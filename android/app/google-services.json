@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "509788095788",
+    "firebase_url": "https://dispatch-muneshwers-default-rtdb.firebaseio.com",
+    "project_id": "dispatch-muneshwers",
+    "storage_bucket": "dispatch-muneshwers.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:509788095788:android:dcf749e07536e29d429889",
+        "android_client_info": {
+          "package_name": "com.example.dispatch"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "509788095788-rii1rnnk6qbr111de11mma0q6au2sndb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7CD8m837mXkIFgL3TaPXrhfBCHSfNY4c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "509788095788-rii1rnnk6qbr111de11mma0q6au2sndb.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "509788095788-l0f4vkimqn7d8ljhodf5jecfd3j4aqqu.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.dispatch"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
