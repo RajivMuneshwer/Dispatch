@@ -5,55 +5,25 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TicketScreen extends StatelessWidget {
-  const TicketScreen({super.key});
+  final List<List<String>> newFormLayoutList;
+  const TicketScreen({
+    super.key,
+    required this.newFormLayoutList,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: BlocProvider(
-        create: (context) => TicketViewCubit([]),
+        create: (context) => TicketViewCubit(newFormLayoutList),
         child: Scaffold(
-          appBar: ticketAppBar(),
+          appBar: ticketAppBar(context),
           body: DispatchForm(),
         ),
       ),
     );
   }
-}
-
-AppBar ticketAppBar() {
-  return AppBar(
-    backgroundColor: Colors.white,
-    title: const Padding(
-      padding: EdgeInsets.only(
-        left: 16.0,
-      ),
-      child: Text(
-        "Ticket",
-        style: TextStyle(
-          color: Colors.blue,
-        ),
-        textAlign: TextAlign.center,
-      ),
-    ),
-    actions: [
-      TextButton(
-        onPressed: () {},
-        child: const Text(
-          "Cancel",
-          style: TextStyle(
-            color: Colors.blue,
-            fontWeight: FontWeight.w400,
-            fontSize: 14.5,
-          ),
-        ),
-      ),
-      const SizedBox(
-        width: 20,
-      ),
-    ],
-  );
 }
 
 class DispatchForm extends StatelessWidget {

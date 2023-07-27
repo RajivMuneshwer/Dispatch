@@ -20,6 +20,4 @@ class TicketViewDeleted extends TicketViewLoaded {
   TicketViewDeleted({required super.formLayoutList});
 }
 
-class TicketViewNew extends TicketViewState {}
-
 class TicketViewError extends TicketViewState {}

@@ -1,4 +1,5 @@
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
+import 'package:dispatch/screens/message_screen.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -8,6 +9,50 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:page_transition/page_transition.dart';
+
+AppBar ticketAppBar(BuildContext context) {
+  return AppBar(
+    backgroundColor: Colors.white,
+    title: const Padding(
+      padding: EdgeInsets.only(
+        left: 16.0,
+      ),
+      child: Text(
+        "Ticket",
+        style: TextStyle(
+          color: Colors.blue,
+        ),
+        textAlign: TextAlign.center,
+      ),
+    ),
+    actions: [
+      IconButton(
+        iconSize: 60,
+        onPressed: () {
+          Navigator.push(
+            context,
+            PageTransition(
+              child: const MessageScreen(),
+              type: PageTransitionType.topToBottom,
+            ),
+          );
+        },
+        icon: const Text(
+          "Cancel",
+          style: TextStyle(
+            color: Colors.blue,
+            fontWeight: FontWeight.w400,
+            fontSize: 14.5,
+          ),
+        ),
+      ),
+      const SizedBox(
+        width: 20,
+      ),
+    ],
+  );
+}
 
 class FormList extends StatelessWidget {
   final GlobalKey<FormBuilderState> formKey;
@@ -461,8 +506,7 @@ class CustomTimePicker extends StatelessWidget {
   final String text;
   final int colPos;
   final int time;
-  final _dateTimeKey = GlobalKey<FormBuilderFieldState>();
-  CustomTimePicker({
+  const CustomTimePicker({
     super.key,
     required this.text,
     required this.colPos,
@@ -479,7 +523,6 @@ class CustomTimePicker extends StatelessWidget {
               bottom: (colPos != 0) ? 15.0 : 0.0,
             ),
             child: FormBuilderDateTimePicker(
-              key: _dateTimeKey,
               name: UniqueKey().toString(),
               autovalidateMode: AutovalidateMode.onUserInteraction,
               format: DateFormat.jm(),
@@ -733,6 +776,7 @@ class CustomSubmitButton extends StatelessWidget {
             FormatLayoutEncoder formatLayoutEncoder = FormatLayoutEncoder();
             String encodedLayout =
                 formatLayoutEncoder.encode(ticketViewState.formLayoutList);
+            //Add the message bloc to add this new message to the message
             print(encodedLayout);
             print(
               formatLayoutEncoder.decode(encodedLayout),

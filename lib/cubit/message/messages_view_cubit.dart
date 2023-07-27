@@ -17,6 +17,7 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
   MessagesViewCubit(this.user) : super(MessagesViewInitial());
 
   StreamSubscription<DatabaseEvent> loadMessages() {
+    print("oh shit");
     final StreamSubscription<DatabaseEvent> sub =
         FirebaseUserMessagesDatabase(user)
             .ref

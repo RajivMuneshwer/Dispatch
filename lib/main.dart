@@ -12,6 +12,6 @@ Future<void> main() async {
       name: "dispatch-muneshwers",
       options: DefaultFirebaseOptions.currentPlatform);
   runApp(
-    const TicketScreen(),
+    const MessageScreen(),
   );
 }
