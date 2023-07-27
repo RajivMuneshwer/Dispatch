@@ -461,7 +461,8 @@ class CustomTimePicker extends StatelessWidget {
   final String text;
   final int colPos;
   final int time;
-  const CustomTimePicker({
+  final _dateTimeKey = GlobalKey<FormBuilderFieldState>();
+  CustomTimePicker({
     super.key,
     required this.text,
     required this.colPos,
@@ -478,7 +479,9 @@ class CustomTimePicker extends StatelessWidget {
               bottom: (colPos != 0) ? 15.0 : 0.0,
             ),
             child: FormBuilderDateTimePicker(
+              key: _dateTimeKey,
               name: UniqueKey().toString(),
+              autovalidateMode: AutovalidateMode.onUserInteraction,
               format: DateFormat.jm(),
               initialEntryMode: DatePickerEntryMode.calendarOnly,
               textAlign: TextAlign.center,
@@ -504,11 +507,11 @@ class CustomTimePicker extends StatelessWidget {
                   ),
                 ),
               ),
-              onChanged: (value) {
+              onChanged: (DateTime? dateTime) {
                 context.read<TicketViewCubit>().updateRow(
                       colPos: colPos,
                       rowPos: timePos,
-                      newValue: value?.millisecondsSinceEpoch.toString() ??
+                      newValue: dateTime?.millisecondsSinceEpoch.toString() ??
                           nowInMilliseconds(),
                     );
               },
@@ -572,23 +575,15 @@ class _WaitSwitchState extends State<WaitSwitch> {
           child: Padding(
             padding: const EdgeInsets.only(bottom: 35.0),
             child: Animate(
-                effects: (state is TicketViewAdded &&
-                        widget.colPos == state.formLayoutList.length - 2)
-                    ? [
-                        const MoveEffect(
-                          begin: Offset(-115, 0),
-                        ),
-                      ]
-                    : [
-                        MoveEffect(
-                          begin: (leave)
-                              ? const Offset(-115, 0)
-                              : const Offset(115, 0),
-                          duration: const Duration(
-                            milliseconds: 90,
-                          ),
-                        )
-                      ],
+                effects: [
+                  MoveEffect(
+                    begin:
+                        (leave) ? const Offset(-115, 0) : const Offset(115, 0),
+                    duration: const Duration(
+                      milliseconds: 90,
+                    ),
+                  )
+                ],
                 child: FlutterSwitch(
                   value: leave,
                   onToggle: (value) {
