@@ -84,29 +84,14 @@ class _DisplayMessagesWidgetState extends State<DisplayMessagesWidget> {
 
 
 
-//TODO
-
-//sign in the user
-//render out a design for the ticket
-
-//find out how to change once arrrived in database
-////its possible but we need to do cloud functions. I will purchase and find out later
-
-//COMPLETED
-//upload to firebase
-// have the Display message widget scroll to bottom
-//when creating a new user, have an initial message so there is not infinite check of context.read<MessagesCubit>().intialize("test");
-// Bool from environment depends on if user is dispatcher
-//react to a new message
-// Click outside of the messages closes the window
-
-//DAY 3
-//always make the group list view scrollable
-//remove the message on drag
-// On scroll up it will load more messages.
-
-////DAY 4
+////TODO
 ///
+///Change the message for the tickets
+///Make a submitted, cancelled and accepted state and maybe an edit??
+///Make the message screen able to take an array of messages and use that
+///instead of making a database call
+///the database would have to be instantiated at another point. ie on loading other messages or sending a new messages
+///on submitting the ticket try can keep the remaining messages from the message screen
 
 
 

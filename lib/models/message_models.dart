@@ -155,7 +155,7 @@ Widget messageRendered(BuildContext context, Message element) => BubbleCustom(
 
 Widget ticketRendered(BuildContext context, Message message) {
   List<List<String>> newFormLayoutList =
-      FormatLayoutEncoder().decode(message.text);
+      FormLayoutEncoder().decode(message.text);
   return BubbleCustom(
     onPressed: () {
       Navigator.push(
@@ -238,6 +238,17 @@ class MessageAdaptor {
       isDispatch: objectMap["isDispatch"] as bool,
       sent: objectMap["sent"] as bool,
       isTicket: objectMap["isTicket"] as bool,
+    );
+  }
+
+  static Message adaptFormLayoutList(List<List<String>> formLayoutList) {
+    String encodedFormLayout = FormLayoutEncoder().encode(formLayoutList);
+    return Message(
+      text: encodedFormLayout,
+      date: DateTime.now(),
+      isDispatch: false,
+      sent: false,
+      isTicket: true,
     );
   }
 }

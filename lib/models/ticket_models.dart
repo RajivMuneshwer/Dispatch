@@ -1,5 +1,5 @@
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
-import 'package:dispatch/screens/message_screen.dart';
+import 'package:dispatch/models/message_models.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -9,7 +9,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
-import 'package:page_transition/page_transition.dart';
 
 AppBar ticketAppBar(BuildContext context) {
   return AppBar(
@@ -30,12 +29,8 @@ AppBar ticketAppBar(BuildContext context) {
       IconButton(
         iconSize: 60,
         onPressed: () {
-          Navigator.push(
+          Navigator.pop(
             context,
-            PageTransition(
-              child: const MessageScreen(),
-              type: PageTransitionType.topToBottom,
-            ),
           );
         },
         icon: const Text(
@@ -86,10 +81,11 @@ class FormList extends StatelessWidget {
   }
 }
 
-List<Widget> buildLayoutWidgets(
-    {required List<List<String>> formLayoutList,
-    required GlobalKey<FormBuilderState> formkey,
-    double xOffset = 0}) {
+List<Widget> buildLayoutWidgets({
+  required List<List<String>> formLayoutList,
+  required GlobalKey<FormBuilderState> formkey,
+  double xOffset = 0,
+}) {
   ListBuilder listBuilder = ListBuilder(xOffset: xOffset);
 
   for (var colPos = 0; colPos < formLayoutList.length; colPos++) {
@@ -759,9 +755,9 @@ class CustomSubmitButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<TicketViewCubit, TicketViewState>(
-      builder: (context, state) {
+      builder: (context, ticketState) {
         return ElevatedButton(
-          onPressed: () {
+          onPressed: () async {
             FormBuilderState? formbuilderState = formKey.currentState;
             if (formbuilderState == null) {
               return;
@@ -769,18 +765,17 @@ class CustomSubmitButton extends StatelessWidget {
             if (!formbuilderState.validate()) {
               return;
             }
-            TicketViewState ticketViewState = state;
+            TicketViewState ticketViewState = ticketState;
             if (ticketViewState is! TicketViewLoaded) {
               return;
             }
-            FormatLayoutEncoder formatLayoutEncoder = FormatLayoutEncoder();
-            String encodedLayout =
-                formatLayoutEncoder.encode(ticketViewState.formLayoutList);
+            Message newMessageTicket = MessageAdaptor.adaptFormLayoutList(
+                ticketViewState.formLayoutList);
+            print(Navigator.canPop(context));
+            print(await Navigator.maybePop(context));
             //Add the message bloc to add this new message to the message
-            print(encodedLayout);
-            print(
-              formatLayoutEncoder.decode(encodedLayout),
-            );
+            await FirebaseUserMessagesDatabase("test")
+                .addMessage(newMessageTicket);
           },
           child: const Padding(
             padding: EdgeInsets.all(10.0),
@@ -833,19 +828,19 @@ String Function() empty = () => "";
 String Function() nowInMilliseconds =
     () => DateTime.now().millisecondsSinceEpoch.toString();
 
-class FormatLayoutEncoder {
+class FormLayoutEncoder {
   static const rowSeparator = "~";
   static const columnSeparator = "`";
 
-  String encode(List<List<String>> formatLayoutList) {
-    List<String> firstRowLayout = formatLayoutList.first;
+  String encode(List<List<String>> formLayoutList) {
+    List<String> firstRowLayout = formLayoutList.first;
     String encodedLayout = firstRowLayout.first;
     for (String element in firstRowLayout.skip(1)) {
       encodedLayout += rowSeparator;
       encodedLayout += element;
     }
 
-    for (List<String> rowLayoutList in formatLayoutList.skip(1)) {
+    for (List<String> rowLayoutList in formLayoutList.skip(1)) {
       String encodedRow = rowLayoutList.first;
       for (String element in rowLayoutList.skip(1)) {
         encodedRow += rowSeparator;

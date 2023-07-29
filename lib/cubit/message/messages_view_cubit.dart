@@ -17,10 +17,10 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
   MessagesViewCubit(this.user) : super(MessagesViewInitial());
 
   StreamSubscription<DatabaseEvent> loadMessages() {
-    print("oh shit");
     final StreamSubscription<DatabaseEvent> sub =
         FirebaseUserMessagesDatabase(user)
             .ref
+            .orderByChild("date")
             .limitToLast(initialNumOfMessages)
             .onChildAdded
             .listen(
@@ -42,7 +42,6 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
           } else {
             //subject to change in the future
             messageHypothetical.sent = true;
-            //await FirebaseUserMessagesDatabase(user).updateMessageSent(snapshot.key);
             emit(MessagesViewLoaded(messagesMap.values.toList()));
           }
         }

@@ -1,5 +1,4 @@
 import 'package:dispatch/firebase_options.dart';
-import 'package:dispatch/screens/ticket_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
