@@ -51,40 +51,49 @@ AppBar ticketAppBar(BuildContext context) {
 
 class FormList extends StatelessWidget {
   final GlobalKey<FormBuilderState> formKey;
-  final List<List<String>> formLayoutList;
   const FormList({
     super.key,
     required this.formKey,
-    required this.formLayoutList,
   });
 
   @override
   Widget build(BuildContext context) {
-    final List<Widget> children = buildLayoutWidgets(
-      xOffset: MediaQuery.of(context).size.width * 0.05,
-      formLayoutList: formLayoutList,
-      formkey: formKey,
-    );
+    return BlocBuilder<TicketViewCubit, TicketViewState>(
+      builder: (context, state) {
+        if (state is! TicketViewWithData) {
+          return Container();
+        }
+        final List<Widget> children = buildLayoutWidgets(
+          xOffset: MediaQuery.of(context).size.width * 0.05,
+          formkey: formKey,
+          ticketViewWithData: state,
+        );
 
-    return FormBuilder(
-      key: formKey,
-      child: ListView.builder(
-        padding: const EdgeInsets.all(8.0),
-        scrollDirection: Axis.vertical,
-        physics: const AlwaysScrollableScrollPhysics(),
-        itemCount: children.length,
-        itemBuilder: (context, index) => children[index],
-      ),
+        return FormBuilder(
+          key: formKey,
+          child: ListView.builder(
+            padding: const EdgeInsets.all(8.0),
+            scrollDirection: Axis.vertical,
+            physics: const AlwaysScrollableScrollPhysics(),
+            itemCount: children.length,
+            itemBuilder: (context, index) => children[index],
+          ),
+        );
+      },
     );
   }
 }
 
 List<Widget> buildLayoutWidgets({
-  required List<List<String>> formLayoutList,
   required GlobalKey<FormBuilderState> formkey,
+  required TicketViewWithData ticketViewWithData,
   double xOffset = 0,
 }) {
-  ListBuilder listBuilder = ListBuilder(xOffset: xOffset);
+  ListBuilder listBuilder = ListBuilder(
+    xOffset: xOffset,
+  );
+
+  List<List<String>> formLayoutList = ticketViewWithData.formLayoutList;
 
   for (var colPos = 0; colPos < formLayoutList.length; colPos++) {
     List<String> formRowList = formLayoutList[colPos];
@@ -120,7 +129,10 @@ List<Widget> buildLayoutWidgets({
   }
   listBuilder.addPlusButton();
   listBuilder.addVerticalSpace(10.0);
-  listBuilder.addSubmitRow(formkey);
+
+  if (ticketViewWithData.bottomButtonType == BottomButtonType.submit) {
+    listBuilder.addSubmitRow(formkey);
+  }
 
   return listBuilder.build();
 }
@@ -129,9 +141,14 @@ class ListBuilder {
   final double xOffset;
   final List<Widget> children = [];
 
-  ListBuilder({required this.xOffset});
+  ListBuilder({
+    required this.xOffset,
+  });
 
-  ListBuilder addFirstRow({required String initialText, required int time}) {
+  ListBuilder addFirstRow({
+    required String initialText,
+    required int time,
+  }) {
     children.add(
       FirstRow(
         initialText: initialText,
@@ -184,7 +201,9 @@ class ListBuilder {
 
   ListBuilder addConnector() {
     children.add(
-      ConnectingLine(xOffset: xOffset),
+      ConnectingLine(
+        xOffset: xOffset,
+      ),
     );
     return this;
   }
@@ -278,11 +297,12 @@ class LeaveRow extends StatelessWidget {
   final int colPos;
   final int time;
   final String initialText;
-  const LeaveRow(
-      {super.key,
-      required this.colPos,
-      required this.time,
-      required this.initialText});
+  const LeaveRow({
+    super.key,
+    required this.colPos,
+    required this.time,
+    required this.initialText,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -440,9 +460,12 @@ class CustomTextFormField extends StatelessWidget {
     const radius = 20.0;
     return BlocBuilder<TicketViewCubit, TicketViewState>(
       builder: (context, state) {
+        if (state is! TicketViewWithData) {
+          return Container();
+        }
         return Flexible(
           child: Animate(
-            effects: (state is TicketViewAdded)
+            effects: (state.animate)
                 ? (colPos == state.formLayoutList.length - 1)
                     ? [const ScaleEffect(duration: Duration(milliseconds: 150))]
                     : []
@@ -452,25 +475,26 @@ class CustomTextFormField extends StatelessWidget {
               initialValue: initialText,
               autocorrect: true,
               textAlign: TextAlign.center,
+              enabled: state.enabled,
               style: const TextStyle(
                 color: Colors.grey,
                 fontWeight: FontWeight.w500,
               ),
               decoration: InputDecoration(
                 alignLabelWithHint: true,
-                enabledBorder: const OutlineInputBorder(
-                  borderRadius: BorderRadius.horizontal(
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: const BorderRadius.horizontal(
                     left: Radius.circular(radius),
                     right: Radius.circular(radius),
                   ),
                   borderSide: BorderSide(
-                    color: Colors.blue,
+                    color: state.color,
                     width: 1.5,
                   ),
                 ),
                 helperText: text,
-                helperStyle: const TextStyle(
-                  color: Colors.blue,
+                helperStyle: TextStyle(
+                  color: state.color,
                 ),
                 border: const OutlineInputBorder(
                   borderRadius: BorderRadius.horizontal(
@@ -513,12 +537,16 @@ class CustomTimePicker extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<TicketViewCubit, TicketViewState>(
       builder: (context, state) {
+        if (state is! TicketViewWithData) {
+          return Container();
+        }
         return Flexible(
           child: Padding(
             padding: EdgeInsets.only(
               bottom: (colPos != 0) ? 15.0 : 0.0,
             ),
             child: FormBuilderDateTimePicker(
+              enabled: state.enabled,
               name: UniqueKey().toString(),
               autovalidateMode: AutovalidateMode.onUserInteraction,
               format: DateFormat.jm(),
@@ -536,12 +564,12 @@ class CustomTimePicker extends StatelessWidget {
               firstDate: DateTime.fromMillisecondsSinceEpoch(time),
               decoration: InputDecoration(
                 helperText: text,
-                helperStyle: const TextStyle(
-                  color: Colors.blue,
+                helperStyle: TextStyle(
+                  color: state.color,
                 ),
-                enabledBorder: const OutlineInputBorder(
+                enabledBorder: OutlineInputBorder(
                   borderSide: BorderSide(
-                    color: Colors.blue,
+                    color: state.color,
                     width: 1.25,
                   ),
                 ),
@@ -560,10 +588,6 @@ class CustomTimePicker extends StatelessWidget {
                     return true;
                   }
                   if (colPos == 0) {
-                    return false;
-                  }
-                  TicketViewState state_ = state;
-                  if (state_ is! TicketViewEditable) {
                     return false;
                   }
                   int previousTimeinForm = context
@@ -610,54 +634,58 @@ class _WaitSwitchState extends State<WaitSwitch> {
   Widget build(BuildContext context) {
     return BlocBuilder<TicketViewCubit, TicketViewState>(
       builder: (context, state) {
+        if (state is! TicketViewWithData) {
+          return Container();
+        }
         return Flexible(
           child: Padding(
             padding: const EdgeInsets.only(bottom: 35.0),
             child: Animate(
-                effects: [
-                  MoveEffect(
-                    begin:
-                        (leave) ? const Offset(-115, 0) : const Offset(115, 0),
-                    duration: const Duration(
-                      milliseconds: 90,
-                    ),
-                  )
-                ],
-                child: FlutterSwitch(
-                  value: leave,
-                  onToggle: (value) {
-                    if (value) {
-                      //switch from wait to leave
-                      context
-                          .read<TicketViewCubit>()
-                          .updateStayRowFormatToLeaveRowFormat(
-                            rowPos: widget.colPos,
-                          );
-                    } else {
-                      context.read<TicketViewCubit>().updateLeaveRowToStayRow(
-                            colPos: widget.colPos,
-                          );
-                    }
-                  },
-                  showOnOff: true,
-                  activeText: "Leave",
-                  valueFontSize: 10,
-                  inactiveText: "Stay",
-                  activeIcon: Transform.translate(
-                    offset: const Offset(2, 0),
-                    child: const FaIcon(
-                      FontAwesomeIcons.carSide,
-                      color: Colors.blue,
-                    ),
+              effects: [
+                MoveEffect(
+                  begin: (leave) ? const Offset(-115, 0) : const Offset(115, 0),
+                  duration: const Duration(
+                    milliseconds: 90,
                   ),
-                  inactiveIcon: Transform.translate(
-                    offset: const Offset(-2, 0),
-                    child: const FaIcon(
-                      FontAwesomeIcons.carSide,
-                      color: Colors.grey,
-                    ),
+                )
+              ],
+              child: FlutterSwitch(
+                disabled: !state.enabled,
+                value: leave,
+                onToggle: (value) {
+                  TicketViewCubit ticketViewCubit =
+                      context.read<TicketViewCubit>();
+                  if (value) {
+                    //switch from wait to leave
+                    ticketViewCubit.updateStayRowFormatToLeaveRowFormat(
+                      rowPos: widget.colPos,
+                    );
+                  } else {
+                    ticketViewCubit.updateLeaveRowToStayRow(
+                      colPos: widget.colPos,
+                    );
+                  }
+                },
+                showOnOff: true,
+                activeText: "Leave",
+                valueFontSize: 10,
+                inactiveText: "Stay",
+                activeIcon: Transform.translate(
+                  offset: const Offset(2, 0),
+                  child: const FaIcon(
+                    FontAwesomeIcons.carSide,
+                    color: Colors.blue,
                   ),
-                )),
+                ),
+                inactiveIcon: Transform.translate(
+                  offset: const Offset(-2, 0),
+                  child: const FaIcon(
+                    FontAwesomeIcons.carSide,
+                    color: Colors.grey,
+                  ),
+                ),
+              ),
+            ),
           ),
         );
       },
@@ -667,22 +695,32 @@ class _WaitSwitchState extends State<WaitSwitch> {
 
 class ConnectingLine extends StatelessWidget {
   final double xOffset;
-  const ConnectingLine({super.key, required this.xOffset});
+  const ConnectingLine({
+    super.key,
+    required this.xOffset,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Transform.translate(
-      offset: Offset(xOffset, 0),
-      child: const Padding(
-        padding: EdgeInsets.only(top: 6.0),
-        child: DottedLine(
-          alignment: WrapAlignment.center,
-          direction: Axis.vertical,
-          lineLength: 40,
-          lineThickness: 1.0,
-          dashColor: Colors.blue,
-        ),
-      ),
+    return BlocBuilder<TicketViewCubit, TicketViewState>(
+      builder: (context, state) {
+        if (state is! TicketViewWithData) {
+          return Container();
+        }
+        return Transform.translate(
+          offset: Offset(xOffset, 0),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 6.0),
+            child: DottedLine(
+              alignment: WrapAlignment.center,
+              direction: Axis.vertical,
+              lineLength: 40,
+              lineThickness: 1.0,
+              dashColor: state.color,
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -755,7 +793,7 @@ class CustomSubmitButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<TicketViewCubit, TicketViewState>(
-      builder: (context, ticketState) {
+      builder: (context, ticketViewState) {
         return ElevatedButton(
           onPressed: () async {
             FormBuilderState? formbuilderState = formKey.currentState;
@@ -765,14 +803,11 @@ class CustomSubmitButton extends StatelessWidget {
             if (!formbuilderState.validate()) {
               return;
             }
-            TicketViewState ticketViewState = ticketState;
-            if (ticketViewState is! TicketViewEditable) {
+            if (ticketViewState is! TicketViewWithData) {
               return;
             }
             Message newMessageTicket = MessageAdaptor.adaptFormLayoutList(
                 ticketViewState.formLayoutList);
-            print(Navigator.canPop(context));
-            print(await Navigator.maybePop(context));
             //Add the message bloc to add this new message to the message
             await FirebaseUserMessagesDatabase("test")
                 .addMessage(newMessageTicket);

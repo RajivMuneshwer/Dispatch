@@ -172,6 +172,7 @@ class Message {
   final DateTime date;
   final bool isDispatch;
   final bool isTicket;
+  final TicketTypes ticketState;
   bool sent;
 
   Message({
@@ -180,6 +181,7 @@ class Message {
     required this.isDispatch,
     required this.sent,
     required this.isTicket,
+    required this.ticketState,
   });
 }
 
@@ -188,15 +190,17 @@ class FirebaseObject extends Object {
   final int date;
   final bool isDispatch;
   final bool isTicket;
+  final TicketTypes ticketState;
   final bool sent;
 
-  FirebaseObject(
-    this.text,
-    this.date,
-    this.isDispatch,
-    this.sent,
-    this.isTicket,
-  );
+  FirebaseObject({
+    required this.text,
+    required this.date,
+    required this.isDispatch,
+    required this.sent,
+    required this.isTicket,
+    required this.ticketState,
+  });
 }
 
 class MessageAdaptor {
@@ -207,6 +211,7 @@ class MessageAdaptor {
       isDispatch: false,
       sent: false,
       isTicket: false,
+      ticketState: TicketTypes.submitted,
     );
   }
 
@@ -217,6 +222,7 @@ class MessageAdaptor {
       isDispatch: firebaseObject.isDispatch,
       sent: firebaseObject.sent,
       isTicket: firebaseObject.isTicket,
+      ticketState: firebaseObject.ticketState,
     );
   }
 
@@ -228,6 +234,8 @@ class MessageAdaptor {
       isDispatch: objectMap["isDispatch"] as bool,
       sent: objectMap["sent"] as bool,
       isTicket: objectMap["isTicket"] as bool,
+      ticketState: stringToTicketState[objectMap["ticketState"] as String] ??
+          TicketTypes.submitted,
     );
   }
 
@@ -239,6 +247,7 @@ class MessageAdaptor {
       isDispatch: false,
       sent: false,
       isTicket: true,
+      ticketState: TicketTypes.submitted,
     );
   }
 }
@@ -246,22 +255,25 @@ class MessageAdaptor {
 class FirebaseObjectAdaptor {
   static FirebaseObject adaptMessage(Message message) {
     return FirebaseObject(
-      message.text,
-      message.date.millisecondsSinceEpoch,
-      message.isDispatch,
-      message.sent,
-      message.isTicket,
+      text: message.text,
+      date: message.date.millisecondsSinceEpoch,
+      isDispatch: message.isDispatch,
+      sent: message.sent,
+      isTicket: message.isTicket,
+      ticketState: message.ticketState,
     );
   }
 
   static FirebaseObject adaptSnapshot(DataSnapshot snapshot) {
     Map<dynamic, dynamic> objectMap = snapshot.value as Map<dynamic, dynamic>;
     return FirebaseObject(
-      objectMap["text"] as String,
-      objectMap["date"] as int,
-      objectMap["isDispatch"] as bool,
-      objectMap["sent"] as bool,
-      objectMap["isTicket"] as bool,
+      text: objectMap["text"] as String,
+      date: objectMap["date"] as int,
+      isDispatch: objectMap["isDispatch"] as bool,
+      sent: objectMap["sent"] as bool,
+      isTicket: objectMap["isTicket"] as bool,
+      ticketState: stringToTicketState[objectMap["ticketState"] as String] ??
+          TicketTypes.submitted,
     );
   }
 }
@@ -281,6 +293,19 @@ class FirebaseUserMessagesDatabase {
       "isDispatch": false,
       "sent": firebaseObject.sent,
       "isTicket": firebaseObject.isTicket,
+      "ticketState": firebaseObject.ticketState.name,
     });
   }
 }
+
+enum TicketTypes {
+  submitted,
+  cancelled,
+  confirmed,
+}
+
+var stringToTicketState = {
+  'submitted': TicketTypes.submitted,
+  'cancelled': TicketTypes.cancelled,
+  'confirmed': TicketTypes.confirmed,
+};

@@ -11,6 +11,7 @@ class BubbleCustom extends StatelessWidget {
   final bool delivered;
   final bool seen;
   final bool isTicket;
+  final Color? iconColor;
   final DateTime date;
   final void Function()? onPressed;
   final TextStyle textStyle;
@@ -26,6 +27,7 @@ class BubbleCustom extends StatelessWidget {
     this.seen = false,
     this.isTicket = false,
     this.onPressed,
+    this.iconColor = Colors.blue,
     this.textStyle = const TextStyle(
       color: Colors.black87,
       fontSize: 16,
@@ -71,9 +73,9 @@ class BubbleCustom extends StatelessWidget {
             materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             minWidth: 80,
             onPressed: (onPressed == null) ? () {} : onPressed,
-            child: const FaIcon(
+            child: FaIcon(
               FontAwesomeIcons.ticket,
-              color: Colors.blue,
+              color: iconColor,
               size: 30,
             ),
           ),

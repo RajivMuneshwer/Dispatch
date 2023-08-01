@@ -35,10 +35,9 @@ class DispatchForm extends StatelessWidget {
         if (state is TicketViewInitial) {
           context.read<TicketViewCubit>().initialize();
           return loading();
-        } else if (state is TicketViewEditable) {
+        } else if (state is TicketViewWithData) {
           return FormList(
             formKey: _formKey,
-            formLayoutList: state.formLayoutList,
           );
         } else {
           return loading();
@@ -48,6 +47,17 @@ class DispatchForm extends StatelessWidget {
   }
 }
 ////TODO
+///Connect the message type to the layout 
+///This means that clicking on the icon in the messages
+///gives the ticket in the correct state
+///i.e confirmed, cancelled, submitted
+///
+///After the messages give the correct type layout
+///the user should be able to affect the state if it is not cancelled or confirmed
+///i.e the user should be able to edit it and be able to update the same message in place
+///
+///Connect to the database and update it
+///Update the messages cubit as well
 ///
 ///COMPLETE
 ///fix the new ticket state to loaded ticket

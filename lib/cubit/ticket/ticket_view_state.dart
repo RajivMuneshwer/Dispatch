@@ -7,40 +7,96 @@ class TicketViewInitial extends TicketViewState {}
 
 class TicketViewLoading extends TicketViewState {}
 
-abstract class TicketViewEditable extends TicketViewState {
+abstract class TicketViewWithData extends TicketViewState {
   final List<List<String>> formLayoutList;
-  TicketViewEditable({required this.formLayoutList});
-}
-
-class TicketViewAdded extends TicketViewEditable {
-  TicketViewAdded({required super.formLayoutList});
-}
-
-class TicketViewDeleted extends TicketViewEditable {
-  TicketViewDeleted({required super.formLayoutList});
-}
-
-abstract class TicketViewNotEditable extends TicketViewState {
-  final List<List<String>> formLayoutList;
-  final Color colors;
-  TicketViewNotEditable({
+  final Color color;
+  final bool enabled;
+  final bool animate;
+  final BottomButtonType bottomButtonType;
+  TicketViewWithData({
     required this.formLayoutList,
-    required this.colors,
+    required this.color,
+    required this.enabled,
+    required this.animate,
+    required this.bottomButtonType,
   });
 }
 
-class TicketViewCanceled extends TicketViewNotEditable {
+class TicketViewAdded extends TicketViewWithData {
+  TicketViewAdded({
+    required super.formLayoutList,
+    super.color = Colors.blue,
+    super.enabled = true,
+    super.animate = true,
+    super.bottomButtonType = BottomButtonType.submit,
+  });
+}
+
+class TicketViewDeleted extends TicketViewWithData {
+  TicketViewDeleted({
+    required super.formLayoutList,
+    super.color = Colors.blue,
+    super.enabled = true,
+    super.animate = false,
+    super.bottomButtonType = BottomButtonType.submit,
+  });
+}
+
+class TicketViewSubmitted extends TicketViewWithData {
+  TicketViewSubmitted({
+    required super.formLayoutList,
+    super.animate = false,
+    super.color = Colors.blue,
+    super.enabled = false,
+    super.bottomButtonType = BottomButtonType.cancelOrEdit,
+  });
+}
+
+class TicketViewCanceled extends TicketViewWithData {
   TicketViewCanceled({
     required super.formLayoutList,
-    super.colors = Colors.red,
+    super.color = Colors.red,
+    super.animate = false,
+    super.enabled = false,
+    super.bottomButtonType = BottomButtonType.none,
   });
 }
 
-class TicketViewConfirmed extends TicketViewNotEditable {
+class TicketViewConfirmed extends TicketViewWithData {
   TicketViewConfirmed({
     required super.formLayoutList,
-    super.colors = Colors.green,
+    super.color = Colors.green,
+    super.animate = false,
+    super.enabled = false,
+    super.bottomButtonType = BottomButtonType.none,
+  });
+}
+
+class TicketViewUpdating extends TicketViewWithData {
+  TicketViewUpdating({
+    required super.formLayoutList,
+    super.color = Colors.blue,
+    super.enabled = true,
+    super.animate = true,
+    super.bottomButtonType = BottomButtonType.update,
   });
 }
 
 class TicketViewError extends TicketViewState {}
+
+enum BottomButtonType {
+  none,
+  submit,
+  update,
+  cancelOrEdit,
+  cancelOrEditOrConfirm,
+}
+
+
+////States needed
+///State needs to determine the 
+///color, 
+///editability, 
+///animations,
+///button functionality
+///
