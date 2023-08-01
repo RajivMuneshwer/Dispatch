@@ -23,21 +23,19 @@ class _MessageScreenState extends State<MessageScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: BlocProvider(
+    return Scaffold(
+      appBar: AppBar(),
+      body: BlocProvider(
         create: (context) => MessagesViewCubit("test"),
-        child: Scaffold(
-          appBar: AppBar(),
-          body: Column(
-            children: [
-              DisplayMessagesWidget(
-                controller: controller,
-              ),
-              NewMessageWidget(
-                controller: controller,
-              ),
-            ],
-          ),
+        child: Column(
+          children: [
+            DisplayMessagesWidget(
+              controller: controller,
+            ),
+            NewMessageWidget(
+              controller: controller,
+            ),
+          ],
         ),
       ),
     );

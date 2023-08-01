@@ -52,10 +52,8 @@ AppBar ticketAppBar(BuildContext context) {
 class FormList extends StatelessWidget {
   final GlobalKey<FormBuilderState> formKey;
   final List<List<String>> formLayoutList;
-  final double xOffset;
   const FormList({
     super.key,
-    required this.xOffset,
     required this.formKey,
     required this.formLayoutList,
   });
@@ -63,7 +61,7 @@ class FormList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final List<Widget> children = buildLayoutWidgets(
-      xOffset: xOffset,
+      xOffset: MediaQuery.of(context).size.width * 0.05,
       formLayoutList: formLayoutList,
       formkey: formKey,
     );
@@ -91,6 +89,8 @@ List<Widget> buildLayoutWidgets({
   for (var colPos = 0; colPos < formLayoutList.length; colPos++) {
     List<String> formRowList = formLayoutList[colPos];
     if (colPos == 0) {
+      //state will determine the color of the borders and whether it's disabled or not
+      // make the disable state, and colors required in the elemental widgets
       listBuilder.addFirstRow(
         initialText: formRowList[textPos],
         time: int.parse(formRowList[timePos]),
@@ -563,7 +563,7 @@ class CustomTimePicker extends StatelessWidget {
                     return false;
                   }
                   TicketViewState state_ = state;
-                  if (state_ is! TicketViewLoaded) {
+                  if (state_ is! TicketViewEditable) {
                     return false;
                   }
                   int previousTimeinForm = context
@@ -766,7 +766,7 @@ class CustomSubmitButton extends StatelessWidget {
               return;
             }
             TicketViewState ticketViewState = ticketState;
-            if (ticketViewState is! TicketViewLoaded) {
+            if (ticketViewState is! TicketViewEditable) {
               return;
             }
             Message newMessageTicket = MessageAdaptor.adaptFormLayoutList(

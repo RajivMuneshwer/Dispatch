@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:dispatch/cubit/message/messages_view_cubit.dart';
 import 'package:dispatch/models/ticket_models.dart';
-import 'package:dispatch/screens/ticket_screen.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -11,7 +10,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:dispatch/models/message_bubble.dart';
-import 'package:page_transition/page_transition.dart';
 
 class NewMessageWidget extends StatelessWidget {
   final ScrollController controller;
@@ -39,14 +37,10 @@ class NewMessageWidget extends StatelessWidget {
             child: InkWell(
               child: IconButton(
                 onPressed: () {
-                  Navigator.push(
+                  Navigator.pushNamed(
                     context,
-                    PageTransition(
-                      child: const TicketScreen(newFormLayoutList: []),
-                      type: PageTransitionType.bottomToTop,
-                      duration: const Duration(milliseconds: 300),
-                      childCurrent: this,
-                    ),
+                    '/ticket',
+                    arguments: getNewTicketLayout(),
                   );
                 },
                 icon: const FaIcon(
@@ -158,14 +152,10 @@ Widget ticketRendered(BuildContext context, Message message) {
       FormLayoutEncoder().decode(message.text);
   return BubbleCustom(
     onPressed: () {
-      Navigator.push(
+      Navigator.pushNamed(
         context,
-        PageTransition(
-          child: TicketScreen(
-            newFormLayoutList: newFormLayoutList,
-          ),
-          type: PageTransitionType.bottomToTop,
-        ),
+        '/ticket',
+        arguments: newFormLayoutList,
       );
     },
     date: message.date,

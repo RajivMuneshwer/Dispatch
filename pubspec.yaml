@@ -23,7 +23,6 @@ dependencies:
   form_builder_validators: ^9.0.0
   grouped_list: ^5.1.2
   intl: ^0.18.0
-  page_transition: ^2.0.9
   shared_preferences: ^2.2.0
 
 dev_dependencies:

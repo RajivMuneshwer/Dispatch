@@ -13,14 +13,11 @@ class TicketScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: BlocProvider(
+    return Scaffold(
+      appBar: ticketAppBar(context),
+      body: BlocProvider(
         create: (context) => TicketViewCubit(newFormLayoutList),
-        child: Scaffold(
-          appBar: ticketAppBar(context),
-          body: DispatchForm(),
-        ),
+        child: DispatchForm(),
       ),
     );
   }
@@ -33,18 +30,15 @@ class DispatchForm extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const lineOffset = 0.05;
-    final double xOffset = MediaQuery.of(context).size.width * lineOffset;
     return BlocBuilder<TicketViewCubit, TicketViewState>(
       builder: (context, state) {
         if (state is TicketViewInitial) {
           context.read<TicketViewCubit>().initialize();
           return loading();
-        } else if (state is TicketViewLoaded) {
+        } else if (state is TicketViewEditable) {
           return FormList(
             formKey: _formKey,
             formLayoutList: state.formLayoutList,
-            xOffset: xOffset,
           );
         } else {
           return loading();
