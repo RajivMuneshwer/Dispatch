@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:dispatch/cubit/message/messages_view_cubit.dart';
+import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
 import 'package:dispatch/models/ticket_models.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -37,11 +38,10 @@ class NewMessageWidget extends StatelessWidget {
             child: InkWell(
               child: IconButton(
                 onPressed: () {
-                  Navigator.pushNamed(
-                    context,
-                    '/ticket',
-                    arguments: getNewTicketLayout(),
-                  );
+                  Navigator.pushNamed(context, '/ticket',
+                      arguments: TicketViewAdded(
+                        formLayoutList: getNewTicketLayout(),
+                      ));
                 },
                 icon: const FaIcon(
                   FontAwesomeIcons.ticket,
@@ -148,14 +148,13 @@ Widget messageRendered(BuildContext context, Message element) => BubbleCustom(
     );
 
 Widget ticketRendered(BuildContext context, Message message) {
-  List<List<String>> newFormLayoutList =
-      FormLayoutEncoder().decode(message.text);
+  List<List<String>> formLayoutList = FormLayoutEncoder().decode(message.text);
   return BubbleCustom(
     onPressed: () {
       Navigator.pushNamed(
         context,
         '/ticket',
-        arguments: newFormLayoutList,
+        arguments: ticketTypeToState(message.ticketType)(formLayoutList),
       );
     },
     date: message.date,
@@ -172,7 +171,7 @@ class Message {
   final DateTime date;
   final bool isDispatch;
   final bool isTicket;
-  final TicketTypes ticketState;
+  final TicketTypes ticketType;
   bool sent;
 
   Message({
@@ -181,7 +180,7 @@ class Message {
     required this.isDispatch,
     required this.sent,
     required this.isTicket,
-    required this.ticketState,
+    required this.ticketType,
   });
 }
 
@@ -190,7 +189,7 @@ class FirebaseObject extends Object {
   final int date;
   final bool isDispatch;
   final bool isTicket;
-  final TicketTypes ticketState;
+  final TicketTypes ticketType;
   final bool sent;
 
   FirebaseObject({
@@ -199,7 +198,7 @@ class FirebaseObject extends Object {
     required this.isDispatch,
     required this.sent,
     required this.isTicket,
-    required this.ticketState,
+    required this.ticketType,
   });
 }
 
@@ -211,7 +210,7 @@ class MessageAdaptor {
       isDispatch: false,
       sent: false,
       isTicket: false,
-      ticketState: TicketTypes.submitted,
+      ticketType: TicketTypes.submitted,
     );
   }
 
@@ -222,7 +221,7 @@ class MessageAdaptor {
       isDispatch: firebaseObject.isDispatch,
       sent: firebaseObject.sent,
       isTicket: firebaseObject.isTicket,
-      ticketState: firebaseObject.ticketState,
+      ticketType: firebaseObject.ticketType,
     );
   }
 
@@ -234,7 +233,7 @@ class MessageAdaptor {
       isDispatch: objectMap["isDispatch"] as bool,
       sent: objectMap["sent"] as bool,
       isTicket: objectMap["isTicket"] as bool,
-      ticketState: stringToTicketState[objectMap["ticketState"] as String] ??
+      ticketType: stringToticketType[objectMap["ticketType"] as String] ??
           TicketTypes.submitted,
     );
   }
@@ -247,7 +246,7 @@ class MessageAdaptor {
       isDispatch: false,
       sent: false,
       isTicket: true,
-      ticketState: TicketTypes.submitted,
+      ticketType: TicketTypes.submitted,
     );
   }
 }
@@ -260,7 +259,7 @@ class FirebaseObjectAdaptor {
       isDispatch: message.isDispatch,
       sent: message.sent,
       isTicket: message.isTicket,
-      ticketState: message.ticketState,
+      ticketType: message.ticketType,
     );
   }
 
@@ -272,7 +271,7 @@ class FirebaseObjectAdaptor {
       isDispatch: objectMap["isDispatch"] as bool,
       sent: objectMap["sent"] as bool,
       isTicket: objectMap["isTicket"] as bool,
-      ticketState: stringToTicketState[objectMap["ticketState"] as String] ??
+      ticketType: stringToticketType[objectMap["ticketType"] as String] ??
           TicketTypes.submitted,
     );
   }
@@ -293,7 +292,7 @@ class FirebaseUserMessagesDatabase {
       "isDispatch": false,
       "sent": firebaseObject.sent,
       "isTicket": firebaseObject.isTicket,
-      "ticketState": firebaseObject.ticketState.name,
+      "ticketType": firebaseObject.ticketType.name,
     });
   }
 }
@@ -304,8 +303,24 @@ enum TicketTypes {
   confirmed,
 }
 
-var stringToTicketState = {
+var stringToticketType = {
   'submitted': TicketTypes.submitted,
   'cancelled': TicketTypes.cancelled,
   'confirmed': TicketTypes.confirmed,
 };
+
+TicketViewWithData Function(List<List<String>>) ticketTypeToState(
+    TicketTypes ticketTypes) {
+  var ticketTypeToStateMap = {
+    TicketTypes.submitted: (List<List<String>> formListBuilder) =>
+        TicketViewSubmitted(formLayoutList: formListBuilder),
+    TicketTypes.cancelled: (List<List<String>> formListBuilder) =>
+        TicketViewCanceled(formLayoutList: formListBuilder),
+    TicketTypes.confirmed: (List<List<String>> formListBuilder) =>
+        TicketViewConfirmed(formLayoutList: formListBuilder),
+  };
+
+  return ticketTypeToStateMap[ticketTypes] ??
+      (List<List<String>> formListBuilder) =>
+          TicketViewSubmitted(formLayoutList: formListBuilder);
+}

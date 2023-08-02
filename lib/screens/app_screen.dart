@@ -1,3 +1,4 @@
+import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
 import 'package:dispatch/screens/message_screen.dart';
 import 'package:dispatch/screens/ticket_screen.dart';
 import 'package:flutter/material.dart';
@@ -16,9 +17,9 @@ class App extends StatelessWidget {
             return MaterialPageRoute(builder: (_) => const MessageScreen());
 
           case '/ticket':
-            if (args is List<List<String>>) {
+            if (args is TicketViewWithData) {
               return MaterialPageRoute(
-                builder: (_) => TicketScreen(newFormLayoutList: args),
+                builder: (_) => TicketScreen(ticketViewWithData: args),
               );
             }
         }

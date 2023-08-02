@@ -5,10 +5,10 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class TicketScreen extends StatelessWidget {
-  final List<List<String>> newFormLayoutList;
+  final TicketViewWithData ticketViewWithData;
   const TicketScreen({
     super.key,
-    required this.newFormLayoutList,
+    required this.ticketViewWithData,
   });
 
   @override
@@ -16,7 +16,7 @@ class TicketScreen extends StatelessWidget {
     return Scaffold(
       appBar: ticketAppBar(context),
       body: BlocProvider(
-        create: (context) => TicketViewCubit(newFormLayoutList),
+        create: (context) => TicketViewCubit(ticketViewWithData),
         child: DispatchForm(),
       ),
     );
@@ -36,7 +36,7 @@ class DispatchForm extends StatelessWidget {
           context.read<TicketViewCubit>().initialize();
           return loading();
         } else if (state is TicketViewWithData) {
-          return FormList(
+          return Ticket(
             formKey: _formKey,
           );
         } else {
@@ -47,6 +47,7 @@ class DispatchForm extends StatelessWidget {
   }
 }
 ////TODO
+///
 ///Connect the message type to the layout 
 ///This means that clicking on the icon in the messages
 ///gives the ticket in the correct state
@@ -64,4 +65,7 @@ class DispatchForm extends StatelessWidget {
 ///make the round trip state
 ///Make animations
 ///put a cancel button at the top
+///
+///
+//////Simplify the way the ticket is built
 

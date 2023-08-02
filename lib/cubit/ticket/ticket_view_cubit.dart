@@ -8,10 +8,14 @@ part 'ticket_view_state.dart';
 class TicketViewCubit extends Cubit<TicketViewState> {
   static const maxLength = 5;
   static const minLength = 2;
-  List<List<String>> formLayoutList;
-  TicketViewCubit(this.formLayoutList) : super(TicketViewInitial());
+  TicketViewWithData initialTicketViewState;
+  TicketViewCubit(this.initialTicketViewState) : super(TicketViewInitial());
 
   int findPreviousTimeinForm(int position) {
+    TicketViewState state_ = state;
+    if (state_ is! TicketViewWithData) return -1;
+
+    List<List<String>> formLayoutList = state_.formLayoutList;
     int lastTime = DateTime.now().millisecondsSinceEpoch;
     int currentPos = position - 1;
     while (currentPos >= 0) {
@@ -54,14 +58,7 @@ class TicketViewCubit extends Cubit<TicketViewState> {
     await Future.delayed(
       duration,
       () {
-        if (formLayoutList.isEmpty) {
-          formLayoutList = getNewTicketLayout();
-          emit(TicketViewAdded(formLayoutList: formLayoutList));
-        } else {
-          emit(
-            TicketViewAdded(formLayoutList: formLayoutList),
-          );
-        }
+        emit(initialTicketViewState);
       },
     );
   }
@@ -70,6 +67,10 @@ class TicketViewCubit extends Cubit<TicketViewState> {
     await Future.delayed(
       duration,
       () {
+        TicketViewState state_ = state;
+        if (state_ is! TicketViewWithData) return;
+
+        List<List<String>> formLayoutList = state_.formLayoutList;
         if (formLayoutList.length < maxLength) {
           formLayoutList.add(
             getFinalTicketRowLayout(formLayoutList.first[textPos]),
@@ -78,6 +79,7 @@ class TicketViewCubit extends Cubit<TicketViewState> {
             TicketViewAdded(formLayoutList: formLayoutList),
           );
         }
+        return;
       },
     );
   }
@@ -86,12 +88,17 @@ class TicketViewCubit extends Cubit<TicketViewState> {
     await Future.delayed(
       duration,
       () {
+        TicketViewState state_ = state;
+        if (state_ is! TicketViewWithData) return;
+
+        List<List<String>> formLayoutList = state_.formLayoutList;
         if (formLayoutList.length > minLength) {
           formLayoutList = deleteFinalTicketRowLayout(formLayoutList);
           emit(
             TicketViewDeleted(formLayoutList: formLayoutList),
           );
         }
+        return;
       },
     );
   }
@@ -103,7 +110,13 @@ class TicketViewCubit extends Cubit<TicketViewState> {
     await Future.delayed(
       duration,
       () {
+        TicketViewState state_ = state;
+        if (state_ is! TicketViewWithData) return;
+
+        List<List<String>> formLayoutList = state_.formLayoutList;
         formLayoutList[colPos][rowPos] = newValue;
+        emit(TicketViewDeleted(formLayoutList: formLayoutList));
+        return;
       },
     );
   }
@@ -115,6 +128,10 @@ class TicketViewCubit extends Cubit<TicketViewState> {
       await Future.delayed(
         duration,
         () {
+          TicketViewState state_ = state;
+          if (state_ is! TicketViewWithData) return;
+
+          List<List<String>> formLayoutList = state_.formLayoutList;
           int lastTime = findPreviousTimeinForm(rowPos);
           List<String> stayRowFormat = formLayoutList[rowPos];
 
@@ -125,6 +142,7 @@ class TicketViewCubit extends Cubit<TicketViewState> {
           emit(
             TicketViewDeleted(formLayoutList: formLayoutList),
           );
+          return;
         },
       );
     }
@@ -133,18 +151,20 @@ class TicketViewCubit extends Cubit<TicketViewState> {
   Future<void> updateLeaveRowToStayRow({
     required int colPos,
   }) async {
-    await Future.delayed(
-      duration,
-      () {
-        List<String> leaveRowFormat = formLayoutList[colPos];
-        formLayoutList[colPos] = leaveRowFormatToStayRowFormat(
-          leaveRowFormat: leaveRowFormat,
-        );
-        emit(
-          TicketViewDeleted(formLayoutList: formLayoutList),
-        );
-      },
-    );
+    await Future.delayed(duration, () {
+      TicketViewState state_ = state;
+      if (state_ is! TicketViewWithData) return;
+
+      List<List<String>> formLayoutList = state_.formLayoutList;
+      List<String> leaveRowFormat = formLayoutList[colPos];
+      formLayoutList[colPos] = leaveRowFormatToStayRowFormat(
+        leaveRowFormat: leaveRowFormat,
+      );
+      emit(
+        TicketViewDeleted(formLayoutList: formLayoutList),
+      );
+      return;
+    });
   }
 }
 

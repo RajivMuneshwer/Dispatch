@@ -49,9 +49,9 @@ AppBar ticketAppBar(BuildContext context) {
   );
 }
 
-class FormList extends StatelessWidget {
+class Ticket extends StatelessWidget {
   final GlobalKey<FormBuilderState> formKey;
-  const FormList({
+  const Ticket({
     super.key,
     required this.formKey,
   });
@@ -63,7 +63,7 @@ class FormList extends StatelessWidget {
         if (state is! TicketViewWithData) {
           return Container();
         }
-        final List<Widget> children = buildLayoutWidgets(
+        final List<Widget> children = buildTicketWidgets(
           xOffset: MediaQuery.of(context).size.width * 0.05,
           formkey: formKey,
           ticketViewWithData: state,
@@ -84,7 +84,7 @@ class FormList extends StatelessWidget {
   }
 }
 
-List<Widget> buildLayoutWidgets({
+List<Widget> buildTicketWidgets({
   required GlobalKey<FormBuilderState> formkey,
   required TicketViewWithData ticketViewWithData,
   double xOffset = 0,
@@ -98,8 +98,6 @@ List<Widget> buildLayoutWidgets({
   for (var colPos = 0; colPos < formLayoutList.length; colPos++) {
     List<String> formRowList = formLayoutList[colPos];
     if (colPos == 0) {
-      //state will determine the color of the borders and whether it's disabled or not
-      // make the disable state, and colors required in the elemental widgets
       listBuilder.addFirstRow(
         initialText: formRowList[textPos],
         time: int.parse(formRowList[timePos]),
