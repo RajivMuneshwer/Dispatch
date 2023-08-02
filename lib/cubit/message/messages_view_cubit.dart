@@ -26,18 +26,16 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
             .listen(
       (event) {
         final snapshot = event.snapshot;
-        FirebaseObject firebaseObject =
-            FirebaseObjectAdaptor.adaptSnapshot(snapshot);
-        Message newMessage = MessageAdaptor.adaptFirebaseObject(firebaseObject);
+        Message newMessage = MessageAdaptor.adaptSnapshot(snapshot);
 
         if (state is MessagesViewInitial) {
-          earliestMessageTime = firebaseObject.date;
-          messagesMap.addAll({firebaseObject.date: newMessage});
+          earliestMessageTime = newMessage.dateToInt();
+          messagesMap.addAll({newMessage.dateToInt(): newMessage});
           emit(MessagesViewLoaded(messagesMap.values.toList()));
         } else if (state is MessagesViewLoaded) {
-          Message? messageHypothetical = messagesMap[firebaseObject.date];
+          Message? messageHypothetical = messagesMap[newMessage.dateToInt()];
           if (messageHypothetical == null) {
-            messagesMap.addAll({firebaseObject.date: newMessage});
+            messagesMap.addAll({newMessage.dateToInt(): newMessage});
             emit(MessagesViewLoaded(messagesMap.values.toList()));
           } else {
             //subject to change in the future
@@ -72,17 +70,15 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
         emit(MessagesViewLoaded(messagesMap.values.toList()));
       } else {
         for (final snapshot in previousMessagesSnapshots) {
-          FirebaseObject firebaseObject =
-              FirebaseObjectAdaptor.adaptSnapshot(snapshot);
-          Message previousMessage =
-              MessageAdaptor.adaptFirebaseObject(firebaseObject);
+          Message previousMessage = MessageAdaptor.adaptSnapshot(snapshot);
 
-          earliestMessageTime = (firebaseObject.date < earliestMessageTime)
-              ? firebaseObject.date
-              : earliestMessageTime;
+          earliestMessageTime =
+              (previousMessage.dateToInt() < earliestMessageTime)
+                  ? previousMessage.dateToInt()
+                  : earliestMessageTime;
 
           Map<int, Message> previousMessageMap = {
-            firebaseObject.date: previousMessage
+            previousMessage.dateToInt(): previousMessage
           };
           previousMessageMap.addAll(messagesMap);
           messagesMap = previousMessageMap;

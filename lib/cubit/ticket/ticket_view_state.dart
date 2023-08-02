@@ -45,10 +45,10 @@ class TicketViewDeleted extends TicketViewWithData {
 class TicketViewSubmitted extends TicketViewWithData {
   TicketViewSubmitted({
     required super.formLayoutList,
-    super.animate = false,
+    super.animate = true,
     super.color = Colors.blue,
-    super.enabled = false,
-    super.bottomButtonType = BottomButtonType.cancelOrEdit,
+    super.enabled = true,
+    super.bottomButtonType = BottomButtonType.cancelOrUpdate,
   });
 }
 
@@ -72,23 +72,12 @@ class TicketViewConfirmed extends TicketViewWithData {
   });
 }
 
-class TicketViewUpdating extends TicketViewWithData {
-  TicketViewUpdating({
-    required super.formLayoutList,
-    super.color = Colors.blue,
-    super.enabled = true,
-    super.animate = true,
-    super.bottomButtonType = BottomButtonType.update,
-  });
-}
-
 class TicketViewError extends TicketViewState {}
 
 enum BottomButtonType {
   none,
   submit,
-  update,
-  cancelOrEdit,
+  cancelOrUpdate,
   cancelOrEditOrConfirm,
 }
 

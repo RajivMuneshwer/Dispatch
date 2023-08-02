@@ -52,6 +52,8 @@ class DispatchForm extends StatelessWidget {
 ///This means that clicking on the icon in the messages
 ///gives the ticket in the correct state
 ///i.e confirmed, cancelled, submitted
+///mostly the behavoir expected just need to fully set up the submitted state
+///and the pop navigation of the submit button is not fully functional
 ///
 ///After the messages give the correct type layout
 ///the user should be able to affect the state if it is not cancelled or confirmed

@@ -182,24 +182,10 @@ class Message {
     required this.isTicket,
     required this.ticketType,
   });
-}
 
-class FirebaseObject extends Object {
-  final String text;
-  final int date;
-  final bool isDispatch;
-  final bool isTicket;
-  final TicketTypes ticketType;
-  final bool sent;
-
-  FirebaseObject({
-    required this.text,
-    required this.date,
-    required this.isDispatch,
-    required this.sent,
-    required this.isTicket,
-    required this.ticketType,
-  });
+  int dateToInt() {
+    return date.millisecondsSinceEpoch;
+  }
 }
 
 class MessageAdaptor {
@@ -211,17 +197,6 @@ class MessageAdaptor {
       sent: false,
       isTicket: false,
       ticketType: TicketTypes.submitted,
-    );
-  }
-
-  static Message adaptFirebaseObject(FirebaseObject firebaseObject) {
-    return Message(
-      text: firebaseObject.text,
-      date: DateTime.fromMillisecondsSinceEpoch(firebaseObject.date),
-      isDispatch: firebaseObject.isDispatch,
-      sent: firebaseObject.sent,
-      isTicket: firebaseObject.isTicket,
-      ticketType: firebaseObject.ticketType,
     );
   }
 
@@ -251,32 +226,6 @@ class MessageAdaptor {
   }
 }
 
-class FirebaseObjectAdaptor {
-  static FirebaseObject adaptMessage(Message message) {
-    return FirebaseObject(
-      text: message.text,
-      date: message.date.millisecondsSinceEpoch,
-      isDispatch: message.isDispatch,
-      sent: message.sent,
-      isTicket: message.isTicket,
-      ticketType: message.ticketType,
-    );
-  }
-
-  static FirebaseObject adaptSnapshot(DataSnapshot snapshot) {
-    Map<dynamic, dynamic> objectMap = snapshot.value as Map<dynamic, dynamic>;
-    return FirebaseObject(
-      text: objectMap["text"] as String,
-      date: objectMap["date"] as int,
-      isDispatch: objectMap["isDispatch"] as bool,
-      sent: objectMap["sent"] as bool,
-      isTicket: objectMap["isTicket"] as bool,
-      ticketType: stringToticketType[objectMap["ticketType"] as String] ??
-          TicketTypes.submitted,
-    );
-  }
-}
-
 class FirebaseUserMessagesDatabase {
   final String user;
   FirebaseUserMessagesDatabase(this.user);
@@ -285,14 +234,13 @@ class FirebaseUserMessagesDatabase {
       FirebaseDatabase.instance.ref("users/$user/messages");
 
   Future<void> addMessage(Message message) async {
-    final firebaseObject = FirebaseObjectAdaptor.adaptMessage(message);
     await ref.push().set({
-      "text": firebaseObject.text,
-      "date": firebaseObject.date,
+      "text": message.text,
+      "date": message.dateToInt(),
       "isDispatch": false,
-      "sent": firebaseObject.sent,
-      "isTicket": firebaseObject.isTicket,
-      "ticketType": firebaseObject.ticketType.name,
+      "sent": message.sent,
+      "isTicket": message.isTicket,
+      "ticketType": message.ticketType.name,
     });
   }
 }

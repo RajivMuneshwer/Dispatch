@@ -94,42 +94,43 @@ List<Widget> buildTicketWidgets({
   );
 
   List<List<String>> formLayoutList = ticketViewWithData.formLayoutList;
+  listBuilder.addFirstRow(
+    time: int.parse(formLayoutList[0][timePos]),
+  );
 
-  for (var colPos = 0; colPos < formLayoutList.length; colPos++) {
+  for (var colPos = 1; colPos < formLayoutList.length; colPos++) {
+    listBuilder.addConnector();
+
     List<String> formRowList = formLayoutList[colPos];
-    if (colPos == 0) {
-      listBuilder.addFirstRow(
-        initialText: formRowList[textPos],
-        time: int.parse(formRowList[timePos]),
-      );
-    } else if (colPos == formLayoutList.length - 1) {
+    if (colPos == formLayoutList.length - 1) {
       listBuilder.addLastRow(
         colPos: colPos,
-        initialText: formRowList[textPos],
       );
     } else {
       if (formRowList[timePos] == stay()) {
         listBuilder.addStayRow(
           colPos: colPos,
-          initialText: formRowList[textPos],
         );
       } else {
         listBuilder.addLeaveRow(
           colPos: colPos,
-          initialText: formRowList[textPos],
-          time: int.parse(
-            formRowList[timePos],
-          ),
         );
       }
     }
-    listBuilder.addConnector();
   }
-  listBuilder.addPlusButton();
-  listBuilder.addVerticalSpace(10.0);
 
   if (ticketViewWithData.bottomButtonType == BottomButtonType.submit) {
+    listBuilder.addConnector();
+    listBuilder.addPlusButton();
+    listBuilder.addVerticalSpace(10.0);
     listBuilder.addSubmitRow(formkey);
+  }
+
+  if (ticketViewWithData.bottomButtonType == BottomButtonType.cancelOrUpdate) {
+    listBuilder.addConnector();
+    listBuilder.addPlusButton();
+    listBuilder.addVerticalSpace(10.0);
+    listBuilder.addCancelOrUpdateRow();
   }
 
   return listBuilder.build();
@@ -144,26 +145,20 @@ class ListBuilder {
   });
 
   ListBuilder addFirstRow({
-    required String initialText,
     required int time,
   }) {
     children.add(
-      FirstRow(
-        initialText: initialText,
-        time: time,
-      ),
+      const FirstRow(),
     );
     return this;
   }
 
   ListBuilder addStayRow({
     required int colPos,
-    required String initialText,
   }) {
     children.add(
       StayRow(
         colPos: colPos,
-        initialText: initialText,
       ),
     );
     return this;
@@ -171,14 +166,10 @@ class ListBuilder {
 
   ListBuilder addLeaveRow({
     required int colPos,
-    required String initialText,
-    required int time,
   }) {
     children.add(
       LeaveRow(
         colPos: colPos,
-        initialText: initialText,
-        time: time,
       ),
     );
     return this;
@@ -186,12 +177,10 @@ class ListBuilder {
 
   ListBuilder addLastRow({
     required int colPos,
-    required String initialText,
   }) {
     children.add(
       LastRow(
         colPos: colPos,
-        initialText: initialText,
       ),
     );
     return this;
@@ -232,18 +221,19 @@ class ListBuilder {
     return this;
   }
 
+  ListBuilder addCancelOrUpdateRow() {
+    children.add(const CancelOrUpdateRow());
+    return this;
+  }
+
   List<Widget> build() {
     return children;
   }
 }
 
 class FirstRow extends StatelessWidget {
-  final int time;
-  final String initialText;
   const FirstRow({
     super.key,
-    required this.initialText,
-    required this.time,
   });
 
   @override
@@ -251,13 +241,11 @@ class FirstRow extends StatelessWidget {
     return RowBuilder()
         .addTextField(
           text: "Pickup",
-          initialText: initialText,
           colPos: 0,
         )
         .addSpace()
         .addTimeField(
           text: "Pickup time",
-          time: time,
           colPos: 0,
         )
         .addSpace()
@@ -268,11 +256,9 @@ class FirstRow extends StatelessWidget {
 
 class LastRow extends StatelessWidget {
   final int colPos;
-  final String initialText;
   const LastRow({
     super.key,
     required this.colPos,
-    required this.initialText,
   });
 
   @override
@@ -281,7 +267,6 @@ class LastRow extends StatelessWidget {
         .addTextField(
           text: "Dropoff $colPos",
           colPos: colPos,
-          initialText: initialText,
         )
         .addSpace()
         .addBlank()
@@ -293,13 +278,9 @@ class LastRow extends StatelessWidget {
 
 class LeaveRow extends StatelessWidget {
   final int colPos;
-  final int time;
-  final String initialText;
   const LeaveRow({
     super.key,
     required this.colPos,
-    required this.time,
-    required this.initialText,
   });
 
   @override
@@ -307,13 +288,11 @@ class LeaveRow extends StatelessWidget {
     return RowBuilder()
         .addTextField(
           text: "Dropoff $colPos /\nPickup ${colPos + 1}",
-          initialText: initialText,
           colPos: colPos,
         )
         .addSpace()
         .addTimeField(
           text: "Pickup time ${colPos + 1}",
-          time: time,
           colPos: colPos,
         )
         .addSpace()
@@ -327,11 +306,9 @@ class LeaveRow extends StatelessWidget {
 
 class StayRow extends StatelessWidget {
   final int colPos;
-  final String initialText;
   const StayRow({
     super.key,
     required this.colPos,
-    required this.initialText,
   });
 
   @override
@@ -340,7 +317,6 @@ class StayRow extends StatelessWidget {
         .addTextField(
           text: "Dropoff $colPos /\nPickup ${colPos + 1}",
           colPos: colPos,
-          initialText: initialText,
         )
         .addSpace()
         .addSwitch(
@@ -372,6 +348,21 @@ class SubmitRow extends StatelessWidget {
   }
 }
 
+class CancelOrUpdateRow extends StatelessWidget {
+  const CancelOrUpdateRow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return RowBuilder()
+        .addUpdate()
+        .addSpace()
+        .addCancel()
+        .addSpace()
+        .addBlank()
+        .build();
+  }
+}
+
 class RowBuilder {
   List<Widget> children = [];
   RowBuilder();
@@ -379,12 +370,10 @@ class RowBuilder {
   RowBuilder addTextField({
     required String text,
     required int colPos,
-    required String initialText,
   }) {
     children.add(CustomTextFormField(
       text: text,
       colPos: colPos,
-      initialText: initialText,
     ));
     return this;
   }
@@ -396,12 +385,10 @@ class RowBuilder {
 
   RowBuilder addTimeField({
     required String text,
-    required int time,
     required int colPos,
   }) {
     children.add(CustomTimePicker(
       text: text,
-      time: time,
       colPos: colPos,
     ));
     return this;
@@ -433,6 +420,16 @@ class RowBuilder {
     return this;
   }
 
+  RowBuilder addCancel() {
+    children.add(CancelButton());
+    return this;
+  }
+
+  RowBuilder addUpdate() {
+    children.add(UpdateButton());
+    return this;
+  }
+
   Row build() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -443,14 +440,12 @@ class RowBuilder {
 
 class CustomTextFormField extends StatelessWidget {
   final String text;
-  final String initialText;
   final int colPos;
 
   const CustomTextFormField({
     super.key,
     required this.text,
     required this.colPos,
-    required this.initialText,
   });
 
   @override
@@ -470,7 +465,7 @@ class CustomTextFormField extends StatelessWidget {
                 : [],
             child: FormBuilderTextField(
               name: UniqueKey().toString(),
-              initialValue: initialText,
+              initialValue: state.formLayoutList[colPos][textPos],
               autocorrect: true,
               textAlign: TextAlign.center,
               enabled: state.enabled,
@@ -523,12 +518,10 @@ class CustomTextFormField extends StatelessWidget {
 class CustomTimePicker extends StatelessWidget {
   final String text;
   final int colPos;
-  final int time;
   const CustomTimePicker({
     super.key,
     required this.text,
     required this.colPos,
-    required this.time,
   });
 
   @override
@@ -538,69 +531,82 @@ class CustomTimePicker extends StatelessWidget {
         if (state is! TicketViewWithData) {
           return Container();
         }
-        return Flexible(
-          child: Padding(
-            padding: EdgeInsets.only(
-              bottom: (colPos != 0) ? 15.0 : 0.0,
-            ),
-            child: FormBuilderDateTimePicker(
-              enabled: state.enabled,
-              name: UniqueKey().toString(),
-              autovalidateMode: AutovalidateMode.onUserInteraction,
-              format: DateFormat.jm(),
-              initialEntryMode: DatePickerEntryMode.calendarOnly,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Colors.grey,
-                fontWeight: FontWeight.w500,
-              ),
-              initialDate: DateTime.fromMillisecondsSinceEpoch(time),
-              initialTime: TimeOfDay.fromDateTime(
-                DateTime.fromMillisecondsSinceEpoch(time),
-              ),
-              initialValue: DateTime.fromMillisecondsSinceEpoch(time),
-              firstDate: DateTime.fromMillisecondsSinceEpoch(time),
-              decoration: InputDecoration(
-                helperText: text,
-                helperStyle: TextStyle(
-                  color: state.color,
+        DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(
+          int.parse(state.formLayoutList[colPos][timePos]),
+        );
+        return Animate(
+            effects: (state.animate)
+                ? const [
+                    ScaleEffect(
+                      duration: Duration(milliseconds: 125),
+                    )
+                  ]
+                : [],
+            child: Flexible(
+              child: Padding(
+                padding: EdgeInsets.only(
+                  bottom: (colPos != 0) ? 15.0 : 0.0,
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: state.color,
-                    width: 1.25,
+                child: FormBuilderDateTimePicker(
+                  enabled: state.enabled,
+                  name: UniqueKey().toString(),
+                  autovalidateMode: AutovalidateMode.onUserInteraction,
+                  format: DateFormat.jm(),
+                  initialEntryMode: DatePickerEntryMode.calendarOnly,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.grey,
+                    fontWeight: FontWeight.w500,
                   ),
+                  initialDate: dateTime,
+                  initialTime: TimeOfDay.fromDateTime(
+                    dateTime,
+                  ),
+                  initialValue: dateTime,
+                  firstDate: dateTime,
+                  decoration: InputDecoration(
+                    helperText: text,
+                    helperStyle: TextStyle(
+                      color: state.color,
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: state.color,
+                        width: 1.25,
+                      ),
+                    ),
+                  ),
+                  onChanged: (DateTime? changedTime) {
+                    context.read<TicketViewCubit>().updateRow(
+                          colPos: colPos,
+                          rowPos: timePos,
+                          newValue:
+                              changedTime?.millisecondsSinceEpoch.toString() ??
+                                  nowInMilliseconds(),
+                        );
+                  },
+                  validator: (DateTime? dateTimeSubmitted) {
+                    if (() {
+                      if (dateTimeSubmitted == null) {
+                        return true;
+                      }
+                      if (colPos == 0) {
+                        return false;
+                      }
+                      int previousTimeinForm = context
+                          .read<TicketViewCubit>()
+                          .findPreviousTimeinForm(colPos);
+                      return dateTimeSubmitted.millisecondsSinceEpoch <=
+                          previousTimeinForm;
+                    }()) {
+                      return "invalid time";
+                    } else {
+                      return null;
+                    }
+                  },
                 ),
               ),
-              onChanged: (DateTime? dateTime) {
-                context.read<TicketViewCubit>().updateRow(
-                      colPos: colPos,
-                      rowPos: timePos,
-                      newValue: dateTime?.millisecondsSinceEpoch.toString() ??
-                          nowInMilliseconds(),
-                    );
-              },
-              validator: (DateTime? dateTime) {
-                if (() {
-                  if (dateTime == null) {
-                    return true;
-                  }
-                  if (colPos == 0) {
-                    return false;
-                  }
-                  int previousTimeinForm = context
-                      .read<TicketViewCubit>()
-                      .findPreviousTimeinForm(colPos);
-                  return dateTime.millisecondsSinceEpoch <= previousTimeinForm;
-                }()) {
-                  return "invalid time";
-                } else {
-                  return null;
-                }
-              },
-            ),
-          ),
-        ).animate().scaleXY(duration: const Duration(milliseconds: 125));
+            ));
       },
     );
   }
@@ -639,14 +645,18 @@ class _WaitSwitchState extends State<WaitSwitch> {
           child: Padding(
             padding: const EdgeInsets.only(bottom: 35.0),
             child: Animate(
-              effects: [
-                MoveEffect(
-                  begin: (leave) ? const Offset(-115, 0) : const Offset(115, 0),
-                  duration: const Duration(
-                    milliseconds: 90,
-                  ),
-                )
-              ],
+              effects: (state.animate)
+                  ? [
+                      MoveEffect(
+                        begin: (leave)
+                            ? const Offset(-115, 0)
+                            : const Offset(115, 0),
+                        duration: const Duration(
+                          milliseconds: 90,
+                        ),
+                      )
+                    ]
+                  : [],
               child: FlutterSwitch(
                 disabled: !state.enabled,
                 value: leave,
@@ -744,7 +754,7 @@ class PlusButton extends StatelessWidget {
                 child: IconButton(
                   // add button
                   onPressed: () async {
-                    await context.read<TicketViewCubit>().addRow();
+                    await context.read<TicketViewCubit>().addRow(state);
                   },
                   icon: const FaIcon(
                     FontAwesomeIcons.circlePlus,
@@ -763,7 +773,7 @@ class PlusButton extends StatelessWidget {
                   child: IconButton(
                     // minus button
                     onPressed: () async {
-                      await context.read<TicketViewCubit>().deleteRow();
+                      await context.read<TicketViewCubit>().deleteRow(state);
                     },
                     icon: const FaIcon(
                       FontAwesomeIcons.circleMinus,
@@ -806,6 +816,9 @@ class CustomSubmitButton extends StatelessWidget {
             }
             Message newMessageTicket = MessageAdaptor.adaptFormLayoutList(
                 ticketViewState.formLayoutList);
+            Navigator.pop(
+              context,
+            );
             //Add the message bloc to add this new message to the message
             await FirebaseUserMessagesDatabase("test")
                 .addMessage(newMessageTicket);
@@ -816,6 +829,46 @@ class CustomSubmitButton extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class CancelButton extends StatelessWidget {
+  const CancelButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () {},
+      style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.white,
+          side: const BorderSide(width: 2, color: Colors.red)),
+      child: const Text(
+        "Cancel",
+        style: TextStyle(
+          color: Colors.red,
+          backgroundColor: Colors.white,
+        ),
+      ),
+    );
+  }
+}
+
+class UpdateButton extends StatelessWidget {
+  const UpdateButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () {},
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        side: const BorderSide(width: 2, color: Colors.blue),
+      ),
+      child: const Text(
+        "Update",
+        style: TextStyle(color: Colors.blue),
+      ),
     );
   }
 }

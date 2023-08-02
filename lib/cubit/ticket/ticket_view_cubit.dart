@@ -63,40 +63,54 @@ class TicketViewCubit extends Cubit<TicketViewState> {
     );
   }
 
-  Future<void> addRow() async {
+  Future<void> addRow(TicketViewState currentState) async {
     await Future.delayed(
       duration,
       () {
-        TicketViewState state_ = state;
-        if (state_ is! TicketViewWithData) return;
+        if (currentState is! TicketViewWithData) return;
 
-        List<List<String>> formLayoutList = state_.formLayoutList;
+        List<List<String>> formLayoutList = currentState.formLayoutList;
         if (formLayoutList.length < maxLength) {
           formLayoutList.add(
             getFinalTicketRowLayout(formLayoutList.first[textPos]),
           );
-          emit(
-            TicketViewAdded(formLayoutList: formLayoutList),
-          );
+          if (currentState.bottomButtonType == BottomButtonType.submit) {
+            emit(
+              TicketViewAdded(formLayoutList: formLayoutList),
+            );
+            return;
+          }
+          if (currentState.bottomButtonType ==
+              BottomButtonType.cancelOrUpdate) {
+            emit(TicketViewSubmitted(formLayoutList: formLayoutList));
+            return;
+          }
         }
         return;
       },
     );
   }
 
-  Future<void> deleteRow() async {
+  Future<void> deleteRow(TicketViewState currentState) async {
     await Future.delayed(
       duration,
       () {
-        TicketViewState state_ = state;
-        if (state_ is! TicketViewWithData) return;
+        if (currentState is! TicketViewWithData) return;
 
-        List<List<String>> formLayoutList = state_.formLayoutList;
+        List<List<String>> formLayoutList = currentState.formLayoutList;
         if (formLayoutList.length > minLength) {
           formLayoutList = deleteFinalTicketRowLayout(formLayoutList);
-          emit(
-            TicketViewDeleted(formLayoutList: formLayoutList),
-          );
+          if (currentState.bottomButtonType == BottomButtonType.submit) {
+            emit(
+              TicketViewDeleted(formLayoutList: formLayoutList),
+            );
+            return;
+          }
+          if (currentState.bottomButtonType ==
+              BottomButtonType.cancelOrUpdate) {
+            emit(TicketViewSubmitted(formLayoutList: formLayoutList));
+            return;
+          }
         }
         return;
       },
@@ -124,28 +138,26 @@ class TicketViewCubit extends Cubit<TicketViewState> {
   Future<void> updateStayRowFormatToLeaveRowFormat({
     required int rowPos,
   }) async {
-    if (state is TicketViewAdded || state is TicketViewDeleted) {
-      await Future.delayed(
-        duration,
-        () {
-          TicketViewState state_ = state;
-          if (state_ is! TicketViewWithData) return;
+    await Future.delayed(
+      duration,
+      () {
+        TicketViewState state_ = state;
+        if (state_ is! TicketViewWithData) return;
 
-          List<List<String>> formLayoutList = state_.formLayoutList;
-          int lastTime = findPreviousTimeinForm(rowPos);
-          List<String> stayRowFormat = formLayoutList[rowPos];
+        List<List<String>> formLayoutList = state_.formLayoutList;
+        int lastTime = findPreviousTimeinForm(rowPos);
+        List<String> stayRowFormat = formLayoutList[rowPos];
 
-          formLayoutList[rowPos] = stayRowFormatToLeaveRowFormat(
-            stayRowFormat: stayRowFormat,
-            lastTime: lastTime,
-          );
-          emit(
-            TicketViewDeleted(formLayoutList: formLayoutList),
-          );
-          return;
-        },
-      );
-    }
+        formLayoutList[rowPos] = stayRowFormatToLeaveRowFormat(
+          stayRowFormat: stayRowFormat,
+          lastTime: lastTime,
+        );
+        emit(
+          TicketViewDeleted(formLayoutList: formLayoutList),
+        );
+        return;
+      },
+    );
   }
 
   Future<void> updateLeaveRowToStayRow({
