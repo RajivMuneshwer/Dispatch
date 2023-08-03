@@ -52,11 +52,13 @@ class DisplayMessagesWidget extends StatefulWidget {
 }
 
 class _DisplayMessagesWidgetState extends State<DisplayMessagesWidget> {
-  late final StreamSubscription<DatabaseEvent> sub;
+  late final List<StreamSubscription<DatabaseEvent>> subscriptions;
 
   @override
   void dispose() async {
-    await sub.cancel();
+    for (final subscription in subscriptions) {
+      await subscription.cancel();
+    }
     super.dispose();
   }
 
@@ -65,7 +67,7 @@ class _DisplayMessagesWidgetState extends State<DisplayMessagesWidget> {
     return BlocBuilder<MessagesViewCubit, MessagesViewState>(
       builder: (context, state) {
         if (state is MessagesViewInitial) {
-          sub = context.read<MessagesViewCubit>().loadMessages();
+          subscriptions = context.read<MessagesViewCubit>().loadMessages();
           return emptyBody();
         } else if (state is MessagesViewLoaded) {
           return messageBody(context, widget.controller, state);

@@ -49,25 +49,17 @@ class DispatchForm extends StatelessWidget {
 }
 ////TODO
 ///
-///Connect the message type to the layout 
-///This means that clicking on the icon in the messages
-///gives the ticket in the correct state
-///i.e confirmed, cancelled, submitted
-///mostly the behavoir expected just need to fully set up the submitted state
-///and the pop navigation of the submit button is not fully functional
 ///
-///After the messages give the correct type layout
-///the user should be able to affect the state if it is not cancelled or confirmed
-///i.e the user should be able to edit it and be able to update the same message in place
 ///
-///Connect to the database and update it
-///Update the messages cubit as well
 ///
 ///COMPLETE
 ///fix the new ticket state to loaded ticket
 ///make the round trip state
 ///Make animations
 ///put a cancel button at the top
+///
+///COMPLETE August 3
+///update the ticket in realtime to cancelled or with more/less info
 ///
 ///
 //////Simplify the way the ticket is built

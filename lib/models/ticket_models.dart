@@ -810,8 +810,7 @@ class CustomSubmitButton extends StatelessWidget {
               context,
             );
             //Add the message bloc to add this new message to the message
-            await FirebaseUserMessagesDatabase("test")
-                .addMessage(newMessageTicket);
+            await FirebaseUserMessagesDatabase().addMessage(newMessageTicket);
           },
           child: const Padding(
             padding: EdgeInsets.all(10.0),
@@ -828,19 +827,30 @@ class CancelButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () {},
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.red,
-        side: const BorderSide(width: 1, color: Colors.red),
-      ),
-      child: const Text(
-        "Delete",
-        style: TextStyle(
-          color: Colors.white,
-          backgroundColor: Colors.red,
-        ),
-      ),
+    return BlocBuilder<TicketViewCubit, TicketViewState>(
+      builder: (context, state) {
+        if (state is! TicketViewWithData) return Container();
+        return ElevatedButton(
+          onPressed: () {
+            FirebaseUserMessagesDatabase()
+                .updateTicketType(state.id.toString(), TicketTypes.cancelled);
+            Navigator.pop(
+              context,
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            side: const BorderSide(width: 1, color: Colors.red),
+          ),
+          child: const Text(
+            "Delete",
+            style: TextStyle(
+              color: Colors.white,
+              backgroundColor: Colors.red,
+            ),
+          ),
+        );
+      },
     );
   }
 }
@@ -850,16 +860,28 @@ class UpdateButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: () {},
-      style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.blue,
-        side: const BorderSide(width: 1, color: Colors.blue),
-      ),
-      child: const Text(
-        "Update",
-        style: TextStyle(color: Colors.white),
-      ),
+    return BlocBuilder<TicketViewCubit, TicketViewState>(
+      builder: (context, state) {
+        if (state is! TicketViewWithData) return Container();
+        return ElevatedButton(
+          onPressed: () {
+            String encodedTicket =
+                FormLayoutEncoder.encode(state.formLayoutList);
+            String messageID = state.id.toString();
+            FirebaseUserMessagesDatabase()
+                .updateTicketMessage(messageID, encodedTicket);
+            Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.blue,
+            side: const BorderSide(width: 1, color: Colors.blue),
+          ),
+          child: const Text(
+            "Update",
+            style: TextStyle(color: Colors.white),
+          ),
+        );
+      },
     );
   }
 }
@@ -895,6 +917,9 @@ List<List<String>> Function() getNewTicketLayout = () => [
       [empty(), stay()],
     ];
 
+int Function() generateNewTicketID =
+    () => DateTime.now().millisecondsSinceEpoch;
+
 List<String> Function(String?) getFinalTicketRowLayout =
     (String? initialText) => [initialText ?? empty(), stay()];
 
@@ -909,7 +934,7 @@ class FormLayoutEncoder {
   static const rowSeparator = "~";
   static const columnSeparator = "`";
 
-  String encode(List<List<String>> formLayoutList) {
+  static String encode(List<List<String>> formLayoutList) {
     List<String> firstRowLayout = formLayoutList.first;
     String encodedLayout = firstRowLayout.first;
     for (String element in firstRowLayout.skip(1)) {
@@ -929,7 +954,7 @@ class FormLayoutEncoder {
     return encodedLayout;
   }
 
-  List<List<String>> decode(String encodedLayout) {
+  static List<List<String>> decode(String encodedLayout) {
     return encodedLayout
         .split(columnSeparator)
         .map(

@@ -23,7 +23,7 @@ class NewMessageWidget extends StatelessWidget {
       Future<void> submit(String text) async {
         Message newMessage = MessageAdaptor.adaptText(text);
         context.read<MessagesViewCubit>().add(newMessage);
-        await FirebaseUserMessagesDatabase("test").addMessage(newMessage);
+        await FirebaseUserMessagesDatabase().addMessage(newMessage);
         scrollDown(controller);
       }
 
@@ -41,6 +41,7 @@ class NewMessageWidget extends StatelessWidget {
                   Navigator.pushNamed(context, '/ticket',
                       arguments: TicketViewWithData(
                         formLayoutList: getNewTicketLayout(),
+                        id: generateNewTicketID(),
                         color: Colors.blue,
                         animate: true,
                         enabled: true,
@@ -155,11 +156,15 @@ Widget ticketRendered(BuildContext context, Message message) {
   return BubbleCustom(
     onPressed: () {
       final List<List<String>> formLayoutList =
-          FormLayoutEncoder().decode(message.text);
+          FormLayoutEncoder.decode(message.text);
       Navigator.pushNamed(
         context,
         '/ticket',
-        arguments: ticketTypeToState(message.ticketType, formLayoutList),
+        arguments: ticketTypeToState(
+          formLayoutList: formLayoutList,
+          ticketTypes: message.ticketType,
+          id: message.id,
+        ),
       );
     },
     date: message.date,
@@ -187,6 +192,8 @@ class Message {
     required this.isTicket,
     required this.ticketType,
   });
+
+  int get id => dateToInt();
 
   int dateToInt() {
     return date.millisecondsSinceEpoch;
@@ -219,7 +226,7 @@ class MessageAdaptor {
   }
 
   static Message adaptFormLayoutList(List<List<String>> formLayoutList) {
-    String encodedFormLayout = FormLayoutEncoder().encode(formLayoutList);
+    String encodedFormLayout = FormLayoutEncoder.encode(formLayoutList);
     return Message(
       text: encodedFormLayout,
       date: DateTime.now(),
@@ -232,21 +239,32 @@ class MessageAdaptor {
 }
 
 class FirebaseUserMessagesDatabase {
-  final String user;
-  FirebaseUserMessagesDatabase(this.user);
-
-  DatabaseReference get ref =>
+  static String user = "test";
+  static DatabaseReference ref =
       FirebaseDatabase.instance.ref("users/$user/messages");
 
   Future<void> addMessage(Message message) async {
-    await ref.push().set({
-      "text": message.text,
-      "date": message.dateToInt(),
-      "isDispatch": false,
-      "sent": message.sent,
-      "isTicket": message.isTicket,
-      "ticketType": message.ticketType.name,
+    await ref.update({
+      message.id.toString(): {
+        "text": message.text,
+        "date": message.dateToInt(),
+        "isDispatch": false,
+        "sent": message.sent,
+        "isTicket": message.isTicket,
+        "ticketType": message.ticketType.name,
+      }
     });
+  }
+
+  Future<void> updateTicketType(
+      String messageID, TicketTypes ticketType) async {
+    await ref.child(messageID).update({"ticketType": ticketType.name});
+    return;
+  }
+
+  Future<void> updateTicketMessage(
+      String messageID, String encodedTicket) async {
+    await ref.child(messageID).update({"text": encodedTicket});
   }
 }
 
@@ -262,16 +280,22 @@ var stringToticketType = {
   'confirmed': TicketTypes.confirmed,
 };
 
-TicketViewWithData ticketTypeToState(
-    TicketTypes ticketTypes, List<List<String>> formLayoutList) {
+TicketViewWithData ticketTypeToState({
+  required TicketTypes ticketTypes,
+  required List<List<String>> formLayoutList,
+  required int id,
+}) {
   var ticketTypeToStateMap = {
-    TicketTypes.submitted: TicketViewSubmitted(formLayoutList: formLayoutList),
-    TicketTypes.cancelled: TicketViewCanceled(formLayoutList: formLayoutList),
-    TicketTypes.confirmed: TicketViewConfirmed(formLayoutList: formLayoutList),
+    TicketTypes.submitted:
+        TicketViewSubmitted(formLayoutList: formLayoutList, id: id),
+    TicketTypes.cancelled:
+        TicketViewCanceled(formLayoutList: formLayoutList, id: id),
+    TicketTypes.confirmed:
+        TicketViewConfirmed(formLayoutList: formLayoutList, id: id),
   };
 
   TicketViewWithData defaultTicket =
-      TicketViewSubmitted(formLayoutList: formLayoutList);
+      TicketViewSubmitted(formLayoutList: formLayoutList, id: id);
 
   return ticketTypeToStateMap[ticketTypes] ?? defaultTicket;
 }

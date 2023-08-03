@@ -9,12 +9,14 @@ class TicketViewLoading extends TicketViewState {}
 
 class TicketViewWithData extends TicketViewState {
   final List<List<String>> formLayoutList;
+  final int id;
   final Color color;
   final bool enabled;
   final bool animate;
   final BottomButtonType bottomButtonType;
   TicketViewWithData({
     required this.formLayoutList,
+    required this.id,
     required this.color,
     required this.enabled,
     required this.animate,
@@ -25,6 +27,7 @@ class TicketViewWithData extends TicketViewState {
 class TicketViewSubmitted extends TicketViewWithData {
   TicketViewSubmitted({
     required super.formLayoutList,
+    required super.id,
     super.color = Colors.blue,
     super.enabled = true,
     super.animate = true,
@@ -35,6 +38,7 @@ class TicketViewSubmitted extends TicketViewWithData {
 class TicketViewCanceled extends TicketViewWithData {
   TicketViewCanceled({
     required super.formLayoutList,
+    required super.id,
     super.color = Colors.red,
     super.animate = false,
     super.enabled = false,
@@ -45,6 +49,7 @@ class TicketViewCanceled extends TicketViewWithData {
 class TicketViewConfirmed extends TicketViewWithData {
   TicketViewConfirmed({
     required super.formLayoutList,
+    required super.id,
     super.color = Colors.green,
     super.animate = false,
     super.enabled = false,
@@ -60,12 +65,3 @@ enum BottomButtonType {
   cancelOrUpdate,
   cancelOrEditOrConfirm,
 }
-
-
-////States needed
-///State needs to determine the 
-///color, 
-///editability, 
-///animations,
-///button functionality
-///

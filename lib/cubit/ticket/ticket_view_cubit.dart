@@ -76,6 +76,7 @@ class TicketViewCubit extends Cubit<TicketViewState> {
           );
           emit(TicketViewWithData(
             formLayoutList: formLayoutList,
+            id: currentState.id,
             color: currentState.color,
             enabled: true,
             animate: true,
@@ -99,6 +100,7 @@ class TicketViewCubit extends Cubit<TicketViewState> {
           emit(
             TicketViewWithData(
               formLayoutList: formLayoutList,
+              id: currentState.id,
               color: currentState.color,
               enabled: true,
               animate: false,
@@ -127,6 +129,7 @@ class TicketViewCubit extends Cubit<TicketViewState> {
         emit(
           TicketViewWithData(
             formLayoutList: formLayoutList,
+            id: state_.id,
             color: state_.color,
             enabled: state_.enabled,
             animate: state_.animate,
@@ -158,6 +161,7 @@ class TicketViewCubit extends Cubit<TicketViewState> {
         emit(
           TicketViewWithData(
             formLayoutList: formLayoutList,
+            id: state_.id,
             animate: false,
             enabled: true,
             color: state_.color,
@@ -184,6 +188,7 @@ class TicketViewCubit extends Cubit<TicketViewState> {
       emit(
         TicketViewWithData(
           formLayoutList: formLayoutList,
+          id: state_.id,
           animate: false,
           enabled: true,
           color: state_.color,
