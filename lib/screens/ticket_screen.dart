@@ -13,6 +13,7 @@ class TicketScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    print(ticketViewWithData.formLayoutList);
     return Scaffold(
       appBar: ticketAppBar(context),
       body: BlocProvider(

@@ -7,7 +7,7 @@ class TicketViewInitial extends TicketViewState {}
 
 class TicketViewLoading extends TicketViewState {}
 
-abstract class TicketViewWithData extends TicketViewState {
+class TicketViewWithData extends TicketViewState {
   final List<List<String>> formLayoutList;
   final Color color;
   final bool enabled;
@@ -22,32 +22,12 @@ abstract class TicketViewWithData extends TicketViewState {
   });
 }
 
-class TicketViewAdded extends TicketViewWithData {
-  TicketViewAdded({
-    required super.formLayoutList,
-    super.color = Colors.blue,
-    super.enabled = true,
-    super.animate = true,
-    super.bottomButtonType = BottomButtonType.submit,
-  });
-}
-
-class TicketViewDeleted extends TicketViewWithData {
-  TicketViewDeleted({
-    required super.formLayoutList,
-    super.color = Colors.blue,
-    super.enabled = true,
-    super.animate = false,
-    super.bottomButtonType = BottomButtonType.submit,
-  });
-}
-
 class TicketViewSubmitted extends TicketViewWithData {
   TicketViewSubmitted({
     required super.formLayoutList,
-    super.animate = true,
     super.color = Colors.blue,
     super.enabled = true,
+    super.animate = true,
     super.bottomButtonType = BottomButtonType.cancelOrUpdate,
   });
 }

@@ -39,8 +39,12 @@ class NewMessageWidget extends StatelessWidget {
               child: IconButton(
                 onPressed: () {
                   Navigator.pushNamed(context, '/ticket',
-                      arguments: TicketViewAdded(
+                      arguments: TicketViewWithData(
                         formLayoutList: getNewTicketLayout(),
+                        color: Colors.blue,
+                        animate: true,
+                        enabled: true,
+                        bottomButtonType: BottomButtonType.submit,
                       ));
                 },
                 icon: const FaIcon(
@@ -148,13 +152,14 @@ Widget messageRendered(BuildContext context, Message element) => BubbleCustom(
     );
 
 Widget ticketRendered(BuildContext context, Message message) {
-  List<List<String>> formLayoutList = FormLayoutEncoder().decode(message.text);
   return BubbleCustom(
     onPressed: () {
+      final List<List<String>> formLayoutList =
+          FormLayoutEncoder().decode(message.text);
       Navigator.pushNamed(
         context,
         '/ticket',
-        arguments: ticketTypeToState(message.ticketType)(formLayoutList),
+        arguments: ticketTypeToState(message.ticketType, formLayoutList),
       );
     },
     date: message.date,
@@ -257,18 +262,16 @@ var stringToticketType = {
   'confirmed': TicketTypes.confirmed,
 };
 
-TicketViewWithData Function(List<List<String>>) ticketTypeToState(
-    TicketTypes ticketTypes) {
+TicketViewWithData ticketTypeToState(
+    TicketTypes ticketTypes, List<List<String>> formLayoutList) {
   var ticketTypeToStateMap = {
-    TicketTypes.submitted: (List<List<String>> formListBuilder) =>
-        TicketViewSubmitted(formLayoutList: formListBuilder),
-    TicketTypes.cancelled: (List<List<String>> formListBuilder) =>
-        TicketViewCanceled(formLayoutList: formListBuilder),
-    TicketTypes.confirmed: (List<List<String>> formListBuilder) =>
-        TicketViewConfirmed(formLayoutList: formListBuilder),
+    TicketTypes.submitted: TicketViewSubmitted(formLayoutList: formLayoutList),
+    TicketTypes.cancelled: TicketViewCanceled(formLayoutList: formLayoutList),
+    TicketTypes.confirmed: TicketViewConfirmed(formLayoutList: formLayoutList),
   };
 
-  return ticketTypeToStateMap[ticketTypes] ??
-      (List<List<String>> formListBuilder) =>
-          TicketViewSubmitted(formLayoutList: formListBuilder);
+  TicketViewWithData defaultTicket =
+      TicketViewSubmitted(formLayoutList: formLayoutList);
+
+  return ticketTypeToStateMap[ticketTypes] ?? defaultTicket;
 }

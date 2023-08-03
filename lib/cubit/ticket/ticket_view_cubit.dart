@@ -74,17 +74,13 @@ class TicketViewCubit extends Cubit<TicketViewState> {
           formLayoutList.add(
             getFinalTicketRowLayout(formLayoutList.first[textPos]),
           );
-          if (currentState.bottomButtonType == BottomButtonType.submit) {
-            emit(
-              TicketViewAdded(formLayoutList: formLayoutList),
-            );
-            return;
-          }
-          if (currentState.bottomButtonType ==
-              BottomButtonType.cancelOrUpdate) {
-            emit(TicketViewSubmitted(formLayoutList: formLayoutList));
-            return;
-          }
+          emit(TicketViewWithData(
+            formLayoutList: formLayoutList,
+            color: currentState.color,
+            enabled: true,
+            animate: true,
+            bottomButtonType: currentState.bottomButtonType,
+          ));
         }
         return;
       },
@@ -100,17 +96,16 @@ class TicketViewCubit extends Cubit<TicketViewState> {
         List<List<String>> formLayoutList = currentState.formLayoutList;
         if (formLayoutList.length > minLength) {
           formLayoutList = deleteFinalTicketRowLayout(formLayoutList);
-          if (currentState.bottomButtonType == BottomButtonType.submit) {
-            emit(
-              TicketViewDeleted(formLayoutList: formLayoutList),
-            );
-            return;
-          }
-          if (currentState.bottomButtonType ==
-              BottomButtonType.cancelOrUpdate) {
-            emit(TicketViewSubmitted(formLayoutList: formLayoutList));
-            return;
-          }
+          emit(
+            TicketViewWithData(
+              formLayoutList: formLayoutList,
+              color: currentState.color,
+              enabled: true,
+              animate: false,
+              bottomButtonType: currentState.bottomButtonType,
+            ),
+          );
+          return;
         }
         return;
       },
@@ -129,7 +124,15 @@ class TicketViewCubit extends Cubit<TicketViewState> {
 
         List<List<String>> formLayoutList = state_.formLayoutList;
         formLayoutList[colPos][rowPos] = newValue;
-        emit(TicketViewDeleted(formLayoutList: formLayoutList));
+        emit(
+          TicketViewWithData(
+            formLayoutList: formLayoutList,
+            color: state_.color,
+            enabled: state_.enabled,
+            animate: state_.animate,
+            bottomButtonType: state_.bottomButtonType,
+          ),
+        );
         return;
       },
     );
@@ -153,7 +156,13 @@ class TicketViewCubit extends Cubit<TicketViewState> {
           lastTime: lastTime,
         );
         emit(
-          TicketViewDeleted(formLayoutList: formLayoutList),
+          TicketViewWithData(
+            formLayoutList: formLayoutList,
+            animate: false,
+            enabled: true,
+            color: state_.color,
+            bottomButtonType: state_.bottomButtonType,
+          ),
         );
         return;
       },
@@ -173,7 +182,13 @@ class TicketViewCubit extends Cubit<TicketViewState> {
         leaveRowFormat: leaveRowFormat,
       );
       emit(
-        TicketViewDeleted(formLayoutList: formLayoutList),
+        TicketViewWithData(
+          formLayoutList: formLayoutList,
+          animate: false,
+          enabled: true,
+          color: state_.color,
+          bottomButtonType: state_.bottomButtonType,
+        ),
       );
       return;
     });

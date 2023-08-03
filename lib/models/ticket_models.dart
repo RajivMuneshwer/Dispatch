@@ -535,13 +535,7 @@ class CustomTimePicker extends StatelessWidget {
           int.parse(state.formLayoutList[colPos][timePos]),
         );
         return Animate(
-            effects: (state.animate)
-                ? const [
-                    ScaleEffect(
-                      duration: Duration(milliseconds: 125),
-                    )
-                  ]
-                : [],
+            effects: const [ScaleEffect(duration: Duration(milliseconds: 125))],
             child: Flexible(
               child: Padding(
                 padding: EdgeInsets.only(
@@ -645,18 +639,14 @@ class _WaitSwitchState extends State<WaitSwitch> {
           child: Padding(
             padding: const EdgeInsets.only(bottom: 35.0),
             child: Animate(
-              effects: (state.animate)
-                  ? [
-                      MoveEffect(
-                        begin: (leave)
-                            ? const Offset(-115, 0)
-                            : const Offset(115, 0),
-                        duration: const Duration(
-                          milliseconds: 90,
-                        ),
-                      )
-                    ]
-                  : [],
+              effects: [
+                MoveEffect(
+                  begin: (leave) ? const Offset(-115, 0) : const Offset(115, 0),
+                  duration: const Duration(
+                    milliseconds: 90,
+                  ),
+                )
+              ],
               child: FlutterSwitch(
                 disabled: !state.enabled,
                 value: leave,
@@ -841,13 +831,14 @@ class CancelButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: () {},
       style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          side: const BorderSide(width: 2, color: Colors.red)),
+        backgroundColor: Colors.red,
+        side: const BorderSide(width: 1, color: Colors.red),
+      ),
       child: const Text(
-        "Cancel",
+        "Delete",
         style: TextStyle(
-          color: Colors.red,
-          backgroundColor: Colors.white,
+          color: Colors.white,
+          backgroundColor: Colors.red,
         ),
       ),
     );
@@ -862,12 +853,12 @@ class UpdateButton extends StatelessWidget {
     return ElevatedButton(
       onPressed: () {},
       style: ElevatedButton.styleFrom(
-        backgroundColor: Colors.white,
-        side: const BorderSide(width: 2, color: Colors.blue),
+        backgroundColor: Colors.blue,
+        side: const BorderSide(width: 1, color: Colors.blue),
       ),
       child: const Text(
         "Update",
-        style: TextStyle(color: Colors.blue),
+        style: TextStyle(color: Colors.white),
       ),
     );
   }
