@@ -14,11 +14,11 @@ class TicketScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     print(ticketViewWithData.formLayoutList);
-    return Scaffold(
-      appBar: ticketAppBar(context),
-      body: BlocProvider(
-        create: (context) => TicketViewCubit(ticketViewWithData),
-        child: DispatchForm(),
+    return BlocProvider(
+      create: (context) => TicketViewCubit(ticketViewWithData),
+      child: Scaffold(
+        appBar: ticketAppBar(context),
+        body: DispatchForm(),
       ),
     );
   }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:dispatch/cubit/message/messages_view_cubit.dart';
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
+import 'package:dispatch/models/rnd_message_generator.dart';
 import 'package:dispatch/models/ticket_models.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -168,11 +169,13 @@ Widget ticketRendered(BuildContext context, Message message) {
       );
     },
     date: message.date,
-    text: message.text,
+    text: RndMessageGenerator.generate(),
     isTicket: true,
     textStyle: const TextStyle(
       fontSize: 12,
     ),
+    iconColor: ticketTypeToColor[message.ticketType] ?? Colors.blue,
+    ticketTypes: message.ticketType,
   );
 }
 
@@ -274,10 +277,16 @@ enum TicketTypes {
   confirmed,
 }
 
-var stringToticketType = {
+const stringToticketType = {
   'submitted': TicketTypes.submitted,
   'cancelled': TicketTypes.cancelled,
   'confirmed': TicketTypes.confirmed,
+};
+
+const ticketTypeToColor = {
+  TicketTypes.submitted: Colors.blue,
+  TicketTypes.confirmed: Colors.green,
+  TicketTypes.cancelled: Colors.red
 };
 
 TicketViewWithData ticketTypeToState({

@@ -13,18 +13,6 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 AppBar ticketAppBar(BuildContext context) {
   return AppBar(
     backgroundColor: Colors.white,
-    title: const Padding(
-      padding: EdgeInsets.only(
-        left: 16.0,
-      ),
-      child: Text(
-        "Ticket",
-        style: TextStyle(
-          color: Colors.blue,
-        ),
-        textAlign: TextAlign.center,
-      ),
-    ),
     actions: [
       IconButton(
         iconSize: 60,
@@ -34,7 +22,7 @@ AppBar ticketAppBar(BuildContext context) {
           );
         },
         icon: const Text(
-          "Cancel",
+          "Back",
           style: TextStyle(
             color: Colors.blue,
             fontWeight: FontWeight.w400,
@@ -843,7 +831,7 @@ class CancelButton extends StatelessWidget {
             side: const BorderSide(width: 1, color: Colors.red),
           ),
           child: const Text(
-            "Delete",
+            "Cancel",
             style: TextStyle(
               color: Colors.white,
               backgroundColor: Colors.red,
