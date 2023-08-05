@@ -10,6 +10,7 @@ part 'messages_view_state.dart';
 class MessagesViewCubit extends Cubit<MessagesViewState> {
   final String user;
   final int initialNumOfMessages = 3;
+  final int numOfMessagesToLoadAfterInitial = 10;
   Map<int, Message> messagesMap = {};
   late int earliestMessageTime;
   static bool isComplete = false;
@@ -17,14 +18,12 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
   MessagesViewCubit(this.user) : super(MessagesViewInitial());
 
   List<StreamSubscription<DatabaseEvent>> loadMessages() {
+    final Stream<DatabaseEvent> childAddStream =
+        UserDatabase().onChildAddedStream(initialNumOfMessages);
+
     final StreamSubscription<DatabaseEvent> childAddSubscription =
-        FirebaseUserMessagesDatabase.ref
-            .orderByChild("date")
-            .limitToLast(initialNumOfMessages)
-            .onChildAdded
-            .listen(
+        childAddStream.listen(
       (event) {
-        print(event);
         final snapshot = event.snapshot;
         Message newMessage = MessageAdaptor.adaptSnapshot(snapshot);
 
@@ -46,12 +45,17 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
       },
     );
 
+    final Stream<DatabaseEvent> childUpdateStream =
+        UserDatabase().onChildChanged();
+
     final StreamSubscription<DatabaseEvent> childUpdateSubscription =
-        FirebaseUserMessagesDatabase.ref.onChildChanged.listen((event) {
+        childUpdateStream.listen((event) {
       final snapshot = event.snapshot;
       Message updatedMessage = MessageAdaptor.adaptSnapshot(snapshot);
       Message? messageInMap = messagesMap[updatedMessage.id];
+
       if (messageInMap == null) return;
+
       messagesMap[updatedMessage.id] = updatedMessage;
       emit(MessagesViewLoaded(messagesMap.values.toList()));
       return;
@@ -68,11 +72,10 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
   Future<void> loadPreviousMessages() async {
     if (!isComplete) {
       final Iterable<DataSnapshot> previousMessagesSnapshots =
-          (await FirebaseUserMessagesDatabase.ref
-                  .orderByChild("date")
-                  .endBefore(earliestMessageTime)
-                  .limitToLast(2)
-                  .once())
+          (await UserDatabase().loadMessagesBeforeTime(
+        earliestMessageTime,
+        numOfMessagesToLoadAfterInitial,
+      ))
               .snapshot
               .children;
 

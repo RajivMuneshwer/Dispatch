@@ -24,7 +24,7 @@ class NewMessageWidget extends StatelessWidget {
       Future<void> submit(String text) async {
         Message newMessage = MessageAdaptor.adaptText(text);
         context.read<MessagesViewCubit>().add(newMessage);
-        await FirebaseUserMessagesDatabase().addMessage(newMessage);
+        await UserDatabase().addMessage(newMessage);
         scrollDown(controller);
       }
 
@@ -73,7 +73,7 @@ GroupedListView<Message, DateTime> groupListView(BuildContext context,
         child: Text(DateFormat.yMMMd().format(element.date)),
       ),
     ),
-    itemBuilder: (context, element) => (element.isTicket)
+    itemBuilder: (BuildContext context, Message element) => (element.isTicket)
         ? ticketRendered(context, element)
         : messageRendered(context, element),
     elements: state.messages,
@@ -90,7 +90,7 @@ void scrollDown(ScrollController controller) {
   );
 }
 
-Widget emptyBody() {
+Widget messageEmptyBody() {
   return Expanded(
     child: Column(
       children: [
@@ -100,7 +100,7 @@ Widget emptyBody() {
   );
 }
 
-Widget loadingBody() => const Expanded(
+Widget messageLoadingBody() => const Expanded(
       child: Center(
         child: CircularProgressIndicator(),
       ),
@@ -144,17 +144,16 @@ Widget refreshIndicator(BuildContext context, IndicatorController controller) {
   );
 }
 
-Widget messageRendered(BuildContext context, Message element) => BubbleCustom(
+Widget messageRendered(BuildContext context, Message element) => TextBubble(
       date: element.date,
       text: element.text,
       color: Colors.white,
       tail: true,
-      textStyle: const TextStyle(color: Colors.black),
       sent: element.sent,
     );
 
 Widget ticketRendered(BuildContext context, Message message) {
-  return BubbleCustom(
+  return TicketBubble(
     onPressed: () {
       final List<List<String>> formLayoutList =
           FormLayoutEncoder.decode(message.text);
@@ -170,10 +169,6 @@ Widget ticketRendered(BuildContext context, Message message) {
     },
     date: message.date,
     text: RndMessageGenerator.generate(),
-    isTicket: true,
-    textStyle: const TextStyle(
-      fontSize: 12,
-    ),
     iconColor: ticketTypeToColor[message.ticketType] ?? Colors.blue,
     ticketTypes: message.ticketType,
   );
@@ -228,8 +223,8 @@ class MessageAdaptor {
     );
   }
 
-  static Message adaptFormLayoutList(List<List<String>> formLayoutList) {
-    String encodedFormLayout = FormLayoutEncoder.encode(formLayoutList);
+  static Message adaptTicketState(TicketViewWithData state) {
+    String encodedFormLayout = FormLayoutEncoder.encode(state.formLayoutList);
     return Message(
       text: encodedFormLayout,
       date: DateTime.now(),
@@ -241,7 +236,7 @@ class MessageAdaptor {
   }
 }
 
-class FirebaseUserMessagesDatabase {
+class UserDatabase {
   static String user = "test";
   static DatabaseReference ref =
       FirebaseDatabase.instance.ref("users/$user/messages");
@@ -268,6 +263,18 @@ class FirebaseUserMessagesDatabase {
   Future<void> updateTicketMessage(
       String messageID, String encodedTicket) async {
     await ref.child(messageID).update({"text": encodedTicket});
+  }
+
+  Future<DatabaseEvent> loadMessagesBeforeTime(int time, int numOfMessage) {
+    return ref.orderByChild("date").endBefore(time).limitToLast(2).once();
+  }
+
+  Stream<DatabaseEvent> onChildAddedStream(int messageLimit) {
+    return ref.orderByChild("date").limitToLast(messageLimit).onChildAdded;
+  }
+
+  Stream<DatabaseEvent> onChildChanged() {
+    return ref.onChildChanged;
   }
 }
 

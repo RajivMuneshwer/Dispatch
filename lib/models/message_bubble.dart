@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 
-class BubbleCustom extends StatelessWidget {
+abstract class GenericBubble extends StatelessWidget {
   final bool isSender;
   final String text;
   final bool tail;
@@ -11,32 +11,26 @@ class BubbleCustom extends StatelessWidget {
   final bool sent;
   final bool delivered;
   final bool seen;
-  final bool isTicket;
-  final TicketTypes ticketTypes;
-  final Color? iconColor;
   final DateTime date;
-  final void Function()? onPressed;
   final TextStyle textStyle;
 
-  const BubbleCustom({
+  const GenericBubble({
     Key? key,
-    this.isSender = true,
+    required this.date,
     required this.text,
+    this.isSender = true,
     this.color = Colors.white70,
     this.tail = true,
     this.sent = false,
     this.delivered = false,
     this.seen = false,
-    this.isTicket = false,
-    this.ticketTypes = TicketTypes.submitted,
-    this.onPressed,
-    this.iconColor = Colors.blue,
     this.textStyle = const TextStyle(
       color: Colors.black87,
-      fontSize: 16,
+      fontSize: 14,
     ),
-    required this.date,
   }) : super(key: key);
+
+  Widget bubbleMain();
 
   ///chat bubble builder method
   @override
@@ -68,59 +62,6 @@ class BubbleCustom extends StatelessWidget {
       );
     }
 
-    Widget bubbleMain(bool isTicket) {
-      if (isTicket) {
-        return Column(children: [
-          MaterialButton(
-            padding: EdgeInsets.zero,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            minWidth: 80,
-            onPressed: (onPressed == null) ? () {} : onPressed,
-            child: FaIcon(
-              FontAwesomeIcons.ticket,
-              color: iconColor,
-              size: 30,
-            ),
-          ),
-          () {
-            if (ticketTypes == TicketTypes.submitted) {
-              return const Text(
-                "Submitted",
-                style: TextStyle(color: Colors.blue),
-              );
-            } else if (ticketTypes == TicketTypes.cancelled) {
-              return const Text(
-                "Cancelled",
-                style: TextStyle(
-                  color: Colors.red,
-                ),
-              );
-            } else if (ticketTypes == TicketTypes.confirmed) {
-              return const Text(
-                "Confirmed",
-                style: TextStyle(
-                  color: Colors.green,
-                ),
-              );
-            } else {
-              return const Text("");
-            }
-          }(),
-          Text(
-            text,
-            style: const TextStyle(color: Colors.black, fontSize: 12),
-            textAlign: TextAlign.end,
-          ),
-        ]);
-      } else {
-        return Text(
-          text,
-          style: textStyle,
-          textAlign: TextAlign.left,
-        );
-      }
-    }
-
     return Align(
       alignment: isSender ? Alignment.topRight : Alignment.topLeft,
       child: Padding(
@@ -149,7 +90,7 @@ class BubbleCustom extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        bubbleMain(isTicket),
+                        bubbleMain(),
                         const SizedBox(
                           height: 5,
                         ),
@@ -178,6 +119,93 @@ class BubbleCustom extends StatelessWidget {
       ),
     );
   }
+}
+
+class TextBubble extends GenericBubble {
+  const TextBubble({
+    super.key,
+    required super.text,
+    required super.date,
+    super.color,
+    super.tail,
+    super.textStyle,
+    super.sent,
+    super.seen,
+    super.delivered,
+  });
+
+  @override
+  Widget bubbleMain() => Text(
+        text,
+        style: textStyle,
+        textAlign: TextAlign.left,
+      );
+}
+
+class TicketBubble extends GenericBubble {
+  final TicketTypes ticketTypes;
+  final void Function()? onPressed;
+  final Color iconColor;
+  const TicketBubble({
+    required super.text,
+    required super.date,
+    required this.ticketTypes,
+    required this.onPressed,
+    required this.iconColor,
+    super.textStyle,
+    super.sent,
+    super.seen,
+    super.delivered,
+    super.key,
+  });
+
+  Text ticketText() {
+    Map<TicketTypes, TextDetails> ticketTypeToColorAndText = {
+      TicketTypes.cancelled:
+          const TextDetails(text: "Cancelled", color: Colors.red),
+      TicketTypes.submitted:
+          const TextDetails(text: "Submitted", color: Colors.blue),
+      TicketTypes.confirmed:
+          const TextDetails(text: "Confirmed", color: Colors.green),
+    };
+    TextDetails textDetails = ticketTypeToColorAndText[ticketTypes] ??
+        const TextDetails(text: "", color: Colors.white);
+
+    return Text(
+      textDetails.text,
+      style: TextStyle(color: textDetails.color),
+    );
+  }
+
+  @override
+  Widget bubbleMain() => Column(children: [
+        MaterialButton(
+          padding: EdgeInsets.zero,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+          minWidth: 80,
+          onPressed: onPressed,
+          child: FaIcon(
+            FontAwesomeIcons.ticket,
+            color: iconColor,
+            size: 30,
+          ),
+        ),
+        ticketText(),
+        Text(
+          text,
+          style: textStyle,
+          textAlign: TextAlign.end,
+        ),
+      ]);
+}
+
+class TextDetails {
+  final String text;
+  final Color color;
+  const TextDetails({
+    required this.text,
+    required this.color,
+  });
 }
 
 ///custom painter use to create the shape of the chat bubble

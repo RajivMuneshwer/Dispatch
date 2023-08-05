@@ -13,7 +13,6 @@ class TicketScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(ticketViewWithData.formLayoutList);
     return BlocProvider(
       create: (context) => TicketViewCubit(ticketViewWithData),
       child: Scaffold(
@@ -47,20 +46,3 @@ class DispatchForm extends StatelessWidget {
     );
   }
 }
-////TODO
-///
-///
-///
-///
-///COMPLETE
-///fix the new ticket state to loaded ticket
-///make the round trip state
-///Make animations
-///put a cancel button at the top
-///
-///COMPLETE August 3
-///update the ticket in realtime to cancelled or with more/less info
-///
-///
-//////Simplify the way the ticket is built
-

@@ -792,13 +792,13 @@ class CustomSubmitButton extends StatelessWidget {
             if (ticketViewState is! TicketViewWithData) {
               return;
             }
-            Message newMessageTicket = MessageAdaptor.adaptFormLayoutList(
-                ticketViewState.formLayoutList);
+            Message newMessageTicket =
+                MessageAdaptor.adaptTicketState(ticketViewState);
             Navigator.pop(
               context,
             );
             //Add the message bloc to add this new message to the message
-            await FirebaseUserMessagesDatabase().addMessage(newMessageTicket);
+            await UserDatabase().addMessage(newMessageTicket);
           },
           child: const Padding(
             padding: EdgeInsets.all(10.0),
@@ -820,7 +820,7 @@ class CancelButton extends StatelessWidget {
         if (state is! TicketViewWithData) return Container();
         return ElevatedButton(
           onPressed: () {
-            FirebaseUserMessagesDatabase()
+            UserDatabase()
                 .updateTicketType(state.id.toString(), TicketTypes.cancelled);
             Navigator.pop(
               context,
@@ -856,8 +856,7 @@ class UpdateButton extends StatelessWidget {
             String encodedTicket =
                 FormLayoutEncoder.encode(state.formLayoutList);
             String messageID = state.id.toString();
-            FirebaseUserMessagesDatabase()
-                .updateTicketMessage(messageID, encodedTicket);
+            UserDatabase().updateTicketMessage(messageID, encodedTicket);
             Navigator.pop(context);
           },
           style: ElevatedButton.styleFrom(
