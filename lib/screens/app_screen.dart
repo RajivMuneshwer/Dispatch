@@ -1,4 +1,5 @@
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
+import 'package:dispatch/screens/admin_screen.dart';
 import 'package:dispatch/screens/dispatch_message_list_screen.dart';
 import 'package:dispatch/screens/message_screen.dart';
 import 'package:dispatch/screens/ticket_screen.dart';
@@ -19,7 +20,7 @@ class App extends StatelessWidget {
 
           case '/':
             return MaterialPageRoute(
-                builder: (_) => const DispatchUsersListScreen());
+                builder: (_) => const DispatchRequesteeListScreen());
 
           case '/ticket':
             if (args is TicketViewWithData) {
@@ -27,6 +28,11 @@ class App extends StatelessWidget {
                 builder: (_) => TicketScreen(ticketViewWithData: args),
               );
             }
+
+          case '/admin':
+            return MaterialPageRoute(
+              builder: (_) => const AdminScreen(),
+            );
         }
         return null;
       },
