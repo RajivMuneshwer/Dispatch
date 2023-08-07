@@ -1,4 +1,5 @@
 import 'package:dispatch/cubit/user_view/user_view_cubit.dart';
+import 'package:dispatch/models/user_objects.dart';
 import 'package:dispatch/utils/object_list_sorter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -12,6 +13,7 @@ abstract class UserListScreen extends StatelessWidget {
   });
 
   Future<List<User>> loadUserData();
+  void onTap();
 
   @override
   Widget build(BuildContext context) {
@@ -25,11 +27,14 @@ abstract class UserListScreen extends StatelessWidget {
           builder: (context, state) {
             if (state is UserViewInitial) {
               var userViewCubit = context.read<UserViewCubit>();
-              userViewCubit.initialize(loadUserData);
+              userViewCubit.initialize(
+                loadData: loadUserData,
+              );
               return loading();
             } else if (state is UserViewWithData) {
               return UserList(
                 userList: state.users,
+                onTap: onTap,
               );
             } else {
               return loading();
@@ -43,9 +48,11 @@ abstract class UserListScreen extends StatelessWidget {
 
 class UserList extends StatelessWidget {
   final List<User> userList;
+  final void Function() onTap;
   const UserList({
     super.key,
     required this.userList,
+    required this.onTap,
   });
 
   @override
@@ -53,31 +60,31 @@ class UserList extends StatelessWidget {
     final List<User?> orderedUserList =
         ObjectListSorter(objectList: userList).sort();
 
-    print(orderedUserList[0]?.name);
-
     return ListView.builder(
       itemCount: orderedUserList.length,
       itemBuilder: (context, index) {
         return UserProfileRow(
-            name: orderedUserList[index]?.name ?? "Error_Loading");
+          user: orderedUserList[index],
+          onTap: onTap,
+        );
       },
     );
   }
 }
 
 class UserProfileRow extends StatelessWidget {
-  final String name;
+  final User? user;
+  final void Function() onTap;
   const UserProfileRow({
     super.key,
-    required this.name,
+    required this.user,
+    required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () {
-        print("hello");
-      },
+      onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.grey.shade50,
@@ -92,14 +99,33 @@ class UserProfileRow extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
-            children: [
-              UserProfilePic(name: name),
-              UserNameBox(name: name),
-            ],
+            children: UserRowFactory(user: user).make(),
           ),
         ),
       ),
     );
+  }
+}
+
+class UserRowFactory {
+  final User? user;
+  const UserRowFactory({required this.user});
+
+  List<Widget> make() {
+    var user_ = user;
+    if (user_ == null) {
+      return [];
+    } else if (user_ is Requestee) {
+      return [
+        UserProfilePic(name: user_.name),
+        UserNameBox(name: user_.name),
+      ];
+    } else {
+      return [
+        UserProfilePic(name: user_.name),
+        UserNameBox(name: user_.name),
+      ];
+    }
   }
 }
 

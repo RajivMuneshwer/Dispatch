@@ -1,5 +1,5 @@
+import 'package:dispatch/models/user_objects.dart';
 import 'package:dispatch/screens/user_list_screen.dart';
-import 'package:dispatch/utils/object_list_sorter.dart';
 
 class DispatchRequesteeListScreen extends UserListScreen {
   const DispatchRequesteeListScreen(
@@ -20,6 +20,9 @@ class DispatchRequesteeListScreen extends UserListScreen {
       return requestees;
     });
   }
+
+  @override
+  void onTap() {}
 }
 
 const duration = Duration(microseconds: 100);

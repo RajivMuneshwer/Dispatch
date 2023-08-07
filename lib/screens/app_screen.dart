@@ -1,6 +1,6 @@
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
 import 'package:dispatch/screens/admin_screen.dart';
-import 'package:dispatch/screens/dispatch_message_list_screen.dart';
+import 'package:dispatch/screens/dispatch_requestee_list_screen.dart';
 import 'package:dispatch/screens/message_screen.dart';
 import 'package:dispatch/screens/ticket_screen.dart';
 import 'package:flutter/material.dart';
