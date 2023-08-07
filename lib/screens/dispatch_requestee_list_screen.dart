@@ -2,8 +2,10 @@ import 'package:dispatch/models/user_objects.dart';
 import 'package:dispatch/screens/user_list_screen.dart';
 
 class DispatchRequesteeListScreen extends UserListScreen {
-  const DispatchRequesteeListScreen(
-      {super.key, super.title = "Requestee Messages"});
+  const DispatchRequesteeListScreen({
+    super.key,
+    super.title = "Requestee Messages",
+  });
 
   @override
   Future<List<User>> loadUserData() {
@@ -20,6 +22,9 @@ class DispatchRequesteeListScreen extends UserListScreen {
       return requestees;
     });
   }
+
+  @override
+  UserRowFactory<User> rowFactory() => const GenericUserRowFactory();
 
   @override
   void onTap() {}

@@ -13,10 +13,12 @@ abstract class UserListScreen extends StatelessWidget {
   });
 
   Future<List<User>> loadUserData();
+  UserRowFactory rowFactory();
   void onTap();
 
   @override
   Widget build(BuildContext context) {
+    var userRowFactory = rowFactory();
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
@@ -34,6 +36,7 @@ abstract class UserListScreen extends StatelessWidget {
             } else if (state is UserViewWithData) {
               return UserList(
                 userList: state.users,
+                rowFactory: userRowFactory,
                 onTap: onTap,
               );
             } else {
@@ -49,10 +52,12 @@ abstract class UserListScreen extends StatelessWidget {
 class UserList extends StatelessWidget {
   final List<User> userList;
   final void Function() onTap;
+  final UserRowFactory rowFactory;
   const UserList({
     super.key,
     required this.userList,
     required this.onTap,
+    required this.rowFactory,
   });
 
   @override
@@ -65,6 +70,7 @@ class UserList extends StatelessWidget {
       itemBuilder: (context, index) {
         return UserProfileRow(
           user: orderedUserList[index],
+          rowFactory: rowFactory,
           onTap: onTap,
         );
       },
@@ -75,10 +81,12 @@ class UserList extends StatelessWidget {
 class UserProfileRow extends StatelessWidget {
   final User? user;
   final void Function() onTap;
+  final UserRowFactory rowFactory;
   const UserProfileRow({
     super.key,
     required this.user,
     required this.onTap,
+    required this.rowFactory,
   });
 
   @override
@@ -99,7 +107,7 @@ class UserProfileRow extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Row(
-            children: UserRowFactory(user: user).make(),
+            children: rowFactory.make(user),
           ),
         ),
       ),
@@ -107,25 +115,23 @@ class UserProfileRow extends StatelessWidget {
   }
 }
 
-class UserRowFactory {
-  final User? user;
-  const UserRowFactory({required this.user});
+abstract class UserRowFactory<T extends User> {
+  const UserRowFactory();
 
-  List<Widget> make() {
-    var user_ = user;
-    if (user_ == null) {
+  List<Widget> make(T? user);
+}
+
+class GenericUserRowFactory extends UserRowFactory<User> {
+  const GenericUserRowFactory();
+  @override
+  List<Widget> make(user) {
+    if (user == null) {
       return [];
-    } else if (user_ is Requestee) {
-      return [
-        UserProfilePic(name: user_.name),
-        UserNameBox(name: user_.name),
-      ];
-    } else {
-      return [
-        UserProfilePic(name: user_.name),
-        UserNameBox(name: user_.name),
-      ];
     }
+    return [
+      UserProfilePic(name: user.name),
+      UserNameBox(name: user.name),
+    ];
   }
 }
 
