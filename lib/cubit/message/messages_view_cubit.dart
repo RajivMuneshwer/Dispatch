@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
+import 'package:dispatch/database/requestee_database.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:meta/meta.dart';
@@ -19,7 +20,7 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
 
   List<StreamSubscription<DatabaseEvent>> loadMessages() {
     final Stream<DatabaseEvent> childAddStream =
-        UserDatabase().onChildAddedStream(initialNumOfMessages);
+        RequesteeDatabase().onChildAddedStream(initialNumOfMessages);
 
     final StreamSubscription<DatabaseEvent> childAddSubscription =
         childAddStream.listen(
@@ -46,7 +47,7 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
     );
 
     final Stream<DatabaseEvent> childUpdateStream =
-        UserDatabase().onChildChanged();
+        RequesteeDatabase().onChildChanged();
 
     final StreamSubscription<DatabaseEvent> childUpdateSubscription =
         childUpdateStream.listen((event) {
@@ -72,7 +73,7 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
   Future<void> loadPreviousMessages() async {
     if (!isComplete) {
       final Iterable<DataSnapshot> previousMessagesSnapshots =
-          (await UserDatabase().loadMessagesBeforeTime(
+          (await RequesteeDatabase().loadMessagesBeforeTime(
         earliestMessageTime,
         numOfMessagesToLoadAfterInitial,
       ))

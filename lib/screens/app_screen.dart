@@ -18,7 +18,7 @@ class App extends StatelessWidget {
           case '/messages':
             return MaterialPageRoute(builder: (_) => const MessageScreen());
 
-          case '/':
+          case '/dispatch':
             return MaterialPageRoute(
                 builder: (_) => const DispatchRequesteeListScreen());
 
@@ -29,7 +29,7 @@ class App extends StatelessWidget {
               );
             }
 
-          case '/admin':
+          case '/':
             return MaterialPageRoute(
               builder: (_) => const AdminScreen(),
             );

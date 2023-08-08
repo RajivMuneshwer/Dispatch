@@ -1,5 +1,8 @@
 import 'package:dispatch/models/user_objects.dart';
+import 'package:dispatch/screens/message_screen.dart';
 import 'package:dispatch/screens/user_list_screen.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/src/widgets/framework.dart';
 
 class DispatchRequesteeListScreen extends UserListScreen {
   const DispatchRequesteeListScreen({
@@ -8,7 +11,7 @@ class DispatchRequesteeListScreen extends UserListScreen {
   });
 
   @override
-  Future<List<User>> loadUserData() {
+  Future<List<User>> data() {
     return Future.delayed(duration, () {
       List<Requestee> requestees = [
         Requestee(id: 1, name: 'test', sortBy: 'test'),
@@ -27,7 +30,14 @@ class DispatchRequesteeListScreen extends UserListScreen {
   UserRowFactory<User> rowFactory() => const GenericUserRowFactory();
 
   @override
-  void onTap() {}
+  void Function() onTap(User user, BuildContext context) {
+    return () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const MessageScreen(),
+          ),
+        );
+  }
 }
 
 const duration = Duration(microseconds: 100);

@@ -7,11 +7,11 @@ part 'user_view_state.dart';
 class UserViewCubit extends Cubit<UserViewState> {
   UserViewCubit() : super(UserViewInitial());
 
-  Future<void> initialize({
-    required Future<List<User>> Function() loadData,
+  Future<void> initialize<T extends User>({
+    required Future<List<T>> Function() loadData,
   }) async {
     Future.delayed(duration, () async {
-      List<User> users = await loadData();
+      List<T> users = await loadData();
       emit(UserViewWithData(
         users: users,
       ));

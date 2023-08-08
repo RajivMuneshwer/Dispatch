@@ -5,8 +5,8 @@ abstract class UserViewState {}
 
 class UserViewInitial extends UserViewState {}
 
-class UserViewWithData extends UserViewState {
-  final List<User> users;
+class UserViewWithData<T extends User> extends UserViewState {
+  final List<T> users;
   UserViewWithData({
     required this.users,
   });
