@@ -799,7 +799,7 @@ class CustomSubmitButton extends StatelessWidget {
               context,
             );
             //Add the message bloc to add this new message to the message
-            await RequesteeDatabase().addMessage(newMessageTicket);
+            await RequesteeMessagesDatabase().addMessage(newMessageTicket);
           },
           child: const Padding(
             padding: EdgeInsets.all(10.0),
@@ -821,7 +821,7 @@ class CancelButton extends StatelessWidget {
         if (state is! TicketViewWithData) return Container();
         return ElevatedButton(
           onPressed: () {
-            RequesteeDatabase()
+            RequesteeMessagesDatabase()
                 .updateTicketType(state.id.toString(), TicketTypes.cancelled);
             Navigator.pop(
               context,
@@ -857,7 +857,8 @@ class UpdateButton extends StatelessWidget {
             String encodedTicket =
                 FormLayoutEncoder.encode(state.formLayoutList);
             String messageID = state.id.toString();
-            RequesteeDatabase().updateTicketMessage(messageID, encodedTicket);
+            RequesteeMessagesDatabase()
+                .updateTicketMessage(messageID, encodedTicket);
             Navigator.pop(context);
           },
           style: ElevatedButton.styleFrom(

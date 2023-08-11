@@ -5,9 +5,16 @@ abstract class UserViewState {}
 
 class UserViewInitial extends UserViewState {}
 
-class UserViewWithData<T extends User> extends UserViewState {
+class UserViewWithUsers<T extends User> extends UserViewState {
   final List<T> users;
-  UserViewWithData({
+  UserViewWithUsers({
     required this.users,
+  });
+}
+
+class UserViewWithWidget extends UserViewState {
+  final Widget widget;
+  UserViewWithWidget({
+    required this.widget,
   });
 }

@@ -20,7 +20,7 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
 
   List<StreamSubscription<DatabaseEvent>> loadMessages() {
     final Stream<DatabaseEvent> childAddStream =
-        RequesteeDatabase().onChildAddedStream(initialNumOfMessages);
+        RequesteeMessagesDatabase().onChildAddedStream(initialNumOfMessages);
 
     final StreamSubscription<DatabaseEvent> childAddSubscription =
         childAddStream.listen(
@@ -47,7 +47,7 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
     );
 
     final Stream<DatabaseEvent> childUpdateStream =
-        RequesteeDatabase().onChildChanged();
+        RequesteeMessagesDatabase().onChildChanged();
 
     final StreamSubscription<DatabaseEvent> childUpdateSubscription =
         childUpdateStream.listen((event) {
@@ -73,7 +73,7 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
   Future<void> loadPreviousMessages() async {
     if (!isComplete) {
       final Iterable<DataSnapshot> previousMessagesSnapshots =
-          (await RequesteeDatabase().loadMessagesBeforeTime(
+          (await RequesteeMessagesDatabase().loadMessagesBeforeTime(
         earliestMessageTime,
         numOfMessagesToLoadAfterInitial,
       ))

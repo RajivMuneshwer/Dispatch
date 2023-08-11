@@ -1,7 +1,7 @@
 import 'package:dispatch/models/message_models.dart';
 import 'package:firebase_database/firebase_database.dart';
 
-class RequesteeDatabase {
+class RequesteeMessagesDatabase {
   static String user = "test";
   static DatabaseReference ref =
       FirebaseDatabase.instance.ref("users/$user/messages");

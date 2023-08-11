@@ -3,7 +3,9 @@ import 'package:dispatch/models/user_objects.dart';
 import 'package:dispatch/utils/object_list_sorter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_profile_picture/flutter_profile_picture.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 
 abstract class UserListScreen<T extends User> extends StatelessWidget {
   final String title;
@@ -15,6 +17,7 @@ abstract class UserListScreen<T extends User> extends StatelessWidget {
   Future<List<T>> data();
   UserRowFactory rowFactory();
   void Function() onTap(T user, BuildContext context);
+  Widget? floatingActionButton();
 
   @override
   Widget build(BuildContext context) {
@@ -29,15 +32,19 @@ abstract class UserListScreen<T extends User> extends StatelessWidget {
           builder: (context, state) {
             if (state is UserViewInitial) {
               var userViewCubit = context.read<UserViewCubit>();
-              userViewCubit.initialize<T>(
-                loadData: data,
+              userViewCubit.initusers<T>(
+                data: data,
               );
               return loading();
-            } else if (state is UserViewWithData<T>) {
-              return UserList<T>(
-                userList: state.users,
-                rowFactory: userRowFactory,
-                onTap: onTap,
+            } else if (state is UserViewWithUsers<T>) {
+              return RefreshIndicator(
+                onRefresh: () async =>
+                    context.read<UserViewCubit>().initusers(data: data),
+                child: UserList<T>(
+                  userList: state.users,
+                  rowFactory: userRowFactory,
+                  onTap: onTap,
+                ),
               );
             } else {
               return loading();
@@ -45,6 +52,7 @@ abstract class UserListScreen<T extends User> extends StatelessWidget {
           },
         ),
       ),
+      floatingActionButton: floatingActionButton(),
     );
   }
 }
@@ -72,9 +80,9 @@ abstract class UserInfoScreen<T extends User, M extends User>
           builder: (context, state) {
             if (state is UserViewInitial) {
               var userViewCubit = context.read<UserViewCubit>();
-              userViewCubit.initialize<M>(loadData: data);
+              userViewCubit.initusers<M>(data: data);
               return loading();
-            } else if (state is UserViewWithData<M>) {
+            } else if (state is UserViewWithUsers<M>) {
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -306,6 +314,138 @@ class UserNameBox extends StatelessWidget {
               fontSize: 15,
             ),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+abstract class UserEditScreen<T extends User> extends StatelessWidget {
+  final GlobalKey<FormBuilderState> _formKey = GlobalKey<FormBuilderState>();
+  final T? user;
+  final String textFieldName;
+  UserEditScreen({
+    super.key,
+    required this.user,
+    required this.textFieldName,
+  });
+
+  Future<Widget> addChild();
+  Future<void> updateuser({
+    required FormBuilderState currentState,
+    required T user,
+  });
+  Future<void> createuser({required FormBuilderState currentState});
+
+  Text title() {
+    T? user_ = user;
+    if (user_ != null) {
+      return Text("Edit ${user_.name}");
+    }
+    String userTypeName = "";
+    if (T == Requestee) {
+      userTypeName = "Requestee";
+    } else if (T == Dispatcher) {
+      userTypeName = "Dispatcher";
+    } else if (T == Admin) {
+      userTypeName = "Admin";
+    }
+    return Text("Create New $userTypeName");
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => UserViewCubit(),
+      child: Scaffold(
+        appBar: AppBar(
+          title: title(),
+        ),
+        body: BlocBuilder<UserViewCubit, UserViewState>(
+          builder: (context, state) {
+            if (state is UserViewInitial) {
+              context.read<UserViewCubit>().initwidget(futwidget: addChild());
+              return loading();
+            } else if (state is UserViewWithWidget) {
+              return SingleChildScrollView(
+                child: FormBuilder(
+                  key: _formKey,
+                  child: Column(
+                    children: [
+                      SizedBox(
+                        height: 20,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: FormBuilderTextField(
+                          name: textFieldName,
+                          autocorrect: true,
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
+                          initialValue: user?.name,
+                          style: const TextStyle(
+                            color: Colors.grey,
+                            fontWeight: FontWeight.w500,
+                          ),
+                          textAlign: TextAlign.left,
+                          decoration: InputDecoration(
+                            labelText: "Name",
+                            labelStyle:
+                                TextStyle(fontWeight: FontWeight.normal),
+                            border: UnderlineInputBorder(
+                              borderRadius:
+                                  BorderRadius.all(Radius.circular(4)),
+                              borderSide: BorderSide(
+                                width: 1,
+                                color: Colors.grey.shade300,
+                              ),
+                            ),
+                          ),
+                          validator: FormBuilderValidators.compose([
+                            FormBuilderValidators.required(),
+                            FormBuilderValidators.match(r'^[a-zA-Z0-9_\s]+$')
+                          ]),
+                        ),
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      state.widget,
+                      SizedBox(
+                        height: 40,
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: ElevatedButton(
+                          onPressed: () async {
+                            var currentState = _formKey.currentState;
+                            var user_ = user;
+                            if (currentState == null) {
+                              return;
+                            }
+                            if (!currentState.validate()) {
+                              return;
+                            }
+                            if (user_ != null) {
+                              updateuser(
+                                  currentState: currentState, user: user_);
+                            } else {
+                              createuser(currentState: currentState);
+                            }
+                            Navigator.pop(context);
+                          },
+                          child: Text(
+                            (user != null) ? "Update" : "Create",
+                          ),
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              );
+            } else {
+              return loading();
+            }
+          },
         ),
       ),
     );

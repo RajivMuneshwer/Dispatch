@@ -1,8 +1,9 @@
-import 'package:dispatch/database/admin_database.dart';
-import 'package:dispatch/database/database.dart';
+import 'package:dispatch/database/user_database.dart';
 import 'package:dispatch/models/user_objects.dart';
 import 'package:dispatch/screens/user_list_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_form_builder/flutter_form_builder.dart';
+import 'package:form_builder_validators/form_builder_validators.dart';
 
 class AdminScreen extends StatelessWidget {
   const AdminScreen({super.key});
@@ -18,105 +19,28 @@ class AdminScreen extends StatelessWidget {
   }
 }
 
-class UserChoiceBubble extends StatelessWidget {
-  final String text;
-  final void Function()? onPressed;
-  const UserChoiceBubble({
-    super.key,
-    required this.text,
-    required this.onPressed,
-  });
-  @override
-  Widget build(BuildContext context) {
-    double screenWidth = MediaQuery.of(context).size.width;
-    double widgetWidth = screenWidth * 2 / 3;
-    double screenHeight = MediaQuery.of(context).size.height;
-    double widgetHeight = screenHeight * 1 / 6;
-
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: widgetWidth,
-        height: widgetHeight,
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: Colors.blue,
-            width: 2,
-          ),
-          borderRadius: const BorderRadius.horizontal(
-            left: Radius.circular(100),
-            right: Radius.circular(100),
-          ),
-        ),
-        child: Center(
-          child: Text(
-            text,
-            style: const TextStyle(
-              fontSize: 20,
-              color: Colors.grey,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 class UserChoicesColumn extends StatelessWidget {
   const UserChoicesColumn({super.key});
 
   @override
   Widget build(BuildContext context) {
-    AdminDatabase adminDatabase = AdminDatabase();
+    AppDatabase adminDatabase = AdminDatabase();
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           const SizedBox(height: 40),
-          Center(
-            child: UserChoiceBubble(
-              text: "Requestees",
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AllUserListScreen<Requestee>(
-                    title: 'All Requestees',
-                    database: adminDatabase,
-                  ),
-                ),
-              ),
-            ),
+          UserChoiceBubble<Requestee>(
+            database: adminDatabase,
           ),
           const SizedBox(height: 40),
-          Center(
-            child: UserChoiceBubble(
-              text: "Dispatchers",
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AllUserListScreen<Dispatcher>(
-                    title: 'All Dispatchers',
-                    database: adminDatabase,
-                  ),
-                ),
-              ),
-            ),
+          UserChoiceBubble<Dispatcher>(
+            database: adminDatabase,
           ),
           const SizedBox(height: 40),
-          Center(
-            child: UserChoiceBubble(
-              text: "Admins",
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => AllUserListScreen<Admin>(
-                    title: 'All Admin',
-                    database: adminDatabase,
-                  ),
-                ),
-              ),
-            ),
+          UserChoiceBubble<Admin>(
+            database: adminDatabase,
           ),
         ],
       ),
@@ -124,8 +48,47 @@ class UserChoicesColumn extends StatelessWidget {
   }
 }
 
+class UserChoiceBubble<T extends User> extends StatelessWidget {
+  final AppDatabase database;
+  const UserChoiceBubble({
+    super.key,
+    required this.database,
+  });
+
+  String bubbleText() {
+    String text = "";
+    if (T == Requestee) {
+      text = "Requestees";
+    } else if (T == Dispatcher) {
+      text = "Dispatchers";
+    } else if (T == Admin) {
+      text = "Admin";
+    }
+    return text;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    String text = bubbleText();
+    return Center(
+      child: ChoiceBubble(
+        text: text,
+        onPressed: () => Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => AllUserListScreen<T>(
+              title: "All $text",
+              database: database,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class AllUserListScreen<T extends User> extends UserListScreen<T> {
-  final Database database;
+  final AppDatabase database;
 
   const AllUserListScreen({
     super.key,
@@ -153,24 +116,28 @@ class AllUserListScreen<T extends User> extends UserListScreen<T> {
 
   @override
   UserRowFactory<User> rowFactory() => const GenericUserRowFactory();
+
+  @override
+  Widget? floatingActionButton() => AddFloatButton(
+        onPressed: (BuildContext context) => () => Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) =>
+                  EditScreenFactory().make<T>(user: null, database: database),
+            )),
+      );
 }
 
 class UserInfoScreenFactory {
-  UserInfoScreen make<T extends User>({
+  Widget make<T extends User>({
     required T user,
-    required Database database,
+    required AppDatabase database,
   }) {
-    if (user is Requestee) {
-      return RequesteeInfoScreen(user: user, database: database);
-    } else if (user is Dispatcher) {
-      return DispatcherInfoScreen(user: user, database: database);
-    } else if (user is Admin) {
-      return AdminInfoScreen(user: user);
-    } else {
-      return UserErrorScreen(
-        user: user,
-      );
-    }
+    return switch (user) {
+      Requestee() => RequesteeInfoScreen(user: user, database: database),
+      Dispatcher() => DispatcherInfoScreen(user: user, database: database),
+      Admin() => AdminInfoScreen(user: user)
+    };
   }
 }
 
@@ -187,7 +154,7 @@ class AdminInfoScreen extends UserInfoScreen<Admin, User> {
 }
 
 class RequesteeInfoScreen extends UserInfoScreen<Requestee, Dispatcher> {
-  final Database database;
+  final AppDatabase database;
   const RequesteeInfoScreen({
     super.key,
     required super.user,
@@ -219,7 +186,7 @@ class RequesteeInfoScreen extends UserInfoScreen<Requestee, Dispatcher> {
 }
 
 class DispatcherInfoScreen extends UserInfoScreen<Dispatcher, Requestee> {
-  final Database database;
+  final AppDatabase database;
   const DispatcherInfoScreen({
     super.key,
     required super.user,
@@ -274,6 +241,178 @@ class UserErrorScreen extends UserInfoScreen<User, User> {
   }
 }
 
+class EditScreenFactory {
+  Widget make<T extends User>(
+      {required AppDatabase database, required T? user}) {
+    return switch (T as User) {
+      Requestee() =>
+        RequesteeEditScreen(user: user as Requestee?, database: database),
+      Dispatcher() =>
+        DispatchEditScreen(user: user as Dispatcher?, database: database),
+      Admin() => AdminEditScreen(user: user as Admin?, database: database),
+    };
+  }
+}
+
+class RequesteeEditScreen extends UserEditScreen<Requestee> {
+  final AppDatabase database;
+  static const textName = "requesteename";
+  static const dropdownName = "requesteedispatch";
+  RequesteeEditScreen({
+    super.key,
+    required super.user,
+    super.textFieldName = textName,
+    required this.database,
+  });
+
+  @override
+  Future<Widget> addChild() async {
+    List<Dispatcher> dispatchers = (await database.getAll<Dispatcher>())
+        .map(
+          (e) => UserAdaptor<Dispatcher>().adaptSnapshot(e),
+        )
+        .toList();
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: FormBuilderDropdown<int>(
+        decoration: const InputDecoration(
+          labelText: "Dispatcher",
+          labelStyle: TextStyle(fontWeight: FontWeight.normal),
+        ),
+        name: dropdownName,
+        items: dispatchers
+            .map((dispatcher) => DropdownMenuItem(
+                  value: dispatcher.id,
+                  child: Text(dispatcher.name),
+                ))
+            .toList(),
+        validator: FormBuilderValidators.compose([
+          FormBuilderValidators.required(),
+        ]),
+      ),
+    );
+  }
+
+  @override
+  Future<void> createuser({required FormBuilderState currentState}) async {
+    var textField = currentState.fields[textName];
+    var dropdownField = currentState.fields[dropdownName];
+    if (textField == null || dropdownField == null) {
+      return;
+    }
+
+    final newRequestee = Requestee(
+      id: getUniqueid(),
+      name: textField.value,
+      sortBy: textField.value,
+      dispatcherid: dropdownField.value,
+    );
+    await AllDatabase().create<Requestee>(newRequestee);
+    return;
+  }
+
+  @override
+  Future<void> updateuser(
+      {required FormBuilderState currentState, required Requestee user}) async {
+    var textField = currentState.fields[textName];
+    var dropdownField = currentState.fields[dropdownName];
+    if (textField == null || dropdownField == null) {
+      return;
+    }
+
+    Map<String, Object?> updatemap = {
+      "name": textField.value,
+      "dispatcherid": dropdownField.value
+    };
+
+    await AllDatabase().update(user, updatemap);
+  }
+}
+
+class DispatchEditScreen extends UserEditScreen<Dispatcher> {
+  final AppDatabase database;
+  static const textName = "dispatchername";
+
+  DispatchEditScreen({
+    super.key,
+    required super.user,
+    super.textFieldName = textName,
+    required this.database,
+  });
+
+  @override
+  Future<Widget> addChild() async => Container();
+
+  @override
+  Future<void> createuser({required FormBuilderState currentState}) async {
+    var textField = currentState.fields[textName];
+    if (textField == null) {
+      return;
+    }
+    final newDispatcher = Dispatcher(
+      id: getUniqueid(),
+      name: textField.value,
+      sortBy: textField.value,
+      requesteesid: [],
+    );
+
+    await AllDatabase().create<Dispatcher>(newDispatcher);
+  }
+
+  @override
+  Future<void> updateuser(
+      {required FormBuilderState currentState,
+      required Dispatcher user}) async {
+    var textField = currentState.fields[textName];
+    if (textField == null) {
+      return;
+    }
+    Map<String, Object?> updateMap = {"name": textField.value};
+    await AllDatabase().update(user, updateMap);
+  }
+}
+
+class AdminEditScreen extends UserEditScreen<Admin> {
+  final AppDatabase database;
+  static const textName = "adminname";
+
+  AdminEditScreen({
+    super.key,
+    required super.user,
+    super.textFieldName = textName,
+    required this.database,
+  });
+
+  @override
+  Future<Widget> addChild() async => Container();
+
+  @override
+  Future<void> createuser({required FormBuilderState currentState}) async {
+    var textField = currentState.fields[textName];
+    if (textField == null) {
+      return;
+    }
+    final newAdmin = Admin(
+      id: getUniqueid(),
+      name: textField.value,
+      sortBy: textField.value,
+    );
+
+    await AllDatabase().create<Admin>(newAdmin);
+  }
+
+  @override
+  Future<void> updateuser(
+      {required FormBuilderState currentState, required Admin user}) async {
+    var textField = currentState.fields[textName];
+    if (textField == null) {
+      return;
+    }
+    Map<String, Object?> updateMap = {"name": textField.value};
+    await AllDatabase().update(user, updateMap);
+  }
+}
+
 Widget errorScreen(BuildContext context) => Scaffold(
       appBar: AppBar(title: const Text('Error Screen')),
       body: Center(
@@ -304,6 +443,66 @@ Widget errorScreen(BuildContext context) => Scaffold(
       ),
     );
 
+class ChoiceBubble extends StatelessWidget {
+  final String text;
+  final void Function()? onPressed;
+  const ChoiceBubble({
+    super.key,
+    required this.text,
+    required this.onPressed,
+  });
+  @override
+  Widget build(BuildContext context) {
+    double screenWidth = MediaQuery.of(context).size.width;
+    double widgetWidth = screenWidth * 2 / 3;
+    double screenHeight = MediaQuery.of(context).size.height;
+    double widgetHeight = screenHeight * 1 / 6;
+
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: widgetWidth,
+        height: widgetHeight,
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: Colors.blue,
+            width: 2,
+          ),
+          borderRadius: const BorderRadius.horizontal(
+            left: Radius.circular(100),
+            right: Radius.circular(100),
+          ),
+        ),
+        child: Center(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 20,
+              color: Colors.grey,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class AddFloatButton extends StatelessWidget {
+  final void Function()? Function(BuildContext context) onPressed;
+  const AddFloatButton({super.key, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return FloatingActionButton(
+      onPressed: onPressed(context),
+      backgroundColor: Colors.blue,
+      child: const Icon(
+        Icons.add,
+        color: Colors.white,
+      ),
+    );
+  }
+}
 
 ////TODO
 ///Make edit button that takes to update page to update / delete user info

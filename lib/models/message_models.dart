@@ -25,7 +25,7 @@ class NewMessageWidget extends StatelessWidget {
       Future<void> submit(String text) async {
         Message newMessage = MessageAdaptor.adaptText(text);
         context.read<MessagesViewCubit>().add(newMessage);
-        await RequesteeDatabase().addMessage(newMessage);
+        await RequesteeMessagesDatabase().addMessage(newMessage);
         scrollDown(controller);
       }
 

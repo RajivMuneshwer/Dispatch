@@ -38,6 +38,12 @@ class DispatchRequesteeListScreen extends UserListScreen {
           ),
         );
   }
+
+  @override
+  Widget? floatingActionButton() {
+    // TODO: implement floatingActionButton
+    throw UnimplementedError();
+  }
 }
 
 const duration = Duration(microseconds: 100);

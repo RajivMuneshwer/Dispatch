@@ -7,7 +7,7 @@ abstract class SortableObject<T> {
   });
 }
 
-abstract class User extends SortableObject<String> {
+sealed class User extends SortableObject<String> {
   final int id;
   final String name;
   const User({
@@ -15,6 +15,7 @@ abstract class User extends SortableObject<String> {
     required this.name,
     required super.sortBy,
   });
+  Map<String, dynamic> toMap();
 }
 
 class Requestee extends User {
@@ -25,6 +26,13 @@ class Requestee extends User {
     required super.sortBy,
     this.dispatcherid,
   });
+
+  @override
+  Map<String, dynamic> toMap() => {
+        "id": id,
+        "name": name,
+        "dispatcherid": dispatcherid,
+      };
 }
 
 class Dispatcher extends User {
@@ -35,6 +43,21 @@ class Dispatcher extends User {
     required super.sortBy,
     this.requesteesid,
   });
+
+  @override
+  Map<String, dynamic> toMap() {
+    var requesteesid_ = requesteesid;
+    return {
+      "id": id,
+      "name": name,
+      "requesteesid": (requesteesid_ == null)
+          ? {}
+          : {
+              for (final requesteeid in requesteesid_)
+                "$requesteeid": requesteeid,
+            },
+    };
+  }
 }
 
 class Admin extends User {
@@ -43,44 +66,40 @@ class Admin extends User {
     required super.name,
     required super.sortBy,
   });
+
+  @override
+  Map<String, dynamic> toMap() => {
+        "id": id,
+        "name": name,
+      };
 }
 
 class UserAdaptor<T extends User> {
   T adaptSnapshot(DataSnapshot snapshot) {
-    print(snapshot.value);
     Map<dynamic, dynamic> objectMap = snapshot.value as Map<dynamic, dynamic>;
     int id = objectMap['id'] as int;
     String name = objectMap['name'] as String;
 
-    if (T == Requestee) {
-      return Requestee(
-        id: id,
-        name: name,
-        sortBy: name,
-        dispatcherid: objectMap['dispatcherid'] as int?,
-      ) as T;
-    } else if (T == Dispatcher) {
-      return Dispatcher(
-        id: id,
-        name: name,
-        requesteesid: (objectMap['requesteesid'] as List<Object?>)
-            .map((e) => e as int)
-            .toList(),
-        sortBy: name,
-      ) as T;
-    } else if (T == Admin) {
-      return Admin(
-        id: id,
-        name: name,
-        sortBy: name,
-      ) as T;
-    } else {
-      return Requestee(
-        id: id,
-        name: name,
-        sortBy: name,
-        dispatcherid: objectMap['dispatcherid'] as int?,
-      ) as T;
-    }
+    return switch (T as User) {
+      Requestee() => Requestee(
+          id: id,
+          name: name,
+          sortBy: name,
+          dispatcherid: objectMap['dispatcherid'] as int?,
+        ) as T,
+      Dispatcher() => Dispatcher(
+          id: id,
+          name: name,
+          sortBy: name,
+          requesteesid: (objectMap['requesteesid'] as List<Object?>)
+              .map((e) => e as int)
+              .toList(),
+        ) as T,
+      Admin() => Admin(
+          id: id,
+          name: name,
+          sortBy: name,
+        ) as T,
+    };
   }
 }
