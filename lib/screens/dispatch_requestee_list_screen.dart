@@ -2,7 +2,6 @@ import 'package:dispatch/models/user_objects.dart';
 import 'package:dispatch/screens/message_screen.dart';
 import 'package:dispatch/screens/user_list_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
 
 class DispatchRequesteeListScreen extends UserListScreen {
   const DispatchRequesteeListScreen({
@@ -41,7 +40,6 @@ class DispatchRequesteeListScreen extends UserListScreen {
 
   @override
   Widget? floatingActionButton() {
-    // TODO: implement floatingActionButton
     throw UnimplementedError();
   }
 }

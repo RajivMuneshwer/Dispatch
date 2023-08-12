@@ -12,7 +12,7 @@ class AdminScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Admin Page"),
+        title: const Text("Admin Page"),
       ),
       body: const UserChoicesColumn(),
     );
@@ -136,21 +136,38 @@ class UserInfoScreenFactory {
     return switch (user) {
       Requestee() => RequesteeInfoScreen(user: user, database: database),
       Dispatcher() => DispatcherInfoScreen(user: user, database: database),
-      Admin() => AdminInfoScreen(user: user)
+      Admin() => AdminInfoScreen(
+          user: user,
+          database: database,
+        )
     };
   }
 }
 
 class AdminInfoScreen extends UserInfoScreen<Admin, User> {
-  const AdminInfoScreen({super.key, required super.user});
+  final AppDatabase database;
+  const AdminInfoScreen({
+    super.key,
+    required super.user,
+    required this.database,
+  });
 
   @override
-  Future<List<User>> data() async => [];
+  Future<List<User>> additionData() async => [];
 
   @override
-  void Function() onTap(User user, BuildContext context) {
+  void Function() onUserTap(User user, BuildContext context) {
     return () => {};
   }
+
+  @override
+  void Function() onEditTap(Admin user, BuildContext context) =>
+      () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => EditScreenFactory()
+                    .make<Admin>(database: database, user: user)),
+          );
 }
 
 class RequesteeInfoScreen extends UserInfoScreen<Requestee, Dispatcher> {
@@ -162,7 +179,7 @@ class RequesteeInfoScreen extends UserInfoScreen<Requestee, Dispatcher> {
   });
 
   @override
-  Future<List<Dispatcher>> data() async {
+  Future<List<Dispatcher>> additionData() async {
     int? id = user.dispatcherid;
     if (id == null) {
       return [];
@@ -173,7 +190,7 @@ class RequesteeInfoScreen extends UserInfoScreen<Requestee, Dispatcher> {
   }
 
   @override
-  void Function() onTap(Dispatcher user, BuildContext context) {
+  void Function() onUserTap(Dispatcher user, BuildContext context) {
     return () => Navigator.push(
         context,
         MaterialPageRoute(
@@ -183,6 +200,15 @@ class RequesteeInfoScreen extends UserInfoScreen<Requestee, Dispatcher> {
           ),
         ));
   }
+
+  @override
+  void Function() onEditTap(Requestee user, BuildContext context) =>
+      () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => EditScreenFactory()
+                    .make<Requestee>(database: database, user: user)),
+          );
 }
 
 class DispatcherInfoScreen extends UserInfoScreen<Dispatcher, Requestee> {
@@ -194,7 +220,7 @@ class DispatcherInfoScreen extends UserInfoScreen<Dispatcher, Requestee> {
   });
 
   @override
-  Future<List<Requestee>> data() async {
+  Future<List<Requestee>> additionData() async {
     List<int>? ids = user.requesteesid;
     if (ids == null) {
       return [];
@@ -209,7 +235,7 @@ class DispatcherInfoScreen extends UserInfoScreen<Dispatcher, Requestee> {
   }
 
   @override
-  void Function() onTap(Requestee user, BuildContext context) {
+  void Function() onUserTap(Requestee user, BuildContext context) {
     return () => Navigator.push(
           context,
           MaterialPageRoute(
@@ -220,6 +246,15 @@ class DispatcherInfoScreen extends UserInfoScreen<Dispatcher, Requestee> {
           ),
         );
   }
+
+  @override
+  void Function() onEditTap(Dispatcher user, BuildContext context) =>
+      () => Navigator.push(
+            context,
+            MaterialPageRoute(
+                builder: (context) => EditScreenFactory()
+                    .make<Dispatcher>(database: database, user: user)),
+          );
 }
 
 class UserErrorScreen extends UserInfoScreen<User, User> {
@@ -231,12 +266,17 @@ class UserErrorScreen extends UserInfoScreen<User, User> {
   }
 
   @override
-  Future<List<User>> data() {
+  Future<List<User>> additionData() {
     throw UnimplementedError();
   }
 
   @override
-  void Function() onTap(User user, BuildContext context) {
+  void Function() onUserTap(User user, BuildContext context) {
+    throw UnimplementedError();
+  }
+
+  @override
+  void Function() onEditTap(User user, BuildContext context) {
     throw UnimplementedError();
   }
 }
@@ -244,12 +284,13 @@ class UserErrorScreen extends UserInfoScreen<User, User> {
 class EditScreenFactory {
   Widget make<T extends User>(
       {required AppDatabase database, required T? user}) {
-    return switch (T as User) {
-      Requestee() =>
+    return switch (T) {
+      Requestee =>
         RequesteeEditScreen(user: user as Requestee?, database: database),
-      Dispatcher() =>
+      Dispatcher =>
         DispatchEditScreen(user: user as Dispatcher?, database: database),
-      Admin() => AdminEditScreen(user: user as Admin?, database: database),
+      Admin => AdminEditScreen(user: user as Admin?, database: database),
+      _ => ErrorEditScreen(),
     };
   }
 }
@@ -327,6 +368,15 @@ class RequesteeEditScreen extends UserEditScreen<Requestee> {
 
     await AllDatabase().update(user, updatemap);
   }
+
+  @override
+  Future<void> deleteuser({required Requestee user}) async {
+    try {
+      await AllDatabase().delete<Requestee>(user);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
 
 class DispatchEditScreen extends UserEditScreen<Dispatcher> {
@@ -370,6 +420,15 @@ class DispatchEditScreen extends UserEditScreen<Dispatcher> {
     Map<String, Object?> updateMap = {"name": textField.value};
     await AllDatabase().update(user, updateMap);
   }
+
+  @override
+  Future<void> deleteuser({required Dispatcher user}) async {
+    try {
+      await AllDatabase().delete<Dispatcher>(user);
+    } catch (e) {
+      rethrow;
+    }
+  }
 }
 
 class AdminEditScreen extends UserEditScreen<Admin> {
@@ -410,6 +469,49 @@ class AdminEditScreen extends UserEditScreen<Admin> {
     }
     Map<String, Object?> updateMap = {"name": textField.value};
     await AllDatabase().update(user, updateMap);
+  }
+
+  @override
+  Future<void> deleteuser({required Admin user}) async {
+    try {
+      await AllDatabase().delete<Admin>(user);
+    } catch (e) {
+      rethrow;
+    }
+  }
+}
+
+class ErrorEditScreen extends UserEditScreen<User> {
+  ErrorEditScreen({
+    super.key,
+    super.user,
+    super.textFieldName = "error",
+  });
+
+  @override
+  Future<Widget> addChild() {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> createuser({required FormBuilderState currentState}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> updateuser(
+      {required FormBuilderState currentState, required User user}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return errorScreen(context);
+  }
+
+  @override
+  Future<void> deleteuser({required User user}) {
+    throw UnimplementedError();
   }
 }
 
@@ -464,8 +566,9 @@ class ChoiceBubble extends StatelessWidget {
         width: widgetWidth,
         height: widgetHeight,
         decoration: BoxDecoration(
+          color: const Color.fromARGB(255, 33, 96, 243),
           border: Border.all(
-            color: Colors.blue,
+            color: Colors.white,
             width: 2,
           ),
           borderRadius: const BorderRadius.horizontal(
@@ -478,7 +581,7 @@ class ChoiceBubble extends StatelessWidget {
             text,
             style: const TextStyle(
               fontSize: 20,
-              color: Colors.grey,
+              color: Colors.white,
             ),
           ),
         ),
@@ -505,7 +608,9 @@ class AddFloatButton extends StatelessWidget {
 }
 
 ////TODO
-///Make edit button that takes to update page to update / delete user info
-///use an absract update page to make
+///make it so that I do not download all the user data at once
+///sense how far the user is scrolled down an then call the function to grab more 
+///from the database
 ///
-///Make an addition floating action button to add more of those kinds of users
+///This will be useful for the dispatcher screen and the catalogue in the future.
+///

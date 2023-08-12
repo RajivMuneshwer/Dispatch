@@ -65,8 +65,9 @@ abstract class UserInfoScreen<T extends User, M extends User>
     required this.user,
   });
 
-  Future<List<M>> data();
-  void Function() onTap(M user, BuildContext context);
+  Future<List<M>> additionData();
+  void Function() onUserTap(M user, BuildContext context);
+  void Function() onEditTap(T user, BuildContext context);
 
   @override
   Widget build(BuildContext context) {
@@ -80,24 +81,33 @@ abstract class UserInfoScreen<T extends User, M extends User>
           builder: (context, state) {
             if (state is UserViewInitial) {
               var userViewCubit = context.read<UserViewCubit>();
-              userViewCubit.initusers<M>(data: data);
+              userViewCubit.initusers<M>(data: additionData);
               return loading();
             } else if (state is UserViewWithUsers<M>) {
-              return Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 40.0),
-                  NameInfoBox(user: user),
-                  const SizedBox(height: 20.0),
-                  HeaderText<M>(),
-                  Expanded(
-                    child: UserList<M>(
-                      userList: state.users,
-                      onTap: onTap,
-                      rowFactory: const GenericUserRowFactory(),
+              return RefreshIndicator(
+                onRefresh: () async =>
+                    context.read<UserViewCubit>().initusers(data: additionData),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 40.0),
+                    NameInfoBox(user: user),
+                    const SizedBox(height: 20.0),
+                    HeaderText<M>(),
+                    Expanded(
+                      flex: 1,
+                      child: UserList<M>(
+                        userList: state.users,
+                        onTap: onUserTap,
+                        rowFactory: const GenericUserRowFactory(),
+                      ),
                     ),
-                  )
-                ],
+                    EditUserButton<T>(
+                      user: user,
+                      onEditTap: onEditTap,
+                    ),
+                  ],
+                ),
               );
             } else {
               return loading();
@@ -105,6 +115,31 @@ abstract class UserInfoScreen<T extends User, M extends User>
           },
         ),
       ),
+    );
+  }
+}
+
+class EditUserButton<T extends User> extends StatelessWidget {
+  final T user;
+  final void Function() Function(T user, BuildContext context) onEditTap;
+  const EditUserButton({
+    super.key,
+    required this.onEditTap,
+    required this.user,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      flex: 1,
+      child: Center(
+          child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: ElevatedButton(
+          onPressed: onEditTap(user, context),
+          child: const Text("Edit"),
+        ),
+      )),
     );
   }
 }
@@ -336,6 +371,7 @@ abstract class UserEditScreen<T extends User> extends StatelessWidget {
     required T user,
   });
   Future<void> createuser({required FormBuilderState currentState});
+  Future<void> deleteuser({required T user});
 
   Text title() {
     T? user_ = user;
@@ -360,6 +396,27 @@ abstract class UserEditScreen<T extends User> extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: title(),
+          actions: [
+            IconButton(
+                onPressed: () async {
+                  var user_ = user;
+                  if (user_ == null) {
+                    return;
+                  }
+                  try {
+                    await deleteuser(user: user_);
+                  } catch (e) {
+                    await showDialog<void>(
+                      context: context,
+                      builder: (context) => AlertBox(errorString: "$e"),
+                    );
+                  }
+                },
+                icon: const Icon(
+                  Icons.delete,
+                  color: Colors.white,
+                ))
+          ],
         ),
         body: BlocBuilder<UserViewCubit, UserViewState>(
           builder: (context, state) {
@@ -372,7 +429,7 @@ abstract class UserEditScreen<T extends User> extends StatelessWidget {
                   key: _formKey,
                   child: Column(
                     children: [
-                      SizedBox(
+                      const SizedBox(
                         height: 20,
                       ),
                       Padding(
@@ -390,10 +447,10 @@ abstract class UserEditScreen<T extends User> extends StatelessWidget {
                           decoration: InputDecoration(
                             labelText: "Name",
                             labelStyle:
-                                TextStyle(fontWeight: FontWeight.normal),
+                                const TextStyle(fontWeight: FontWeight.normal),
                             border: UnderlineInputBorder(
                               borderRadius:
-                                  BorderRadius.all(Radius.circular(4)),
+                                  const BorderRadius.all(Radius.circular(4)),
                               borderSide: BorderSide(
                                 width: 1,
                                 color: Colors.grey.shade300,
@@ -406,11 +463,11 @@ abstract class UserEditScreen<T extends User> extends StatelessWidget {
                           ]),
                         ),
                       ),
-                      SizedBox(
+                      const SizedBox(
                         height: 20,
                       ),
                       state.widget,
-                      SizedBox(
+                      const SizedBox(
                         height: 40,
                       ),
                       Padding(
@@ -448,6 +505,33 @@ abstract class UserEditScreen<T extends User> extends StatelessWidget {
           },
         ),
       ),
+    );
+  }
+}
+
+class AlertBox extends StatelessWidget {
+  final String errorString;
+  const AlertBox({super.key, required this.errorString});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Cannot Delete'),
+      content: SingleChildScrollView(
+        child: ListBody(
+          children: <Widget>[
+            Text(errorString),
+          ],
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          child: const Text('Cancel'),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ],
     );
   }
 }

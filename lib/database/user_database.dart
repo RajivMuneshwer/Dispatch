@@ -1,5 +1,6 @@
 import 'package:dispatch/models/user_objects.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/material.dart';
 
 sealed class AppDatabase {
   ////this database stores the meta data on the users
@@ -10,6 +11,7 @@ sealed class AppDatabase {
   Future<Iterable<DataSnapshot>> getOne<T extends User>(int id);
   Future<void> create<T extends User>(T user);
   Future<void> update<T extends User>(T user, Map<String, Object?> value);
+  Future<void> delete<T extends User>(T user);
 }
 
 int getUniqueid() {
@@ -20,11 +22,12 @@ class AdminDatabase extends AppDatabase {
   @override
   DatabaseReference ref = FirebaseDatabase.instance.ref('muneshwers/admin');
 
-  String getpath<T>() {
-    return switch (T as User) {
-      Requestee() => 'requestees',
-      Dispatcher() => 'dispatcher',
-      Admin() => 'admin',
+  String getpath<T extends User>() {
+    return switch (T) {
+      Requestee => 'requestees',
+      Dispatcher => 'dispatchers',
+      Admin => 'admin',
+      _ => '',
     };
   }
 
@@ -98,6 +101,42 @@ class AdminDatabase extends AppDatabase {
         }
     }
   }
+
+  @override
+  Future<void> delete<T extends User>(T user) async {
+    String path = getpath<T>();
+    path += "/${user.id}";
+    switch (user) {
+      case Requestee():
+        {
+          ref.child(path).remove();
+
+          String dispatchRequesteePath = getpath<Dispatcher>();
+          dispatchRequesteePath +=
+              "/${user.dispatcherid}/requesteesid/${user.id}";
+
+          await ref.child(dispatchRequesteePath).remove();
+          return;
+        }
+      case Dispatcher():
+        {
+          var requesteesid_ = user.requesteesid;
+          if (requesteesid_ == null) {
+            await ref.child(path).remove();
+            return;
+          } else if (requesteesid_.isEmpty) {
+            await ref.child(path).remove();
+            return;
+          }
+          throw Exception("Cannot delete dispatcher with requeestes");
+        }
+      case Admin():
+        {
+          await ref.child(path).remove();
+          return;
+        }
+    }
+  }
 }
 
 class RequesteeDatabase extends AppDatabase {
@@ -114,10 +153,11 @@ class RequesteeDatabase extends AppDatabase {
   @override
   Future<Iterable<DataSnapshot>> getOne<T extends User>(int id) async {
     String path = '$id';
-    return switch (T as User) {
-      Requestee() => [await ref.child(path).get()],
-      Dispatcher() => [],
-      Admin() => []
+    return switch (T) {
+      Requestee => [await ref.child(path).get()],
+      Dispatcher => [],
+      Admin => [],
+      _ => [],
     };
   }
 
@@ -161,6 +201,25 @@ class RequesteeDatabase extends AppDatabase {
         }
     }
   }
+
+  @override
+  Future<void> delete<T extends User>(T user) async {
+    switch (user) {
+      case Requestee():
+        {
+          String path = "${user.id}";
+          await ref.child(path).remove();
+        }
+      case Dispatcher():
+        {
+          return;
+        }
+      case Admin():
+        {
+          return;
+        }
+    }
+  }
 }
 
 class DispatcherDatabase extends AppDatabase {
@@ -170,20 +229,22 @@ class DispatcherDatabase extends AppDatabase {
 
   @override
   Future<Iterable<DataSnapshot>> getAll<T extends User>() async {
-    return switch (T as User) {
-      Dispatcher() => (await ref.get()).children,
-      Requestee() => [],
-      Admin() => [],
+    return switch (T) {
+      Dispatcher => (await ref.get()).children,
+      Requestee => [],
+      Admin => [],
+      _ => [],
     };
   }
 
   @override
   Future<Iterable<DataSnapshot>> getOne<T extends User>(int id) async {
     String path = "$id";
-    return switch (T as User) {
-      Dispatcher() => [await ref.child(path).get()],
-      Requestee() => [],
-      Admin() => [],
+    return switch (T) {
+      Dispatcher => [await ref.child(path).get()],
+      Requestee => [],
+      Admin => [],
+      _ => [],
     };
   }
 
@@ -231,6 +292,35 @@ class DispatcherDatabase extends AppDatabase {
         {}
     }
   }
+
+  @override
+  Future<void> delete<T extends User>(T user) async {
+    switch (user) {
+      case Requestee():
+        {
+          String requesteepath = "${user.dispatcherid}/requesteesid/${user.id}";
+          ref.child(requesteepath).remove();
+          return;
+        }
+      case Dispatcher():
+        {
+          String dispatcherpath = "${user.id}";
+          var requesteesid_ = user.requesteesid;
+          if (requesteesid_ == null) {
+            ref.child(dispatcherpath).remove();
+            return;
+          } else if (requesteesid_.isEmpty) {
+            ref.child(dispatcherpath).remove();
+            return;
+          }
+          throw Exception("Cannot delete dispatcher with requeestes");
+        }
+      case Admin():
+        {
+          return;
+        }
+    }
+  }
 }
 
 class AllDatabase extends AppDatabase {
@@ -268,5 +358,43 @@ class AllDatabase extends AppDatabase {
     for (final database in databases) {
       await database.update<T>(user, value);
     }
+  }
+
+  @override
+  Future<void> delete<T extends User>(T user) async {
+    try {
+      for (final database in databases) {
+        await database.delete<T>(user);
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+}
+
+class AlertBox extends StatelessWidget {
+  final String errorString;
+  const AlertBox({super.key, required this.errorString});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Cannot Delete'),
+      content: SingleChildScrollView(
+        child: ListBody(
+          children: <Widget>[
+            Text(errorString),
+          ],
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          child: const Text('Cancel'),
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+      ],
+    );
   }
 }

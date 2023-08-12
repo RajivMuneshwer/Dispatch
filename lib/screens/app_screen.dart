@@ -15,7 +15,7 @@ class App extends StatelessWidget {
         final args = settings.arguments;
 
         switch (settings.name) {
-          case '/messages':
+          case '/message':
             return MaterialPageRoute(builder: (_) => const MessageScreen());
 
           case '/dispatch':

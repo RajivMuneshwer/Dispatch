@@ -80,22 +80,34 @@ class UserAdaptor<T extends User> {
     int id = objectMap['id'] as int;
     String name = objectMap['name'] as String;
 
-    return switch (T as User) {
-      Requestee() => Requestee(
+    return switch (T) {
+      Requestee => Requestee(
           id: id,
           name: name,
           sortBy: name,
           dispatcherid: objectMap['dispatcherid'] as int?,
         ) as T,
-      Dispatcher() => Dispatcher(
+      Dispatcher => Dispatcher(
           id: id,
           name: name,
           sortBy: name,
-          requesteesid: (objectMap['requesteesid'] as List<Object?>)
-              .map((e) => e as int)
-              .toList(),
+          requesteesid: () {
+            var requesteesidmap = objectMap['requesteesid'];
+            if (requesteesidmap == null) {
+              return null;
+            }
+            return (requesteesidmap as Map<Object?, Object?>)
+                .values
+                .map((e) => e as int)
+                .toList();
+          }(),
         ) as T,
-      Admin() => Admin(
+      Admin => Admin(
+          id: id,
+          name: name,
+          sortBy: name,
+        ) as T,
+      _ => Requestee(
           id: id,
           name: name,
           sortBy: name,
