@@ -73,14 +73,14 @@ class UserChoiceBubble<T extends User> extends StatelessWidget {
     return Center(
       child: ChoiceBubble(
         text: text,
-        onPressed: () => Navigator.push(
+        onPressed: () => Navigator.pushNamed(
           context,
-          MaterialPageRoute(
-            builder: (context) => AllUserListScreen<T>(
-              title: "All $text",
-              database: database,
-            ),
-          ),
+          '/all',
+          arguments: {
+            "type": typeToUserType<T>(),
+            "database": database,
+            "title": "All $text",
+          },
         ),
       ),
     );
@@ -313,6 +313,7 @@ class RequesteeEditScreen extends UserEditScreen<Requestee> {
           (e) => UserAdaptor<Dispatcher>().adaptSnapshot(e),
         )
         .toList();
+    var user_ = user;
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: FormBuilderDropdown<int>(
@@ -321,6 +322,7 @@ class RequesteeEditScreen extends UserEditScreen<Requestee> {
           labelStyle: TextStyle(fontWeight: FontWeight.normal),
         ),
         name: dropdownName,
+        initialValue: (user_ != null) ? user_.dispatcherid : null,
         items: dispatchers
             .map((dispatcher) => DropdownMenuItem(
                   value: dispatcher.id,
@@ -606,6 +608,20 @@ class AddFloatButton extends StatelessWidget {
     );
   }
 }
+
+enum UserType {
+  requestee,
+  dispatcher,
+  admin,
+  error,
+}
+
+UserType typeToUserType<T extends User>() => switch (T) {
+      Requestee => UserType.requestee,
+      Dispatcher => UserType.dispatcher,
+      Admin => UserType.admin,
+      _ => UserType.error,
+    };
 
 ////TODO
 ///make it so that I do not download all the user data at once

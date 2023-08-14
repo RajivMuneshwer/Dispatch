@@ -399,18 +399,15 @@ abstract class UserEditScreen<T extends User> extends StatelessWidget {
           actions: [
             IconButton(
                 onPressed: () async {
-                  var user_ = user;
-                  if (user_ == null) {
-                    return;
-                  }
-                  try {
-                    await deleteuser(user: user_);
-                  } catch (e) {
-                    await showDialog<void>(
-                      context: context,
-                      builder: (context) => AlertBox(errorString: "$e"),
-                    );
-                  }
+                  await showDialog<void>(
+                    context: context,
+                    builder: (context) => DeleteConfirmationBox(
+                      user: user,
+                      deleteuser: deleteuser,
+                    ),
+                  );
+                  int count = 0;
+                  Navigator.popUntil(context, (route) => ++count > 2);
                 },
                 icon: const Icon(
                   Icons.delete,
@@ -488,7 +485,12 @@ abstract class UserEditScreen<T extends User> extends StatelessWidget {
                             } else {
                               createuser(currentState: currentState);
                             }
-                            Navigator.pop(context);
+                            int count = 0;
+                            Navigator.popUntil(
+                                context,
+                                (route) => (user_ == null)
+                                    ? ++count > 1
+                                    : ++count > 2);
                           },
                           child: Text(
                             (user != null) ? "Update" : "Create",
@@ -509,9 +511,9 @@ abstract class UserEditScreen<T extends User> extends StatelessWidget {
   }
 }
 
-class AlertBox extends StatelessWidget {
+class ExceptionAlertBox extends StatelessWidget {
   final String errorString;
-  const AlertBox({super.key, required this.errorString});
+  const ExceptionAlertBox({super.key, required this.errorString});
 
   @override
   Widget build(BuildContext context) {
@@ -530,6 +532,53 @@ class AlertBox extends StatelessWidget {
           onPressed: () {
             Navigator.of(context).pop();
           },
+        ),
+      ],
+    );
+  }
+}
+
+class DeleteConfirmationBox<T extends User> extends StatelessWidget {
+  final T? user;
+  final Future<void> Function({required T user}) deleteuser;
+  const DeleteConfirmationBox(
+      {super.key, required this.user, required this.deleteuser});
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Confirm delete'),
+      content: const SingleChildScrollView(
+        child: ListBody(
+          children: <Widget>[
+            Text("Are you sure you wish to delete user?"),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () async {
+            var user_ = user;
+            if (user_ == null) {
+              return;
+            }
+            try {
+              Navigator.of(context).pop();
+              await deleteuser(user: user_);
+            } catch (e) {
+              await showDialog<void>(
+                context: context,
+                builder: (context) => ExceptionAlertBox(errorString: "$e"),
+              );
+            }
+          },
+          child: const Text('Confirm'),
         ),
       ],
     );

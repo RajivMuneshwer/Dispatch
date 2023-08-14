@@ -1,4 +1,6 @@
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
+import 'package:dispatch/database/user_database.dart';
+import 'package:dispatch/models/user_objects.dart';
 import 'package:dispatch/screens/admin_screen.dart';
 import 'package:dispatch/screens/dispatch_requestee_list_screen.dart';
 import 'package:dispatch/screens/message_screen.dart';
@@ -27,6 +29,31 @@ class App extends StatelessWidget {
               return MaterialPageRoute(
                 builder: (_) => TicketScreen(ticketViewWithData: args),
               );
+            }
+
+          case '/all':
+            if (args
+                case {
+                  "type": UserType userType,
+                  "database": AppDatabase database,
+                  "title": String title
+                }) {
+              return MaterialPageRoute(
+                  builder: (_) => switch (userType) {
+                        UserType.admin => AllUserListScreen<Admin>(
+                            database: database,
+                            title: title,
+                          ),
+                        UserType.dispatcher => AllUserListScreen<Dispatcher>(
+                            database: database,
+                            title: title,
+                          ),
+                        UserType.requestee => AllUserListScreen<Requestee>(
+                            database: database,
+                            title: title,
+                          ),
+                        UserType.error => errorScreen(context),
+                      });
             }
 
           case '/':

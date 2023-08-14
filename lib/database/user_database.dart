@@ -132,8 +132,13 @@ class AdminDatabase extends AppDatabase {
         }
       case Admin():
         {
-          await ref.child(path).remove();
-          return;
+          String adminsPath = getpath<Admin>();
+          var adminSnapshots = (await ref.child(adminsPath).get()).children;
+          if (adminSnapshots.length > 1) {
+            await ref.child(path).remove();
+            return;
+          }
+          throw Exception("Cannot delete the only admin");
         }
     }
   }
