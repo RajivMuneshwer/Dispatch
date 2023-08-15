@@ -31,10 +31,7 @@ abstract class UserListScreen<T extends User> extends StatelessWidget {
         child: BlocBuilder<UserViewCubit, UserViewState>(
           builder: (context, state) {
             if (state is UserViewInitial) {
-              var userViewCubit = context.read<UserViewCubit>();
-              userViewCubit.init<List<T>>(
-                func: userList,
-              );
+              context.read<UserViewCubit>().init<List<T>>(func: userList);
               return loading();
             } else if (state is UserViewWithData<List<T>>) {
               return RefreshIndicator(
@@ -219,7 +216,7 @@ class HeaderText<M extends User> extends StatelessWidget {
   }
 }
 
-class UserList<T extends User> extends StatelessWidget {
+class UserList<T extends User> extends StatefulWidget {
   final List<T> userList;
   final void Function() Function(T, BuildContext) onTap;
   final UserRowFactory rowFactory;
@@ -231,17 +228,22 @@ class UserList<T extends User> extends StatelessWidget {
   });
 
   @override
+  State<UserList<T>> createState() => _UserListState<T>();
+}
+
+class _UserListState<T extends User> extends State<UserList<T>> {
+  @override
   Widget build(BuildContext context) {
     final List<T?> orderedUserList =
-        ObjectListSorter(objectList: userList).sort();
+        ObjectListSorter(objectList: widget.userList).sort();
 
     return ListView.builder(
       itemCount: orderedUserList.length,
       itemBuilder: (context, index) {
         return UserProfileRow<T>(
           user: orderedUserList[index],
-          rowFactory: rowFactory,
-          onTap: onTap,
+          rowFactory: widget.rowFactory,
+          onTap: widget.onTap,
         );
       },
     );

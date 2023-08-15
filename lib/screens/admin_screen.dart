@@ -73,14 +73,13 @@ class UserChoiceBubble<T extends User> extends StatelessWidget {
     return Center(
       child: ChoiceBubble(
         text: text,
-        onPressed: () => Navigator.pushNamed(
+        onPressed: () => Navigator.push(
           context,
-          '/all',
-          arguments: {
-            "type": typeToUserType<T>(),
-            "database": database,
-            "title": "All $text",
-          },
+          MaterialPageRoute(
+              builder: (context) => AllUserListScreen(
+                    title: "All $text",
+                    database: database,
+                  )),
         ),
       ),
     );
