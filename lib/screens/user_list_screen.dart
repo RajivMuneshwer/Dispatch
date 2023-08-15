@@ -14,7 +14,7 @@ abstract class UserListScreen<T extends User> extends StatelessWidget {
     required this.title,
   });
 
-  Future<List<T>> data();
+  Future<List<T>> userList();
   UserRowFactory rowFactory();
   void Function() onTap(T user, BuildContext context);
   Widget? floatingActionButton();
@@ -32,16 +32,16 @@ abstract class UserListScreen<T extends User> extends StatelessWidget {
           builder: (context, state) {
             if (state is UserViewInitial) {
               var userViewCubit = context.read<UserViewCubit>();
-              userViewCubit.initusers<T>(
-                data: data,
+              userViewCubit.init<List<T>>(
+                func: userList,
               );
               return loading();
-            } else if (state is UserViewWithUsers<T>) {
+            } else if (state is UserViewWithData<List<T>>) {
               return RefreshIndicator(
                 onRefresh: () async =>
-                    context.read<UserViewCubit>().initusers(data: data),
+                    context.read<UserViewCubit>().init<List<T>>(func: userList),
                 child: UserList<T>(
-                  userList: state.users,
+                  userList: state.data,
                   rowFactory: userRowFactory,
                   onTap: onTap,
                 ),
@@ -79,38 +79,44 @@ abstract class UserInfoScreen<T extends User, M extends User>
         create: (context) => UserViewCubit(),
         child: BlocBuilder<UserViewCubit, UserViewState>(
           builder: (context, state) {
-            if (state is UserViewInitial) {
-              var userViewCubit = context.read<UserViewCubit>();
-              userViewCubit.initusers<M>(data: additionData);
-              return loading();
-            } else if (state is UserViewWithUsers<M>) {
-              return RefreshIndicator(
-                onRefresh: () async =>
-                    context.read<UserViewCubit>().initusers(data: additionData),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 40.0),
-                    NameInfoBox(user: user),
-                    const SizedBox(height: 20.0),
-                    HeaderText<M>(),
-                    Expanded(
-                      flex: 1,
-                      child: UserList<M>(
-                        userList: state.users,
-                        onTap: onUserTap,
-                        rowFactory: const GenericUserRowFactory(),
-                      ),
+            switch (state) {
+              case UserViewInitial():
+                {
+                  var cubit = context.read<UserViewCubit>();
+                  cubit.init<List<M>>(func: additionData);
+                  return loading();
+                }
+              case UserViewWithData<List<M>>():
+                {
+                  return RefreshIndicator(
+                    onRefresh: () async => context
+                        .read<UserViewCubit>()
+                        .init<List<M>>(func: additionData),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 40.0),
+                        NameInfoBox(user: user),
+                        const SizedBox(height: 20.0),
+                        HeaderText<M>(),
+                        Expanded(
+                          flex: 1,
+                          child: UserList<M>(
+                            userList: state.data,
+                            onTap: onUserTap,
+                            rowFactory: const GenericUserRowFactory(),
+                          ),
+                        ),
+                        EditUserButton<T>(
+                          user: user,
+                          onEditTap: onEditTap,
+                        ),
+                      ],
                     ),
-                    EditUserButton<T>(
-                      user: user,
-                      onEditTap: onEditTap,
-                    ),
-                  ],
-                ),
-              );
-            } else {
-              return loading();
+                  );
+                }
+              case UserViewWithData<dynamic>():
+                return loading();
             }
           },
         ),
@@ -358,35 +364,32 @@ class UserNameBox extends StatelessWidget {
 abstract class UserEditScreen<T extends User> extends StatelessWidget {
   final GlobalKey<FormBuilderState> _formKey = GlobalKey<FormBuilderState>();
   final T? user;
-  final String textFieldName;
+
   UserEditScreen({
     super.key,
     required this.user,
-    required this.textFieldName,
   });
 
-  Future<Widget> addChild();
-  Future<void> updateuser({
-    required FormBuilderState currentState,
+  Future<Widget> addWidgets();
+  Future<void> updateUser({
+    required FormBuilderState state,
     required T user,
   });
-  Future<void> createuser({required FormBuilderState currentState});
-  Future<void> deleteuser({required T user});
+  Future<void> createUser({required FormBuilderState state});
+  Future<void> deleteUser({required T user});
 
   Text title() {
     T? user_ = user;
-    if (user_ != null) {
-      return Text("Edit ${user_.name}");
+    if (user_ case User()) {
+      return Text(user_.name);
     }
-    String userTypeName = "";
-    if (T == Requestee) {
-      userTypeName = "Requestee";
-    } else if (T == Dispatcher) {
-      userTypeName = "Dispatcher";
-    } else if (T == Admin) {
-      userTypeName = "Admin";
-    }
-    return Text("Create New $userTypeName");
+    String text = switch (T) {
+      Requestee => 'Requestee',
+      Dispatcher => 'Dispatcher',
+      Admin => 'Admin',
+      _ => '',
+    };
+    return Text("Create new $text");
   }
 
   @override
@@ -399,11 +402,15 @@ abstract class UserEditScreen<T extends User> extends StatelessWidget {
           actions: [
             IconButton(
                 onPressed: () async {
+                  var user_ = user;
+                  if (user_ == null) {
+                    return;
+                  }
                   await showDialog<void>(
                     context: context,
                     builder: (context) => DeleteConfirmationBox(
-                      user: user,
-                      deleteuser: deleteuser,
+                      user: user_,
+                      deleteuser: deleteUser,
                     ),
                   );
                   int count = 0;
@@ -418,84 +425,21 @@ abstract class UserEditScreen<T extends User> extends StatelessWidget {
         body: BlocBuilder<UserViewCubit, UserViewState>(
           builder: (context, state) {
             if (state is UserViewInitial) {
-              context.read<UserViewCubit>().initwidget(futwidget: addChild());
+              context.read<UserViewCubit>().init<Widget>(func: addWidgets);
               return loading();
-            } else if (state is UserViewWithWidget) {
+            } else if (state is UserViewWithData<Widget>) {
               return SingleChildScrollView(
                 child: FormBuilder(
                   key: _formKey,
                   child: Column(
                     children: [
-                      const SizedBox(
-                        height: 20,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: FormBuilderTextField(
-                          name: textFieldName,
-                          autocorrect: true,
-                          autovalidateMode: AutovalidateMode.onUserInteraction,
-                          initialValue: user?.name,
-                          style: const TextStyle(
-                            color: Colors.grey,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.left,
-                          decoration: InputDecoration(
-                            labelText: "Name",
-                            labelStyle:
-                                const TextStyle(fontWeight: FontWeight.normal),
-                            border: UnderlineInputBorder(
-                              borderRadius:
-                                  const BorderRadius.all(Radius.circular(4)),
-                              borderSide: BorderSide(
-                                width: 1,
-                                color: Colors.grey.shade300,
-                              ),
-                            ),
-                          ),
-                          validator: FormBuilderValidators.compose([
-                            FormBuilderValidators.required(),
-                            FormBuilderValidators.match(r'^[a-zA-Z0-9_\s]+$')
-                          ]),
-                        ),
-                      ),
-                      const SizedBox(
-                        height: 20,
-                      ),
-                      state.widget,
-                      const SizedBox(
-                        height: 40,
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(8.0),
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            var currentState = _formKey.currentState;
-                            var user_ = user;
-                            if (currentState == null) {
-                              return;
-                            }
-                            if (!currentState.validate()) {
-                              return;
-                            }
-                            if (user_ != null) {
-                              updateuser(
-                                  currentState: currentState, user: user_);
-                            } else {
-                              createuser(currentState: currentState);
-                            }
-                            int count = 0;
-                            Navigator.popUntil(
-                                context,
-                                (route) => (user_ == null)
-                                    ? ++count > 1
-                                    : ++count > 2);
-                          },
-                          child: Text(
-                            (user != null) ? "Update" : "Create",
-                          ),
-                        ),
+                      state.data,
+                      const SizedBox(height: 40),
+                      EditSubmitButton(
+                        formKey: _formKey,
+                        user: user,
+                        createUser: createUser,
+                        updateUser: updateUser,
                       )
                     ],
                   ),
@@ -506,6 +450,85 @@ abstract class UserEditScreen<T extends User> extends StatelessWidget {
             }
           },
         ),
+      ),
+    );
+  }
+}
+
+class EditSubmitButton<T extends User> extends StatelessWidget {
+  final T? user;
+  final GlobalKey<FormBuilderState> formKey;
+  final Future<void> Function({required FormBuilderState state}) createUser;
+  final Future<void> Function(
+      {required FormBuilderState state, required T user}) updateUser;
+  const EditSubmitButton({
+    super.key,
+    required this.formKey,
+    required this.user,
+    required this.createUser,
+    required this.updateUser,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ElevatedButton(
+        onPressed: () async {
+          var state = formKey.currentState;
+          var user_ = user;
+          if (state!.validate() == true) {
+            (user_ == null)
+                ? await createUser(state: state)
+                : await updateUser(state: state, user: user_);
+          }
+          int count = 0;
+          Navigator.popUntil(
+              context, (route) => (user_ == null) ? ++count > 1 : ++count > 2);
+        },
+        child: Text(
+          (user != null) ? "Update" : "Create",
+        ),
+      ),
+    );
+  }
+}
+
+class EditTextFormField extends StatelessWidget {
+  final String name;
+  final String? initial;
+  const EditTextFormField(
+      {super.key, required this.name, required this.initial});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: FormBuilderTextField(
+        name: name,
+        autocorrect: true,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        initialValue: initial,
+        style: const TextStyle(
+          color: Colors.grey,
+          fontWeight: FontWeight.w500,
+        ),
+        textAlign: TextAlign.left,
+        decoration: InputDecoration(
+          labelText: "Name",
+          labelStyle: const TextStyle(fontWeight: FontWeight.normal),
+          border: UnderlineInputBorder(
+            borderRadius: const BorderRadius.all(Radius.circular(4)),
+            borderSide: BorderSide(
+              width: 1,
+              color: Colors.grey.shade300,
+            ),
+          ),
+        ),
+        validator: FormBuilderValidators.compose([
+          FormBuilderValidators.required(),
+          FormBuilderValidators.match(r'^[a-zA-Z0-9_\s]+$')
+        ]),
       ),
     );
   }
@@ -539,7 +562,7 @@ class ExceptionAlertBox extends StatelessWidget {
 }
 
 class DeleteConfirmationBox<T extends User> extends StatelessWidget {
-  final T? user;
+  final T user;
   final Future<void> Function({required T user}) deleteuser;
   const DeleteConfirmationBox(
       {super.key, required this.user, required this.deleteuser});
@@ -565,9 +588,6 @@ class DeleteConfirmationBox<T extends User> extends StatelessWidget {
         TextButton(
           onPressed: () async {
             var user_ = user;
-            if (user_ == null) {
-              return;
-            }
             try {
               Navigator.of(context).pop();
               await deleteuser(user: user_);

@@ -10,7 +10,7 @@ class DispatchRequesteeListScreen extends UserListScreen {
   });
 
   @override
-  Future<List<User>> data() {
+  Future<List<User>> userList() {
     return Future.delayed(duration, () {
       List<Requestee> requestees = [
         Requestee(id: 1, name: 'test', sortBy: 'test'),

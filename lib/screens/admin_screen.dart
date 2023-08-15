@@ -97,7 +97,7 @@ class AllUserListScreen<T extends User> extends UserListScreen<T> {
   });
 
   @override
-  Future<List<T>> data() async => (await database.getAll<T>())
+  Future<List<T>> userList() async => (await database.getAll<T>())
       .map((snapshot) => UserAdaptor<T>().adaptSnapshot(snapshot))
       .toList();
 
@@ -297,82 +297,75 @@ class EditScreenFactory {
 
 class RequesteeEditScreen extends UserEditScreen<Requestee> {
   final AppDatabase database;
-  static const textName = "requesteename";
-  static const dropdownName = "requesteedispatch";
+  static const textName = "name";
+  static const dropdownName = "dispatcherid";
   RequesteeEditScreen({
     super.key,
     required super.user,
-    super.textFieldName = textName,
     required this.database,
   });
 
   @override
-  Future<Widget> addChild() async {
+  Future<Widget> addWidgets() async {
     List<Dispatcher> dispatchers = (await database.getAll<Dispatcher>())
         .map(
           (e) => UserAdaptor<Dispatcher>().adaptSnapshot(e),
         )
         .toList();
     var user_ = user;
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: FormBuilderDropdown<int>(
-        decoration: const InputDecoration(
-          labelText: "Dispatcher",
-          labelStyle: TextStyle(fontWeight: FontWeight.normal),
+    return Column(
+      children: [
+        const SizedBox(height: 20),
+        EditTextFormField(name: textName, initial: user?.name),
+        const SizedBox(height: 20),
+        EditDropdownFormField(
+          dropdownOptions: dispatchers,
+          initialId: (user_ != null) ? user_.dispatcherid : null,
+          name: dropdownName,
         ),
-        name: dropdownName,
-        initialValue: (user_ != null) ? user_.dispatcherid : null,
-        items: dispatchers
-            .map((dispatcher) => DropdownMenuItem(
-                  value: dispatcher.id,
-                  child: Text(dispatcher.name),
-                ))
-            .toList(),
-        validator: FormBuilderValidators.compose([
-          FormBuilderValidators.required(),
-        ]),
-      ),
+      ],
     );
   }
 
   @override
-  Future<void> createuser({required FormBuilderState currentState}) async {
-    var textField = currentState.fields[textName];
-    var dropdownField = currentState.fields[dropdownName];
-    if (textField == null || dropdownField == null) {
+  Future<void> createUser({
+    required FormBuilderState state,
+  }) async {
+    if (state.fields
+        case {
+          textName: var textField,
+          dropdownName: var dropdownField,
+        }) {
+      final newRequestee = Requestee(
+        id: getUniqueid(),
+        name: textField.value,
+        sortBy: textField.value,
+        dispatcherid: dropdownField.value,
+      );
+      await AllDatabase().create<Requestee>(newRequestee);
       return;
     }
-
-    final newRequestee = Requestee(
-      id: getUniqueid(),
-      name: textField.value,
-      sortBy: textField.value,
-      dispatcherid: dropdownField.value,
-    );
-    await AllDatabase().create<Requestee>(newRequestee);
-    return;
   }
 
   @override
-  Future<void> updateuser(
-      {required FormBuilderState currentState, required Requestee user}) async {
-    var textField = currentState.fields[textName];
-    var dropdownField = currentState.fields[dropdownName];
-    if (textField == null || dropdownField == null) {
-      return;
+  Future<void> updateUser({
+    required FormBuilderState state,
+    required Requestee user,
+  }) async {
+    if (state.fields
+        case {
+          textName: var textField,
+          dropdownName: var dropdownField,
+        }) {
+      await AllDatabase().update(user, {
+        "name": textField.value,
+        "dispatcherid": dropdownField.value,
+      });
     }
-
-    Map<String, Object?> updatemap = {
-      "name": textField.value,
-      "dispatcherid": dropdownField.value
-    };
-
-    await AllDatabase().update(user, updatemap);
   }
 
   @override
-  Future<void> deleteuser({required Requestee user}) async {
+  Future<void> deleteUser({required Requestee user}) async {
     try {
       await AllDatabase().delete<Requestee>(user);
     } catch (e) {
@@ -383,39 +376,41 @@ class RequesteeEditScreen extends UserEditScreen<Requestee> {
 
 class DispatchEditScreen extends UserEditScreen<Dispatcher> {
   final AppDatabase database;
-  static const textName = "dispatchername";
+  static const textName = "name";
 
   DispatchEditScreen({
     super.key,
     required super.user,
-    super.textFieldName = textName,
     required this.database,
   });
 
   @override
-  Future<Widget> addChild() async => Container();
+  Future<Widget> addWidgets() async => Column(
+        children: [
+          const SizedBox(height: 20),
+          EditTextFormField(name: textName, initial: user?.name)
+        ],
+      );
 
   @override
-  Future<void> createuser({required FormBuilderState currentState}) async {
-    var textField = currentState.fields[textName];
-    if (textField == null) {
-      return;
+  Future<void> createUser({required FormBuilderState state}) async {
+    if (state.fields case {textName: var textField}) {
+      final newDispatcher = Dispatcher(
+        id: getUniqueid(),
+        name: textField.value,
+        sortBy: textField.value,
+        requesteesid: [],
+      );
+      await AllDatabase().create<Dispatcher>(newDispatcher);
     }
-    final newDispatcher = Dispatcher(
-      id: getUniqueid(),
-      name: textField.value,
-      sortBy: textField.value,
-      requesteesid: [],
-    );
-
-    await AllDatabase().create<Dispatcher>(newDispatcher);
   }
 
   @override
-  Future<void> updateuser(
-      {required FormBuilderState currentState,
-      required Dispatcher user}) async {
-    var textField = currentState.fields[textName];
+  Future<void> updateUser({
+    required FormBuilderState state,
+    required Dispatcher user,
+  }) async {
+    var textField = state.fields[textName];
     if (textField == null) {
       return;
     }
@@ -424,7 +419,7 @@ class DispatchEditScreen extends UserEditScreen<Dispatcher> {
   }
 
   @override
-  Future<void> deleteuser({required Dispatcher user}) async {
+  Future<void> deleteUser({required Dispatcher user}) async {
     try {
       await AllDatabase().delete<Dispatcher>(user);
     } catch (e) {
@@ -435,46 +430,47 @@ class DispatchEditScreen extends UserEditScreen<Dispatcher> {
 
 class AdminEditScreen extends UserEditScreen<Admin> {
   final AppDatabase database;
-  static const textName = "adminname";
+  static const textName = "name";
 
   AdminEditScreen({
     super.key,
     required super.user,
-    super.textFieldName = textName,
     required this.database,
   });
 
   @override
-  Future<Widget> addChild() async => Container();
+  Future<Widget> addWidgets() async => Column(
+        children: [
+          const SizedBox(height: 20),
+          EditTextFormField(name: textName, initial: user?.name)
+        ],
+      );
 
   @override
-  Future<void> createuser({required FormBuilderState currentState}) async {
-    var textField = currentState.fields[textName];
-    if (textField == null) {
-      return;
+  Future<void> createUser({required FormBuilderState state}) async {
+    if (state.fields case {textName: var textField}) {
+      final newAdmin = Admin(
+        id: getUniqueid(),
+        name: textField.value,
+        sortBy: textField.value,
+      );
+      await AllDatabase().create<Admin>(newAdmin);
     }
-    final newAdmin = Admin(
-      id: getUniqueid(),
-      name: textField.value,
-      sortBy: textField.value,
-    );
-
-    await AllDatabase().create<Admin>(newAdmin);
   }
 
   @override
-  Future<void> updateuser(
-      {required FormBuilderState currentState, required Admin user}) async {
-    var textField = currentState.fields[textName];
-    if (textField == null) {
+  Future<void> updateUser({
+    required FormBuilderState state,
+    required Admin user,
+  }) async {
+    if (state.fields case {textName: var textField}) {
+      await AllDatabase().update(user, {"name": textField});
       return;
     }
-    Map<String, Object?> updateMap = {"name": textField.value};
-    await AllDatabase().update(user, updateMap);
   }
 
   @override
-  Future<void> deleteuser({required Admin user}) async {
+  Future<void> deleteUser({required Admin user}) async {
     try {
       await AllDatabase().delete<Admin>(user);
     } catch (e) {
@@ -487,22 +483,21 @@ class ErrorEditScreen extends UserEditScreen<User> {
   ErrorEditScreen({
     super.key,
     super.user,
-    super.textFieldName = "error",
   });
 
   @override
-  Future<Widget> addChild() {
+  Future<Widget> addWidgets() {
     throw UnimplementedError();
   }
 
   @override
-  Future<void> createuser({required FormBuilderState currentState}) {
+  Future<void> createUser({required FormBuilderState state}) {
     throw UnimplementedError();
   }
 
   @override
-  Future<void> updateuser(
-      {required FormBuilderState currentState, required User user}) {
+  Future<void> updateUser(
+      {required FormBuilderState state, required User user}) {
     throw UnimplementedError();
   }
 
@@ -512,7 +507,7 @@ class ErrorEditScreen extends UserEditScreen<User> {
   }
 
   @override
-  Future<void> deleteuser({required User user}) {
+  Future<void> deleteUser({required User user}) {
     throw UnimplementedError();
   }
 }
@@ -546,6 +541,82 @@ Widget errorScreen(BuildContext context) => Scaffold(
         ),
       ),
     );
+
+class EditDropdownFormField extends StatelessWidget {
+  final String name;
+  final List<User> dropdownOptions;
+  final int? initialId;
+  const EditDropdownFormField({
+    super.key,
+    required this.dropdownOptions,
+    required this.initialId,
+    required this.name,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: FormBuilderDropdown<int>(
+        decoration: const InputDecoration(
+          labelText: "Dispatcher",
+          labelStyle: TextStyle(fontWeight: FontWeight.normal),
+        ),
+        name: name,
+        initialValue: initialId,
+        items: dropdownOptions
+            .map((dispatcher) => DropdownMenuItem(
+                  value: dispatcher.id,
+                  child: Text(dispatcher.name),
+                ))
+            .toList(),
+        validator: FormBuilderValidators.compose([
+          FormBuilderValidators.required(),
+        ]),
+      ),
+    );
+  }
+}
+
+class EditTextFormField extends StatelessWidget {
+  final String name;
+  final String? initial;
+  const EditTextFormField(
+      {super.key, required this.name, required this.initial});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: FormBuilderTextField(
+        name: name,
+        autocorrect: true,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        initialValue: initial,
+        style: const TextStyle(
+          color: Colors.grey,
+          fontWeight: FontWeight.w500,
+        ),
+        textAlign: TextAlign.left,
+        decoration: InputDecoration(
+          labelText: "Name",
+          labelStyle: const TextStyle(fontWeight: FontWeight.normal),
+          border: UnderlineInputBorder(
+            borderRadius: const BorderRadius.all(Radius.circular(4)),
+            borderSide: BorderSide(
+              width: 1,
+              color: Colors.grey.shade300,
+            ),
+          ),
+        ),
+        validator: FormBuilderValidators.compose([
+          FormBuilderValidators.required(),
+          FormBuilderValidators.match(r'^[a-zA-Z0-9_\s]+$')
+        ]),
+      ),
+    );
+  }
+}
 
 class ChoiceBubble extends StatelessWidget {
   final String text;
