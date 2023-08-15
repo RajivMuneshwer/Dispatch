@@ -25,13 +25,13 @@ class UserViewCubit<M> extends Cubit<UserViewState> {
       );
 
   Future<void> update({
-    required Future<M?> Function() uploadfunc,
+    required Future<M?> Function() downloadfunc,
     required M Function(M newdata, M olddata) combine,
   }) async =>
       Future.delayed(
         duration,
         () async {
-          M? newData = await uploadfunc();
+          M? newData = await downloadfunc();
           (newData == null)
               ? emit(
                   UserViewWithData(
@@ -39,10 +39,12 @@ class UserViewCubit<M> extends Cubit<UserViewState> {
                     canUpdate: false,
                   ),
                 )
-              : emit(UserViewWithData(
-                  data: combine(newData, data),
-                  canUpdate: true,
-                ));
+              : emit(
+                  UserViewWithData(
+                    data: combine(newData, data),
+                    canUpdate: true,
+                  ),
+                );
         },
       );
 }

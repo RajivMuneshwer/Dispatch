@@ -7,7 +7,7 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_profile_picture/flutter_profile_picture.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 
-abstract class UserListScreen<T extends User> extends StatefulWidget {
+abstract class UserListScreen<T extends User> extends StatelessWidget {
   final String title;
   const UserListScreen({
     super.key,
@@ -20,49 +20,33 @@ abstract class UserListScreen<T extends User> extends StatefulWidget {
   void Function() onTap(T user, BuildContext context);
   Widget? floatingActionButton();
 
-  List<T> combine(List<T> newdata, List<T> olddata) {
-    olddata.addAll(newdata);
-    return olddata;
-  }
-
-  @override
-  State<UserListScreen<T>> createState() => _UserListScreenState<T>();
-}
-
-class _UserListScreenState<T extends User> extends State<UserListScreen<T>> {
-  bool running = false;
   @override
   Widget build(BuildContext context) {
-    var userRowFactory = widget.rowFactory();
+    var userRowFactory = rowFactory();
     return Scaffold(
       appBar: AppBar(
-        title: Text(widget.title),
+        title: Text(title),
       ),
       body: BlocProvider(
         create: (context) => UserViewCubit<List<T>>(data: []),
         child: BlocBuilder<UserViewCubit<List<T>>, UserViewState>(
           builder: (context, state) {
             if (state is UserViewInitial) {
-              context
-                  .read<UserViewCubit<List<T>>>()
-                  .init(func: widget.initUsers);
+              context.read<UserViewCubit<List<T>>>().init(func: initUsers);
               return loading();
             } else if (state is UserViewWithData<List<T>>) {
               return NotificationListener<ScrollNotification>(
                 onNotification: (ScrollNotification notification) {
                   if (notification.metrics.pixels ==
                       notification.metrics.maxScrollExtent) {
-                    if (state.canUpdate && !running) {
-                      setState(() {
-                        running = true;
-                      });
+                    if (state.canUpdate) {
                       context.read<UserViewCubit<List<T>>>().update(
-                            uploadfunc: widget.loadUsers(state.data.last),
-                            combine: widget.combine,
+                            downloadfunc: loadUsers(state.data.last),
+                            combine: (newdata, olddata) {
+                              olddata.addAll(newdata);
+                              return olddata;
+                            },
                           );
-                      setState(() {
-                        running = false;
-                      });
                     }
                   }
 
@@ -71,11 +55,11 @@ class _UserListScreenState<T extends User> extends State<UserListScreen<T>> {
                 child: RefreshIndicator(
                   onRefresh: () async => context
                       .read<UserViewCubit<List<T>>>()
-                      .init(func: widget.initUsers),
+                      .init(func: initUsers),
                   child: UserList<T>(
                     initUsers: state.data,
                     rowFactory: userRowFactory,
-                    onTap: widget.onTap,
+                    onTap: onTap,
                   ),
                 ),
               );
@@ -85,7 +69,7 @@ class _UserListScreenState<T extends User> extends State<UserListScreen<T>> {
           },
         ),
       ),
-      floatingActionButton: widget.floatingActionButton(),
+      floatingActionButton: floatingActionButton(),
     );
   }
 }
@@ -133,7 +117,7 @@ abstract class UserInfoScreen<T extends User, M extends User>
                         const SizedBox(height: 20.0),
                         HeaderText<M>(),
                         Expanded(
-                          flex: 1,
+                          flex: 2,
                           child: UserList<M>(
                             initUsers: state.data,
                             onTap: onUserTap,

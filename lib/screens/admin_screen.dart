@@ -1,6 +1,6 @@
 import 'package:dispatch/database/user_database.dart';
 import 'package:dispatch/models/user_objects.dart';
-import 'package:dispatch/screens/user_list_screen.dart';
+import 'package:dispatch/screens/user_screens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
@@ -56,15 +56,12 @@ class UserChoiceBubble<T extends User> extends StatelessWidget {
   });
 
   String bubbleText() {
-    String text = "";
-    if (T == Requestee) {
-      text = "Requestees";
-    } else if (T == Dispatcher) {
-      text = "Dispatchers";
-    } else if (T == Admin) {
-      text = "Admin";
-    }
-    return text;
+    return switch (T) {
+      Requestee => "Requestee",
+      Dispatcher => "Dispatcher",
+      Admin => "Admin",
+      _ => "",
+    };
   }
 
   @override
@@ -88,7 +85,7 @@ class UserChoiceBubble<T extends User> extends StatelessWidget {
 
 class AllUserListScreen<T extends User> extends UserListScreen<T> {
   final AppDatabase database;
-  final int limit = 2;
+  final int limit = 15;
   final String orderBy = "name";
   const AllUserListScreen({
     super.key,
@@ -149,10 +146,7 @@ class UserInfoScreenFactory {
     return switch (user) {
       Requestee() => RequesteeInfoScreen(user: user, database: database),
       Dispatcher() => DispatcherInfoScreen(user: user, database: database),
-      Admin() => AdminInfoScreen(
-          user: user,
-          database: database,
-        )
+      Admin() => AdminInfoScreen(user: user, database: database)
     };
   }
 }
@@ -407,7 +401,10 @@ class DispatchEditScreen extends UserEditScreen<Dispatcher> {
 
   @override
   Future<void> createUser({required FormBuilderState state}) async {
-    if (state.fields case {textName: var textField}) {
+    if (state.fields
+        case {
+          textName: var textField,
+        }) {
       final newDispatcher = Dispatcher(
         id: getUniqueid(),
         name: textField.value,
@@ -423,12 +420,12 @@ class DispatchEditScreen extends UserEditScreen<Dispatcher> {
     required FormBuilderState state,
     required Dispatcher user,
   }) async {
-    var textField = state.fields[textName];
-    if (textField == null) {
-      return;
+    if (state.fields
+        case {
+          textName: var textField,
+        }) {
+      await AllDatabase().update(user, {"name": textField.value});
     }
-    Map<String, Object?> updateMap = {"name": textField.value};
-    await AllDatabase().update(user, updateMap);
   }
 
   @override
@@ -455,13 +452,19 @@ class AdminEditScreen extends UserEditScreen<Admin> {
   Future<Widget> addWidgets() async => Column(
         children: [
           const SizedBox(height: 20),
-          EditTextFormField(name: textName, initial: user?.name)
+          EditTextFormField(
+            name: textName,
+            initial: user?.name,
+          )
         ],
       );
 
   @override
   Future<void> createUser({required FormBuilderState state}) async {
-    if (state.fields case {textName: var textField}) {
+    if (state.fields
+        case {
+          textName: var textField,
+        }) {
       final newAdmin = Admin(
         id: getUniqueid(),
         name: textField.value,
@@ -476,7 +479,10 @@ class AdminEditScreen extends UserEditScreen<Admin> {
     required FormBuilderState state,
     required Admin user,
   }) async {
-    if (state.fields case {textName: var textField}) {
+    if (state.fields
+        case {
+          textName: var textField,
+        }) {
       await AllDatabase().update(user, {"name": textField});
       return;
     }
