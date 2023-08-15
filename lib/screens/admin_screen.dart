@@ -76,7 +76,7 @@ class UserChoiceBubble<T extends User> extends StatelessWidget {
         onPressed: () => Navigator.push(
           context,
           MaterialPageRoute(
-              builder: (context) => AllUserListScreen(
+              builder: (context) => AllUserListScreen<T>(
                     title: "All $text",
                     database: database,
                   )),
@@ -88,7 +88,8 @@ class UserChoiceBubble<T extends User> extends StatelessWidget {
 
 class AllUserListScreen<T extends User> extends UserListScreen<T> {
   final AppDatabase database;
-
+  final int limit = 2;
+  final String orderBy = "name";
   const AllUserListScreen({
     super.key,
     required super.title,
@@ -96,7 +97,8 @@ class AllUserListScreen<T extends User> extends UserListScreen<T> {
   });
 
   @override
-  Future<List<T>> userList() async => (await database.getAll<T>())
+  Future<List<T>> initUsers() async => (await database.getSome<T>(
+          limit: limit, lastUser: null, orderBy: orderBy))
       .map((snapshot) => UserAdaptor<T>().adaptSnapshot(snapshot))
       .toList();
 
@@ -125,6 +127,18 @@ class AllUserListScreen<T extends User> extends UserListScreen<T> {
                   EditScreenFactory().make<T>(user: null, database: database),
             )),
       );
+
+  @override
+  Future<List<T>?> Function() loadUsers(T lastUsers) {
+    return () async {
+      List<T> newUsers = (await database.getSome<T>(
+              limit: limit, lastUser: lastUsers, orderBy: orderBy))
+          .map((snapshot) => UserAdaptor<T>().adaptSnapshot(snapshot))
+          .toList();
+      if (newUsers.isEmpty) return null;
+      return newUsers;
+    };
+  }
 }
 
 class UserInfoScreenFactory {

@@ -10,7 +10,7 @@ class DispatchRequesteeListScreen extends UserListScreen {
   });
 
   @override
-  Future<List<User>> userList() {
+  Future<List<User>> initUsers() {
     return Future.delayed(duration, () {
       List<Requestee> requestees = [
         Requestee(id: 1, name: 'test', sortBy: 'test'),
@@ -40,6 +40,12 @@ class DispatchRequesteeListScreen extends UserListScreen {
 
   @override
   Widget? floatingActionButton() {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<User>> Function() loadUsers(User lastUsers) {
+    // TODO: implement loadMoreUsers
     throw UnimplementedError();
   }
 }

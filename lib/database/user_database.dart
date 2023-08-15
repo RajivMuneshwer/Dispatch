@@ -9,6 +9,8 @@ sealed class AppDatabase {
   DatabaseReference get ref;
   Future<Iterable<DataSnapshot>> getAll<T extends User>();
   Future<Iterable<DataSnapshot>> getOne<T extends User>(int id);
+  Future<Iterable<DataSnapshot>> getSome<T extends User>(
+      {required int limit, required T? lastUser, required String orderBy});
   Future<void> create<T extends User>(T user);
   Future<void> update<T extends User>(T user, Map<String, Object?> value);
   Future<void> delete<T extends User>(T user);
@@ -59,13 +61,9 @@ class AdminDatabase extends AppDatabase {
           return;
         }
       case Dispatcher():
-        {
-          return;
-        }
+        return;
       case Admin():
-        {
-          return;
-        }
+        return;
     }
   }
 
@@ -141,6 +139,23 @@ class AdminDatabase extends AppDatabase {
           throw Exception("Cannot delete the only admin");
         }
     }
+  }
+
+  @override
+  Future<Iterable<DataSnapshot>> getSome<T extends User>({
+    required int limit,
+    required T? lastUser,
+    required String orderBy,
+  }) async {
+    String path = getpath<T>();
+    var snapshots = (await ref
+            .child(path)
+            .orderByChild(orderBy)
+            .startAfter(lastUser?.name ?? "")
+            .limitToFirst(limit)
+            .once())
+        .snapshot;
+    return snapshots.children;
   }
 }
 
@@ -224,6 +239,23 @@ class RequesteeDatabase extends AppDatabase {
           return;
         }
     }
+  }
+
+  @override
+  Future<Iterable<DataSnapshot>> getSome<T extends User>(
+      {required int limit,
+      required T? lastUser,
+      required String orderBy}) async {
+    return switch (lastUser) {
+      Dispatcher() => [],
+      Admin() => [],
+      _ => (await ref
+              .orderByChild(orderBy)
+              .startAfter(lastUser?.name)
+              .limitToFirst(limit)
+              .get())
+          .children
+    };
   }
 }
 
@@ -326,6 +358,23 @@ class DispatcherDatabase extends AppDatabase {
         }
     }
   }
+
+  @override
+  Future<Iterable<DataSnapshot>> getSome<T extends User>(
+      {required int limit,
+      required T? lastUser,
+      required String orderBy}) async {
+    return switch (lastUser) {
+      Requestee() => [],
+      Admin() => [],
+      _ => (await ref
+              .orderByChild(orderBy)
+              .startAfter(lastUser?.name)
+              .limitToFirst(limit)
+              .get())
+          .children,
+    };
+  }
 }
 
 class AllDatabase extends AppDatabase {
@@ -374,6 +423,16 @@ class AllDatabase extends AppDatabase {
     } catch (e) {
       rethrow;
     }
+  }
+
+  @override
+  Future<Iterable<DataSnapshot>> getSome<T extends User>({
+    required int limit,
+    required T? lastUser,
+    required String orderBy,
+  }) {
+    // TODO: implement getSome
+    throw UnimplementedError();
   }
 }
 

@@ -7,40 +7,76 @@ import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_profile_picture/flutter_profile_picture.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 
-abstract class UserListScreen<T extends User> extends StatelessWidget {
+abstract class UserListScreen<T extends User> extends StatefulWidget {
   final String title;
   const UserListScreen({
     super.key,
     required this.title,
   });
 
-  Future<List<T>> userList();
+  Future<List<T>> initUsers();
+  Future<List<T>?> Function() loadUsers(T lastUsers);
   UserRowFactory rowFactory();
   void Function() onTap(T user, BuildContext context);
   Widget? floatingActionButton();
 
+  List<T> combine(List<T> newdata, List<T> olddata) {
+    olddata.addAll(newdata);
+    return olddata;
+  }
+
+  @override
+  State<UserListScreen<T>> createState() => _UserListScreenState<T>();
+}
+
+class _UserListScreenState<T extends User> extends State<UserListScreen<T>> {
+  bool running = false;
   @override
   Widget build(BuildContext context) {
-    var userRowFactory = rowFactory();
+    var userRowFactory = widget.rowFactory();
     return Scaffold(
       appBar: AppBar(
-        title: Text(title),
+        title: Text(widget.title),
       ),
       body: BlocProvider(
-        create: (context) => UserViewCubit(),
-        child: BlocBuilder<UserViewCubit, UserViewState>(
+        create: (context) => UserViewCubit<List<T>>(data: []),
+        child: BlocBuilder<UserViewCubit<List<T>>, UserViewState>(
           builder: (context, state) {
             if (state is UserViewInitial) {
-              context.read<UserViewCubit>().init<List<T>>(func: userList);
+              context
+                  .read<UserViewCubit<List<T>>>()
+                  .init(func: widget.initUsers);
               return loading();
             } else if (state is UserViewWithData<List<T>>) {
-              return RefreshIndicator(
-                onRefresh: () async =>
-                    context.read<UserViewCubit>().init<List<T>>(func: userList),
-                child: UserList<T>(
-                  userList: state.data,
-                  rowFactory: userRowFactory,
-                  onTap: onTap,
+              return NotificationListener<ScrollNotification>(
+                onNotification: (ScrollNotification notification) {
+                  if (notification.metrics.pixels ==
+                      notification.metrics.maxScrollExtent) {
+                    if (state.canUpdate && !running) {
+                      setState(() {
+                        running = true;
+                      });
+                      context.read<UserViewCubit<List<T>>>().update(
+                            uploadfunc: widget.loadUsers(state.data.last),
+                            combine: widget.combine,
+                          );
+                      setState(() {
+                        running = false;
+                      });
+                    }
+                  }
+
+                  return true;
+                },
+                child: RefreshIndicator(
+                  onRefresh: () async => context
+                      .read<UserViewCubit<List<T>>>()
+                      .init(func: widget.initUsers),
+                  child: UserList<T>(
+                    initUsers: state.data,
+                    rowFactory: userRowFactory,
+                    onTap: widget.onTap,
+                  ),
                 ),
               );
             } else {
@@ -49,7 +85,7 @@ abstract class UserListScreen<T extends User> extends StatelessWidget {
           },
         ),
       ),
-      floatingActionButton: floatingActionButton(),
+      floatingActionButton: widget.floatingActionButton(),
     );
   }
 }
@@ -73,22 +109,22 @@ abstract class UserInfoScreen<T extends User, M extends User>
         title: Text("${user.name}'s info"),
       ),
       body: BlocProvider(
-        create: (context) => UserViewCubit(),
-        child: BlocBuilder<UserViewCubit, UserViewState>(
+        create: (context) => UserViewCubit<List<M>>(data: []),
+        child: BlocBuilder<UserViewCubit<List<M>>, UserViewState>(
           builder: (context, state) {
             switch (state) {
               case UserViewInitial():
                 {
-                  var cubit = context.read<UserViewCubit>();
-                  cubit.init<List<M>>(func: additionData);
+                  var cubit = context.read<UserViewCubit<List<M>>>();
+                  cubit.init(func: additionData);
                   return loading();
                 }
               case UserViewWithData<List<M>>():
                 {
                   return RefreshIndicator(
                     onRefresh: () async => context
-                        .read<UserViewCubit>()
-                        .init<List<M>>(func: additionData),
+                        .read<UserViewCubit<List<M>>>()
+                        .init(func: additionData),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -99,7 +135,7 @@ abstract class UserInfoScreen<T extends User, M extends User>
                         Expanded(
                           flex: 1,
                           child: UserList<M>(
-                            userList: state.data,
+                            initUsers: state.data,
                             onTap: onUserTap,
                             rowFactory: const GenericUserRowFactory(),
                           ),
@@ -216,34 +252,27 @@ class HeaderText<M extends User> extends StatelessWidget {
   }
 }
 
-class UserList<T extends User> extends StatefulWidget {
-  final List<T> userList;
+class UserList<T extends User> extends StatelessWidget {
+  final List<T> initUsers;
   final void Function() Function(T, BuildContext) onTap;
   final UserRowFactory rowFactory;
   const UserList({
     super.key,
-    required this.userList,
+    required this.initUsers,
     required this.onTap,
     required this.rowFactory,
   });
 
   @override
-  State<UserList<T>> createState() => _UserListState<T>();
-}
-
-class _UserListState<T extends User> extends State<UserList<T>> {
-  @override
   Widget build(BuildContext context) {
-    final List<T?> orderedUserList =
-        ObjectListSorter(objectList: widget.userList).sort();
-
+    List<T?> orderedUserList = ObjectListSorter(objectList: initUsers).sort();
     return ListView.builder(
       itemCount: orderedUserList.length,
       itemBuilder: (context, index) {
         return UserProfileRow<T>(
           user: orderedUserList[index],
-          rowFactory: widget.rowFactory,
-          onTap: widget.onTap,
+          rowFactory: rowFactory,
+          onTap: onTap,
         );
       },
     );
@@ -397,7 +426,7 @@ abstract class UserEditScreen<T extends User> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (context) => UserViewCubit(),
+      create: (context) => UserViewCubit<Widget>(data: Container()),
       child: Scaffold(
         appBar: AppBar(
           title: title(),
@@ -424,10 +453,10 @@ abstract class UserEditScreen<T extends User> extends StatelessWidget {
                 ))
           ],
         ),
-        body: BlocBuilder<UserViewCubit, UserViewState>(
+        body: BlocBuilder<UserViewCubit<Widget>, UserViewState>(
           builder: (context, state) {
             if (state is UserViewInitial) {
-              context.read<UserViewCubit>().init<Widget>(func: addWidgets);
+              context.read<UserViewCubit<Widget>>().init(func: addWidgets);
               return loading();
             } else if (state is UserViewWithData<Widget>) {
               return SingleChildScrollView(

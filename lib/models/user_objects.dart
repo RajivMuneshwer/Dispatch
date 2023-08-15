@@ -77,6 +77,7 @@ class Admin extends User {
 class UserAdaptor<T extends User> {
   T adaptSnapshot(DataSnapshot snapshot) {
     Map<dynamic, dynamic> objectMap = snapshot.value as Map<dynamic, dynamic>;
+    print(objectMap);
     int id = objectMap['id'] as int;
     String name = objectMap['name'] as String;
 
