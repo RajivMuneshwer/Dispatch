@@ -1,12 +1,51 @@
 import 'dart:async';
 import 'package:dispatch/cubit/message/messages_view_cubit.dart';
+import 'package:dispatch/database/requestee_database.dart';
+import 'package:dispatch/models/user_objects.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../models/message_models.dart';
 
-class MessageScreen extends StatefulWidget {
-  const MessageScreen({super.key});
+class RequesteeMessageScreen extends StatelessWidget {
+  final Requestee user;
+  const RequesteeMessageScreen({super.key, required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return MessageScreen<Requestee>(
+      user: user,
+      database: RequesteeMessagesDatabase(requestee: user),
+    );
+  }
+}
+
+class DispatcherMessageScreen extends StatelessWidget {
+  final Dispatcher user;
+  final Requestee requestee;
+  const DispatcherMessageScreen({
+    super.key,
+    required this.user,
+    required this.requestee,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return MessageScreen<Dispatcher>(
+      user: user,
+      database: RequesteeMessagesDatabase(requestee: requestee),
+    );
+  }
+}
+
+class MessageScreen<T extends User> extends StatefulWidget {
+  final T user;
+  final RequesteeMessagesDatabase database;
+  const MessageScreen({
+    super.key,
+    required this.user,
+    required this.database,
+  });
 
   @override
   State<MessageScreen> createState() => _MessageScreenState();
@@ -26,7 +65,10 @@ class _MessageScreenState extends State<MessageScreen> {
     return Scaffold(
       appBar: AppBar(),
       body: BlocProvider(
-        create: (context) => MessagesViewCubit("test"),
+        create: (context) => MessagesViewCubit(
+          widget.user,
+          widget.database,
+        ),
         child: Column(
           children: [
             DisplayMessagesWidget(
@@ -52,12 +94,12 @@ class DisplayMessagesWidget extends StatefulWidget {
 }
 
 class _DisplayMessagesWidgetState extends State<DisplayMessagesWidget> {
-  late final List<StreamSubscription<DatabaseEvent>> subscriptions;
+  List<StreamSubscription<DatabaseEvent>> subscriptions = [];
 
   @override
   void dispose() async {
     for (final subscription in subscriptions) {
-      await subscription.cancel();
+      subscription.cancel();
     }
     super.dispose();
   }

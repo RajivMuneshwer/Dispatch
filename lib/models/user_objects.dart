@@ -20,11 +20,15 @@ sealed class User extends SortableObject<String> {
 
 class Requestee extends User {
   final int? dispatcherid;
+  final int? numOfUnreadMessages;
+  final int? lastMessageTime;
   Requestee({
     required super.id,
     required super.name,
     required super.sortBy,
     this.dispatcherid,
+    this.numOfUnreadMessages,
+    this.lastMessageTime,
   });
 
   @override
@@ -87,6 +91,8 @@ class UserAdaptor<T extends User> {
           name: name,
           sortBy: name,
           dispatcherid: objectMap['dispatcherid'] as int?,
+          numOfUnreadMessages: objectMap['numOfUnreadMessages'] as int?,
+          lastMessageTime: objectMap['lastMessageTime'] as int?,
         ) as T,
       Dispatcher => Dispatcher(
           id: id,

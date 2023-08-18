@@ -1,15 +1,38 @@
 part of 'messages_view_cubit.dart';
 
 @immutable
-abstract class MessagesViewState {}
+abstract class MessagesViewState {
+  final User user;
+  final RequesteeMessagesDatabase database;
+  const MessagesViewState({required this.user, required this.database});
+}
 
-class MessagesViewInitial extends MessagesViewState {}
+class MessagesViewInitial extends MessagesViewState {
+  const MessagesViewInitial({
+    required super.database,
+    required super.user,
+  });
+}
 
-class MessagesViewLoading extends MessagesViewState {}
+class MessagesViewLoading extends MessagesViewState {
+  const MessagesViewLoading({
+    required super.database,
+    required super.user,
+  });
+}
 
 class MessagesViewLoaded extends MessagesViewState {
   final List<Message> messages;
-  MessagesViewLoaded(this.messages);
+  const MessagesViewLoaded({
+    required this.messages,
+    required super.user,
+    required super.database,
+  });
 }
 
-class MessagesViewError extends MessagesViewState {}
+class MessagesViewError extends MessagesViewState {
+  const MessagesViewError({
+    required super.database,
+    required super.user,
+  });
+}

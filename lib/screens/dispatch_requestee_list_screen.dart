@@ -1,53 +1,46 @@
+import 'package:dispatch/database/user_database.dart';
 import 'package:dispatch/models/user_objects.dart';
 import 'package:dispatch/screens/message_screen.dart';
-import 'package:dispatch/screens/user_list_screen.dart';
+import 'package:dispatch/screens/user_screens.dart';
 import 'package:flutter/material.dart';
 
-class DispatchRequesteeListScreen extends UserListScreen {
-  const DispatchRequesteeListScreen({
+class RequesteeMessageListScreen extends UserListScreen<Requestee> {
+  final DispatcherDatabase database = DispatcherDatabase();
+  final Dispatcher dispatcher =
+      Dispatcher(id: 1691793507356, name: "Tasha", sortBy: "Tasha");
+  RequesteeMessageListScreen({
     super.key,
     super.title = "Requestee Messages",
   });
 
   @override
-  Future<List<User>> initUsers() {
-    return Future.delayed(duration, () {
-      List<Requestee> requestees = [
-        Requestee(id: 1, name: 'test', sortBy: 'test'),
-        Requestee(id: 2, name: 'daniel', sortBy: 'daniel'),
-        Requestee(id: 3, name: 'valeria', sortBy: 'valeria'),
-        Requestee(id: 4, name: 'tommy', sortBy: 'tommy'),
-        Requestee(id: 5, name: 'jay', sortBy: 'jay'),
-        Requestee(id: 6, name: 'rajiv', sortBy: 'rajiv'),
-        Requestee(id: 7, name: 'rust', sortBy: 'rust'),
-      ];
-      return requestees;
-    });
-  }
+  Future<List<Requestee>> initUsers() async =>
+      (await database.getRequestees(id: dispatcher.id))
+          .map((snapshot) => UserAdaptor<Requestee>().adaptSnapshot(snapshot))
+          .toList();
 
   @override
-  UserRowFactory<User> rowFactory() => const GenericUserRowFactory();
+  UserRowFactory<Requestee> rowFactory() => RequesteeMessagesRowFactory();
 
   @override
-  void Function() onTap(User user, BuildContext context) {
+  void Function() onTap(Requestee user, BuildContext context) {
     return () => Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const MessageScreen(),
+            builder: (context) => DispatcherMessageScreen(
+              user: dispatcher,
+              requestee: user,
+            ),
           ),
         );
   }
 
   @override
-  Widget? floatingActionButton() {
-    throw UnimplementedError();
-  }
+  Widget? floatingActionButton() => null;
 
   @override
-  Future<List<User>> Function() loadUsers(User lastUsers) {
-    // TODO: implement loadMoreUsers
-    throw UnimplementedError();
-  }
+  Future<List<Requestee>> Function() loadUsers(User lastUsers) =>
+      () async => [];
 }
 
 const duration = Duration(microseconds: 100);

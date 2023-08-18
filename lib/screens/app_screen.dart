@@ -17,12 +17,19 @@ class App extends StatelessWidget {
         final args = settings.arguments;
 
         switch (settings.name) {
-          case '/message':
-            return MaterialPageRoute(builder: (_) => const MessageScreen());
-
-          case '/dispatch':
+          case '/':
             return MaterialPageRoute(
-                builder: (_) => const DispatchRequesteeListScreen());
+              builder: (_) => RequesteeMessageScreen(
+                user: Requestee(
+                    id: 1691793872626,
+                    name: "Rajiv Muneshwer",
+                    sortBy: "Rajiv Muneshwer"),
+              ),
+            );
+
+          case '/dispatcher':
+            return MaterialPageRoute(
+                builder: (_) => RequesteeMessageListScreen());
 
           case '/ticket':
             if (args is TicketViewWithData) {
@@ -56,7 +63,7 @@ class App extends StatelessWidget {
                       });
             }
 
-          case '/':
+          case '/admin':
             return MaterialPageRoute(
               builder: (_) => const AdminScreen(),
             );

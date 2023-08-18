@@ -6,6 +6,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:flutter_profile_picture/flutter_profile_picture.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:intl/intl.dart';
 
 abstract class UserListScreen<T extends User> extends StatelessWidget {
   final String title;
@@ -83,6 +84,7 @@ abstract class UserInfoScreen<T extends User, M extends User>
   });
 
   Future<List<M>> additionData();
+  Future<List<M>?> Function() loadData(M lastUsers);
   void Function() onUserTap(M user, BuildContext context);
   void Function() onEditTap(T user, BuildContext context);
 
@@ -105,30 +107,48 @@ abstract class UserInfoScreen<T extends User, M extends User>
                 }
               case UserViewWithData<List<M>>():
                 {
-                  return RefreshIndicator(
-                    onRefresh: () async => context
-                        .read<UserViewCubit<List<M>>>()
-                        .init(func: additionData),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 40.0),
-                        NameInfoBox(user: user),
-                        const SizedBox(height: 20.0),
-                        HeaderText<M>(),
-                        Expanded(
-                          flex: 2,
-                          child: UserList<M>(
-                            initUsers: state.data,
-                            onTap: onUserTap,
-                            rowFactory: const GenericUserRowFactory(),
+                  return NotificationListener<ScrollNotification>(
+                    onNotification: (ScrollNotification notification) {
+                      if (notification.metrics.pixels ==
+                          notification.metrics.maxScrollExtent) {
+                        if (state.canUpdate) {
+                          context.read<UserViewCubit<List<M>>>().update(
+                                downloadfunc: loadData(state.data.last),
+                                combine: (newdata, olddata) {
+                                  olddata.addAll(newdata);
+                                  return olddata;
+                                },
+                              );
+                        }
+                      }
+
+                      return true;
+                    },
+                    child: RefreshIndicator(
+                      onRefresh: () async => context
+                          .read<UserViewCubit<List<M>>>()
+                          .init(func: additionData),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 40.0),
+                          NameInfoBox(user: user),
+                          const SizedBox(height: 20.0),
+                          HeaderText<M>(),
+                          Expanded(
+                            flex: 2,
+                            child: UserList<M>(
+                              initUsers: state.data,
+                              onTap: onUserTap,
+                              rowFactory: const GenericUserRowFactory(),
+                            ),
                           ),
-                        ),
-                        EditUserButton<T>(
-                          user: user,
-                          onEditTap: onEditTap,
-                        ),
-                      ],
+                          EditUserButton<T>(
+                            user: user,
+                            onEditTap: onEditTap,
+                          ),
+                        ],
+                      ),
                     ),
                   );
                 }
@@ -324,6 +344,21 @@ class GenericUserRowFactory extends UserRowFactory<User> {
   }
 }
 
+class RequesteeMessagesRowFactory extends UserRowFactory<Requestee> {
+  @override
+  List<Widget> make(Requestee? user) {
+    if (user == null) return [];
+    return [
+      UserProfilePic(name: user.name),
+      UserNameBox(name: user.name),
+      UserMessageInfo(
+        numOfUnreadMessages: user.numOfUnreadMessages ?? 2,
+        time: user.lastMessageTime ?? DateTime.now().millisecondsSinceEpoch,
+      ),
+    ];
+  }
+}
+
 class UserProfilePic extends StatelessWidget {
   final String name;
   const UserProfilePic({
@@ -371,6 +406,93 @@ class UserNameBox extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class UserMessageInfo extends StatelessWidget {
+  final int numOfUnreadMessages;
+  final int? time;
+  const UserMessageInfo({
+    super.key,
+    required this.numOfUnreadMessages,
+    required this.time,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Flexible(
+        flex: 2,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            MessageTimeTextWidget(time: time),
+            MessageNumberWidget(numOfUnreadMessages: numOfUnreadMessages)
+          ],
+        ));
+  }
+}
+
+class MessageNumberWidget extends StatelessWidget {
+  final int numOfUnreadMessages;
+  const MessageNumberWidget({super.key, required this.numOfUnreadMessages});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 25,
+      width: 25,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: (numOfUnreadMessages > 0) ? Colors.red : Colors.transparent,
+      ),
+      child: Center(
+          child: Text(
+        (numOfUnreadMessages > 0) ? numOfUnreadMessages.toString() : "",
+        style: const TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+          fontSize: 12,
+        ),
+      )),
+    );
+  }
+}
+
+class MessageTimeTextWidget extends StatelessWidget {
+  final int? time;
+  const MessageTimeTextWidget({
+    super.key,
+    required this.time,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    DateTime now = DateTime.now();
+    DateTime todayDateTime = DateTime(now.year, now.month, now.day);
+    int today = todayDateTime.millisecondsSinceEpoch;
+    String text = "";
+    var time_ = time;
+    if (time_ == null) return Text(text);
+    DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(time_);
+    if (time_ >= today) {
+      text = DateFormat.jm().format(dateTime);
+    } else {
+      Duration difference = todayDateTime.difference(dateTime);
+      if (difference.inDays == 0) {
+        text = "Yesterday";
+      } else if (difference.inDays >= 7) {
+        text = "${difference.inDays} days ago";
+      } else {
+        text = DateFormat.yMd().format(dateTime);
+      }
+    }
+    return Text(
+      text,
+      style: TextStyle(
+        color: Colors.grey.shade700,
+        fontSize: 15,
       ),
     );
   }

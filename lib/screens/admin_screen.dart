@@ -175,6 +175,9 @@ class AdminInfoScreen extends UserInfoScreen<Admin, User> {
                 builder: (context) => EditScreenFactory()
                     .make<Admin>(database: database, user: user)),
           );
+
+  @override
+  Future<List<User>?> Function() loadData(User lastUsers) => () async => null;
 }
 
 class RequesteeInfoScreen extends UserInfoScreen<Requestee, Dispatcher> {
@@ -216,6 +219,10 @@ class RequesteeInfoScreen extends UserInfoScreen<Requestee, Dispatcher> {
                 builder: (context) => EditScreenFactory()
                     .make<Requestee>(database: database, user: user)),
           );
+
+  @override
+  Future<List<Dispatcher>?> Function() loadData(Dispatcher lastUsers) =>
+      () async => null;
 }
 
 class DispatcherInfoScreen extends UserInfoScreen<Dispatcher, Requestee> {
@@ -233,6 +240,10 @@ class DispatcherInfoScreen extends UserInfoScreen<Dispatcher, Requestee> {
       return [];
     }
     List<Requestee> requestees = [];
+    (
+      await database.getSome<Requestee>(
+          limit: 10, lastUser: null, orderBy: "id"),
+    );
     for (final id in ids) {
       requestees.addAll((await database.getOne<Requestee>(id))
           .map((snapshot) => UserAdaptor<Requestee>().adaptSnapshot(snapshot))
@@ -262,6 +273,10 @@ class DispatcherInfoScreen extends UserInfoScreen<Dispatcher, Requestee> {
                 builder: (context) => EditScreenFactory()
                     .make<Dispatcher>(database: database, user: user)),
           );
+
+  @override
+  Future<List<Requestee>?> Function() loadData(Requestee lastUsers) =>
+      () async => null;
 }
 
 class UserErrorScreen extends UserInfoScreen<User, User> {
@@ -284,6 +299,12 @@ class UserErrorScreen extends UserInfoScreen<User, User> {
 
   @override
   void Function() onEditTap(User user, BuildContext context) {
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<List<User>?> Function() loadData(User lastUsers) {
+    // TODO: implement loadData
     throw UnimplementedError();
   }
 }

@@ -291,7 +291,10 @@ class DispatcherDatabase extends AppDatabase {
       case Requestee():
         {
           String path = "${user.dispatcherid}/requesteesid/${user.id}";
-          ref.child(path).set({"id": user.id});
+          ref.child(path).set({
+            "id": user.id,
+            "name": user.name,
+          });
           return;
         }
       case Dispatcher():
@@ -321,7 +324,9 @@ class DispatcherDatabase extends AppDatabase {
           await ref.child(prevdispatchpath).remove();
           String newdispatchpath =
               "${value['dispatcherid']}/requesteesid/${user.id}";
-          await ref.child(newdispatchpath).set({"id": user.id});
+          await ref
+              .child(newdispatchpath)
+              .set({"id": user.id, "name": user.name});
         }
       case Dispatcher():
         {}
@@ -374,6 +379,10 @@ class DispatcherDatabase extends AppDatabase {
               .get())
           .children,
     };
+  }
+
+  Future<Iterable<DataSnapshot>> getRequestees({required int id}) async {
+    return (await ref.child("$id/requesteesid").get()).children;
   }
 }
 

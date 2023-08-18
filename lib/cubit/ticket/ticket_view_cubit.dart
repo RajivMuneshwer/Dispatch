@@ -1,4 +1,5 @@
 import 'package:bloc/bloc.dart';
+import 'package:dispatch/cubit/message/messages_view_cubit.dart';
 import 'package:dispatch/models/ticket_models.dart';
 import 'package:flutter/material.dart';
 import 'package:meta/meta.dart';
@@ -78,6 +79,7 @@ class TicketViewCubit extends Cubit<TicketViewState> {
             formLayoutList: formLayoutList,
             id: currentState.id,
             color: currentState.color,
+            messagesState: currentState.messagesState,
             enabled: true,
             animate: true,
             bottomButtonType: currentState.bottomButtonType,
@@ -101,6 +103,7 @@ class TicketViewCubit extends Cubit<TicketViewState> {
             TicketViewWithData(
               formLayoutList: formLayoutList,
               id: currentState.id,
+              messagesState: currentState.messagesState,
               color: currentState.color,
               enabled: true,
               animate: false,
@@ -130,6 +133,7 @@ class TicketViewCubit extends Cubit<TicketViewState> {
           TicketViewWithData(
             formLayoutList: formLayoutList,
             id: state_.id,
+            messagesState: state_.messagesState,
             color: state_.color,
             enabled: state_.enabled,
             animate: state_.animate,
@@ -162,6 +166,7 @@ class TicketViewCubit extends Cubit<TicketViewState> {
           TicketViewWithData(
             formLayoutList: formLayoutList,
             id: state_.id,
+            messagesState: state_.messagesState,
             animate: false,
             enabled: true,
             color: state_.color,
@@ -189,6 +194,7 @@ class TicketViewCubit extends Cubit<TicketViewState> {
         TicketViewWithData(
           formLayoutList: formLayoutList,
           id: state_.id,
+          messagesState: state_.messagesState,
           animate: false,
           enabled: true,
           color: state_.color,

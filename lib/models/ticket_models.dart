@@ -1,5 +1,4 @@
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
-import 'package:dispatch/database/requestee_database.dart';
 import 'package:dispatch/models/message_models.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
@@ -799,7 +798,8 @@ class CustomSubmitButton extends StatelessWidget {
               context,
             );
             //Add the message bloc to add this new message to the message
-            await RequesteeMessagesDatabase().addMessage(newMessageTicket);
+            await ticketViewState.messagesState.database
+                .addMessage(newMessageTicket);
           },
           child: const Padding(
             padding: EdgeInsets.all(10.0),
@@ -821,7 +821,7 @@ class CancelButton extends StatelessWidget {
         if (state is! TicketViewWithData) return Container();
         return ElevatedButton(
           onPressed: () {
-            RequesteeMessagesDatabase()
+            state.messagesState.database
                 .updateTicketType(state.id.toString(), TicketTypes.cancelled);
             Navigator.pop(
               context,
@@ -857,7 +857,7 @@ class UpdateButton extends StatelessWidget {
             String encodedTicket =
                 FormLayoutEncoder.encode(state.formLayoutList);
             String messageID = state.id.toString();
-            RequesteeMessagesDatabase()
+            state.messagesState.database
                 .updateTicketMessage(messageID, encodedTicket);
             Navigator.pop(context);
           },

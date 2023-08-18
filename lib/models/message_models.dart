@@ -1,9 +1,9 @@
 import 'dart:async';
 import 'package:dispatch/cubit/message/messages_view_cubit.dart';
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
-import 'package:dispatch/database/requestee_database.dart';
 import 'package:dispatch/models/rnd_message_generator.dart';
 import 'package:dispatch/models/ticket_models.dart';
+import 'package:dispatch/models/user_objects.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -22,10 +22,18 @@ class NewMessageWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<MessagesViewCubit, MessagesViewState>(
         builder: (context, state) {
+      print(state);
+      var state_ = state;
       Future<void> submit(String text) async {
-        Message newMessage = MessageAdaptor.adaptText(text);
+        var user = state_.user;
+        bool isDispatch = switch (user) {
+          Dispatcher() => true,
+          _ => false,
+        };
+        print(isDispatch);
+        Message newMessage = MessageAdaptor.adaptText(text, isDispatch);
         context.read<MessagesViewCubit>().add(newMessage);
-        await RequesteeMessagesDatabase().addMessage(newMessage);
+        await state_.database.addMessage(newMessage);
         scrollDown(controller);
       }
 
@@ -44,6 +52,7 @@ class NewMessageWidget extends StatelessWidget {
                       arguments: TicketViewWithData(
                         formLayoutList: getNewTicketLayout(),
                         id: generateNewTicketID(),
+                        messagesState: state_,
                         color: Colors.blue,
                         animate: true,
                         enabled: true,
@@ -74,13 +83,33 @@ GroupedListView<Message, DateTime> groupListView(BuildContext context,
         child: Text(DateFormat.yMMMd().format(element.date)),
       ),
     ),
-    itemBuilder: (BuildContext context, Message element) => (element.isTicket)
-        ? ticketRendered(context, element)
-        : messageRendered(context, element),
+    itemBuilder: (BuildContext context, Message element) =>
+        renderItem(context: context, element: element, state: state),
     elements: state.messages,
     groupBy: (message) =>
         DateTime(message.date.year, message.date.month, message.date.day),
   );
+}
+
+Widget renderItem({
+  required BuildContext context,
+  required Message element,
+  required MessagesViewState state,
+}) {
+  var user = state.user;
+  bool isSender_ = switch (user) {
+    Dispatcher() => (element.isDispatch),
+    _ => (!element.isDispatch),
+  };
+
+  return (element.isTicket)
+      ? ticketRendered(
+          context: context,
+          ticket: element,
+          isSender: isSender_,
+          messageState: state)
+      : messageRendered(
+          context: context, message: element, isSender: isSender_);
 }
 
 void scrollDown(ScrollController controller) {
@@ -113,7 +142,9 @@ Widget messageBody(BuildContext context, ScrollController controller,
     child: CustomRefreshIndicator(
       builder: MaterialIndicatorDelegate(
         builder: (context, controller) {
-          return refreshIndicator(context, controller);
+          return RefreshIndicator(
+            controller: controller,
+          );
         },
       ),
       onRefresh: context.read<MessagesViewCubit>().loadPreviousMessages,
@@ -121,6 +152,37 @@ Widget messageBody(BuildContext context, ScrollController controller,
       child: groupListView(context, state, controller),
     ),
   );
+}
+
+class RefreshIndicator extends StatelessWidget {
+  final IndicatorController controller;
+  const RefreshIndicator({
+    super.key,
+    required this.controller,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 150),
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(
+        color: Colors.blue,
+        shape: BoxShape.circle,
+      ),
+      child: SizedBox(
+        height: 30,
+        width: 30,
+        child: CircularProgressIndicator(
+          strokeWidth: 2,
+          valueColor: const AlwaysStoppedAnimation(Colors.white),
+          value: controller.isDragging || controller.isArmed
+              ? controller.value.clamp(0.0, 1.0)
+              : null,
+        ),
+      ),
+    );
+  }
 }
 
 Widget refreshIndicator(BuildContext context, IndicatorController controller) {
@@ -145,33 +207,46 @@ Widget refreshIndicator(BuildContext context, IndicatorController controller) {
   );
 }
 
-Widget messageRendered(BuildContext context, Message element) => TextBubble(
-      date: element.date,
-      text: element.text,
+Widget messageRendered({
+  required BuildContext context,
+  required Message message,
+  required bool isSender,
+}) =>
+    TextBubble(
+      date: message.date,
+      text: message.text,
       color: Colors.white,
       tail: true,
-      sent: element.sent,
+      sent: message.sent,
+      isSender: isSender,
     );
 
-Widget ticketRendered(BuildContext context, Message message) {
+Widget ticketRendered({
+  required BuildContext context,
+  required Message ticket,
+  required bool isSender,
+  required MessagesViewState messageState,
+}) {
   return TicketBubble(
     onPressed: () {
       final List<List<String>> formLayoutList =
-          FormLayoutEncoder.decode(message.text);
+          FormLayoutEncoder.decode(ticket.text);
       Navigator.pushNamed(
         context,
         '/ticket',
         arguments: ticketTypeToState(
           formLayoutList: formLayoutList,
-          ticketTypes: message.ticketType,
-          id: message.id,
+          ticketTypes: ticket.ticketType,
+          id: ticket.id,
+          messageState: messageState,
         ),
       );
     },
-    date: message.date,
+    isSender: isSender,
+    date: ticket.date,
     text: RndMessageGenerator.generate(),
-    iconColor: ticketTypeToColor[message.ticketType] ?? Colors.blue,
-    ticketTypes: message.ticketType,
+    iconColor: ticketTypeToColor[ticket.ticketType] ?? Colors.blue,
+    ticketTypes: ticket.ticketType,
   );
 }
 
@@ -200,11 +275,11 @@ class Message {
 }
 
 class MessageAdaptor {
-  static Message adaptText(String text) {
+  static Message adaptText(String text, bool isDispatch) {
     return Message(
       text: text,
       date: DateTime.now(),
-      isDispatch: false,
+      isDispatch: isDispatch,
       sent: false,
       isTicket: false,
       ticketType: TicketTypes.submitted,
@@ -258,19 +333,29 @@ const ticketTypeToColor = {
 TicketViewWithData ticketTypeToState({
   required TicketTypes ticketTypes,
   required List<List<String>> formLayoutList,
+  required MessagesViewState messageState,
   required int id,
 }) {
   var ticketTypeToStateMap = {
-    TicketTypes.submitted:
-        TicketViewSubmitted(formLayoutList: formLayoutList, id: id),
-    TicketTypes.cancelled:
-        TicketViewCanceled(formLayoutList: formLayoutList, id: id),
-    TicketTypes.confirmed:
-        TicketViewConfirmed(formLayoutList: formLayoutList, id: id),
+    TicketTypes.submitted: TicketViewSubmitted(
+      formLayoutList: formLayoutList,
+      id: id,
+      messagesState: messageState,
+    ),
+    TicketTypes.cancelled: TicketViewCanceled(
+      formLayoutList: formLayoutList,
+      id: id,
+      messagesState: messageState,
+    ),
+    TicketTypes.confirmed: TicketViewConfirmed(
+      formLayoutList: formLayoutList,
+      id: id,
+      messagesState: messageState,
+    ),
   };
 
-  TicketViewWithData defaultTicket =
-      TicketViewSubmitted(formLayoutList: formLayoutList, id: id);
+  TicketViewWithData defaultTicket = TicketViewSubmitted(
+      formLayoutList: formLayoutList, id: id, messagesState: messageState);
 
   return ticketTypeToStateMap[ticketTypes] ?? defaultTicket;
 }
