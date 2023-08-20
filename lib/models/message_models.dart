@@ -22,7 +22,6 @@ class NewMessageWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocBuilder<MessagesViewCubit, MessagesViewState>(
         builder: (context, state) {
-      print(state);
       var state_ = state;
       Future<void> submit(String text) async {
         var user = state_.user;
@@ -215,7 +214,9 @@ Widget messageRendered({
     TextBubble(
       date: message.date,
       text: message.text,
-      color: Colors.white,
+      color: (isSender)
+          ? Color.fromRGBO(220, 220, 220, 1)
+          : Color.fromRGBO(200, 200, 200, 1),
       tail: true,
       sent: message.sent,
       isSender: isSender,
@@ -227,6 +228,10 @@ Widget ticketRendered({
   required bool isSender,
   required MessagesViewState messageState,
 }) {
+  bool isDispatch = switch (messageState.user) {
+    Dispatcher() => true,
+    _ => false,
+  };
   return TicketBubble(
     onPressed: () {
       final List<List<String>> formLayoutList =
@@ -244,9 +249,15 @@ Widget ticketRendered({
     },
     isSender: isSender,
     date: ticket.date,
-    text: RndMessageGenerator.generate(),
+    text: MessageGenerator.generate(
+      number: ticket.text.length,
+      isDispatch: isDispatch,
+    ),
     iconColor: ticketTypeToColor[ticket.ticketType] ?? Colors.blue,
     ticketTypes: ticket.ticketType,
+    color: (isSender)
+        ? Color.fromRGBO(220, 220, 220, 1)
+        : Color.fromRGBO(200, 200, 200, 1),
   );
 }
 
@@ -299,12 +310,14 @@ class MessageAdaptor {
     );
   }
 
-  static Message adaptTicketState(TicketViewWithData state) {
-    String encodedFormLayout = FormLayoutEncoder.encode(state.formLayoutList);
+  static Message adaptTicketState(
+      TicketViewWithData ticketState, bool isDispatch) {
+    String encodedFormLayout =
+        FormLayoutEncoder.encode(ticketState.formLayoutList);
     return Message(
       text: encodedFormLayout,
       date: DateTime.now(),
-      isDispatch: false,
+      isDispatch: isDispatch,
       sent: false,
       isTicket: true,
       ticketType: TicketTypes.submitted,

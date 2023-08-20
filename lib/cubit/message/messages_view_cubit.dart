@@ -16,7 +16,7 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
   final int numOfMessagesToLoadAfterInitial = 10;
   Map<int, Message> messagesMap = {};
   late int earliestMessageTime;
-  static bool isComplete = false;
+  bool isComplete = false;
 
   MessagesViewCubit(
     this.user,
@@ -30,7 +30,6 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
     final StreamSubscription<DatabaseEvent> childAddSubscription =
         childAddStream.listen(
       (event) {
-        print("hi");
         final snapshot = event.snapshot;
         Message newMessage = MessageAdaptor.adaptSnapshot(snapshot);
 
@@ -67,30 +66,23 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
     final Stream<DatabaseEvent> childUpdateStream = database.onChildChanged();
 
     final StreamSubscription<DatabaseEvent> childUpdateSubscription =
-        childUpdateStream.listen((event) {
-      final snapshot = event.snapshot;
-      Message updatedMessage = MessageAdaptor.adaptSnapshot(snapshot);
-      Message? messageInMap = messagesMap[updatedMessage.id];
+        childUpdateStream.listen(
+      (event) {
+        final snapshot = event.snapshot;
+        Message updatedMessage = MessageAdaptor.adaptSnapshot(snapshot);
+        Message? messageInMap = messagesMap[updatedMessage.id];
 
-      if (messageInMap == null) return;
+        if (messageInMap == null) return;
 
-      messagesMap[updatedMessage.id] = updatedMessage;
-      emit(MessagesViewLoaded(
-        messages: messagesMap.values.toList(),
-        user: user,
-        database: database,
-      ));
-      return;
-    });
-
-    if (state is MessagesViewInitial) {
-      earliestMessageTime = DateTime.now().millisecondsSinceEpoch;
-      emit(MessagesViewLoaded(
-        messages: messagesMap.values.toList(),
-        user: user,
-        database: database,
-      ));
-    }
+        messagesMap[updatedMessage.id] = updatedMessage;
+        emit(MessagesViewLoaded(
+          messages: messagesMap.values.toList(),
+          user: user,
+          database: database,
+        ));
+        return;
+      },
+    );
 
     return [childAddSubscription, childUpdateSubscription];
   }
@@ -131,10 +123,13 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
           };
           previousMessageMap.addAll(messagesMap);
           messagesMap = previousMessageMap;
-          emit(MessagesViewLoaded(
+          emit(
+            MessagesViewLoaded(
               messages: messagesMap.values.toList(),
               user: user,
-              database: database));
+              database: database,
+            ),
+          );
         }
       }
     }
@@ -142,12 +137,20 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
 }
 
 ////TODO
-///when you load all the messages once and exit the chat 
-///it does not reload
-///imply that is holding on to some information
+///Fix the date card on the messages
+///Put a time stamp when the ticket was completed
+///Put a widget to chose the driver but where? We need to create the driver user 
+///re-write the ticket parsing, but how? With a data structure?
+///make a login screen
+///make some class that has static variables that effectively sign the user in
+///add the phone numbers to the dispatcher and the requestees
 ///
+///
+///COMPLETED Aug 19
+///Fixed the inability to reload once already loaded
+///Fix that the tickets pop up on the user's side and not the dispatcher's
+///Fix the random messages for the dispatcher
 ///Put the name and profile picture of the requestee
-///
-///Weird bug where the messages switch sides and pop in the wrong order
-///
+///Make the dispatcher able to confirm the ticket
+///Fix the ticket color
 ///

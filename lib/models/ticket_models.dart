@@ -1,5 +1,6 @@
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
 import 'package:dispatch/models/message_models.dart';
+import 'package:dispatch/models/user_objects.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -118,7 +119,9 @@ List<Widget> buildTicketWidgets({
     listBuilder.addConnector();
     listBuilder.addPlusButton();
     listBuilder.addVerticalSpace(10.0);
-    listBuilder.addCancelOrUpdateRow();
+    (ticketViewWithData.messagesState.user is! Dispatcher)
+        ? listBuilder.addCancelOrUpdateRow()
+        : listBuilder.addCancelUpdateOrConfirm();
   }
 
   return listBuilder.build();
@@ -211,6 +214,11 @@ class ListBuilder {
 
   ListBuilder addCancelOrUpdateRow() {
     children.add(const CancelOrUpdateRow());
+    return this;
+  }
+
+  ListBuilder addCancelUpdateOrConfirm() {
+    children.add(const CancelUpdateOrConfirm());
     return this;
   }
 
@@ -351,6 +359,21 @@ class CancelOrUpdateRow extends StatelessWidget {
   }
 }
 
+class CancelUpdateOrConfirm extends StatelessWidget {
+  const CancelUpdateOrConfirm({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return RowBuilder()
+        .addCancel()
+        .addSpace()
+        .addUpdate()
+        .addSpace()
+        .addConfirm()
+        .build();
+  }
+}
+
 class RowBuilder {
   List<Widget> children = [];
   RowBuilder();
@@ -409,12 +432,17 @@ class RowBuilder {
   }
 
   RowBuilder addCancel() {
-    children.add(CancelButton());
+    children.add(const CancelButton());
     return this;
   }
 
   RowBuilder addUpdate() {
-    children.add(UpdateButton());
+    children.add(const UpdateButton());
+    return this;
+  }
+
+  RowBuilder addConfirm() {
+    children.add(const ConfirmButton());
     return this;
   }
 
@@ -701,7 +729,7 @@ class ConnectingLine extends StatelessWidget {
               alignment: WrapAlignment.center,
               direction: Axis.vertical,
               lineLength: 40,
-              lineThickness: 1.0,
+              lineThickness: 1.5,
               dashColor: state.color,
             ),
           ),
@@ -792,8 +820,15 @@ class CustomSubmitButton extends StatelessWidget {
             if (ticketViewState is! TicketViewWithData) {
               return;
             }
-            Message newMessageTicket =
-                MessageAdaptor.adaptTicketState(ticketViewState);
+            final bool isDispatch =
+                switch (ticketViewState.messagesState.user) {
+              Dispatcher() => true,
+              _ => false,
+            };
+            Message newMessageTicket = MessageAdaptor.adaptTicketState(
+              ticketViewState,
+              isDispatch,
+            );
             Navigator.pop(
               context,
             );
@@ -823,9 +858,7 @@ class CancelButton extends StatelessWidget {
           onPressed: () {
             state.messagesState.database
                 .updateTicketType(state.id.toString(), TicketTypes.cancelled);
-            Navigator.pop(
-              context,
-            );
+            Navigator.pop(context);
           },
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.red,
@@ -868,6 +901,38 @@ class UpdateButton extends StatelessWidget {
           child: const Text(
             "Update",
             style: TextStyle(color: Colors.white),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class ConfirmButton extends StatelessWidget {
+  const ConfirmButton({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TicketViewCubit, TicketViewState>(
+      builder: (context, state) {
+        if (state is! TicketViewWithData) return Container();
+        return ElevatedButton(
+          onPressed: () {
+            state.messagesState.database
+                .updateTicketType(state.id.toString(), TicketTypes.confirmed);
+
+            Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.green,
+            side: const BorderSide(width: 1, color: Colors.green),
+          ),
+          child: const Text(
+            "Confirm",
+            style: TextStyle(
+              color: Colors.white,
+              backgroundColor: Colors.green,
+            ),
           ),
         );
       },

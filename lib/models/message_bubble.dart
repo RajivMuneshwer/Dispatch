@@ -154,6 +154,7 @@ class TicketBubble extends GenericBubble {
     required this.ticketTypes,
     required this.onPressed,
     required this.iconColor,
+    super.color,
     super.textStyle,
     super.sent,
     super.seen,
