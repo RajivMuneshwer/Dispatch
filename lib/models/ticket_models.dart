@@ -82,6 +82,12 @@ List<Widget> buildTicketWidgets({
     xOffset: xOffset,
   );
 
+  //// the below loop should only be for the main ticket body i.e. everything above the plus button
+  /// if you re-write to another system, there will be difficulties
+  /// adding rows or deleting rows,
+  /// controlling the maximum and minimum number of stops.
+  ///
+
   List<List<String>> formLayoutList = ticketViewWithData.formLayoutList;
   listBuilder.addFirstRow(
     time: int.parse(formLayoutList[0][timePos]),

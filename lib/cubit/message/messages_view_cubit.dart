@@ -138,12 +138,13 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
 
 ////TODO
 ///Fix the date card on the messages
-///Put a time stamp when the ticket was completed
-///Put a widget to chose the driver but where? We need to create the driver user 
-///re-write the ticket parsing, but how? With a data structure?
 ///make a login screen
 ///make some class that has static variables that effectively sign the user in
 ///add the phone numbers to the dispatcher and the requestees
+///re-write the ticket parsing, but how? With a data structure? with json and json parsing.
+///Put a time stamp when the ticket was completed
+///Put a widget to chose the driver but where? We need to create the driver user 
+///
 ///
 ///
 ///COMPLETED Aug 19

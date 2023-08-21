@@ -5,7 +5,6 @@ import 'package:dispatch/models/user_objects.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_profile_picture/flutter_profile_picture.dart';
 import '../models/message_models.dart';
 
 class RequesteeMessageScreen extends StatelessWidget {
@@ -17,11 +16,6 @@ class RequesteeMessageScreen extends StatelessWidget {
     return MessageScreen<Requestee>(
       user: user,
       database: RequesteeMessagesDatabase(requestee: user),
-      appBar: AppBar(
-        backgroundColor: Colors.white,
-        shadowColor: Colors.white,
-        elevation: 4,
-      ),
     );
   }
 }
@@ -40,26 +34,6 @@ class DispatcherMessageScreen extends StatelessWidget {
     return MessageScreen<Dispatcher>(
       user: user,
       database: RequesteeMessagesDatabase(requestee: requestee),
-      appBar: AppBar(
-        backgroundColor: Colors.blue,
-        centerTitle: false,
-        title: Row(children: [
-          ProfilePicture(
-            name: requestee.name,
-            radius: 21,
-            fontsize: 18,
-          ),
-          const SizedBox(
-            width: 10,
-          ),
-          Text(
-            requestee.name,
-            style: const TextStyle(
-              fontSize: 17.5,
-            ),
-          )
-        ]),
-      ),
     );
   }
 }
@@ -67,12 +41,10 @@ class DispatcherMessageScreen extends StatelessWidget {
 class MessageScreen<T extends User> extends StatefulWidget {
   final T user;
   final RequesteeMessagesDatabase database;
-  final AppBar appBar;
   const MessageScreen({
     super.key,
     required this.user,
     required this.database,
-    required this.appBar,
   });
 
   @override
@@ -91,14 +63,12 @@ class _MessageScreenState extends State<MessageScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: widget.appBar,
+      appBar: AppBar(),
       body: BlocProvider(
-        create: (context) {
-          return MessagesViewCubit(
-            widget.user,
-            widget.database,
-          );
-        },
+        create: (context) => MessagesViewCubit(
+          widget.user,
+          widget.database,
+        ),
         child: Column(
           children: [
             DisplayMessagesWidget(
