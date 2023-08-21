@@ -42,6 +42,10 @@ class UserChoicesColumn extends StatelessWidget {
           UserChoiceBubble<Admin>(
             database: adminDatabase,
           ),
+          const SizedBox(height: 40),
+          UserChoiceBubble<Driver>(
+            database: adminDatabase,
+          )
         ],
       ),
     );
@@ -60,6 +64,7 @@ class UserChoiceBubble<T extends User> extends StatelessWidget {
       Requestee => "Requestee",
       Dispatcher => "Dispatcher",
       Admin => "Admin",
+      Driver => "Driver",
       _ => "",
     };
   }
@@ -146,8 +151,55 @@ class UserInfoScreenFactory {
     return switch (user) {
       Requestee() => RequesteeInfoScreen(user: user, database: database),
       Dispatcher() => DispatcherInfoScreen(user: user, database: database),
-      Admin() => AdminInfoScreen(user: user, database: database)
+      Admin() => AdminInfoScreen(user: user, database: database),
+      Driver() => DriverInfoScreen(user: user, database: database),
     };
+  }
+}
+
+class DriverInfoScreen extends UserInfoScreen<Driver, Dispatcher> {
+  final AppDatabase database;
+  const DriverInfoScreen({
+    super.key,
+    required super.user,
+    required this.database,
+  });
+
+  @override
+  Future<List<Dispatcher>> additionData() async {
+    int? id = user.dispatcherid;
+    if (id == null) {
+      return [];
+    }
+    return (await database.getOne<Dispatcher>(id))
+        .map((snapshot) => UserAdaptor<Dispatcher>().adaptSnapshot(snapshot))
+        .toList();
+  }
+
+  @override
+  Future<List<Dispatcher>?> Function() loadData(Dispatcher lastUsers) =>
+      () async => null;
+
+  @override
+  void Function() onEditTap(Driver user, BuildContext context) => () =>
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) =>
+              EditScreenFactory().make<Driver>(database: database, user: user),
+        ),
+      );
+
+  @override
+  void Function() onUserTap(Dispatcher user, BuildContext context) {
+    return () => Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => DispatcherInfoScreen(
+            user: user,
+            database: database,
+          ),
+        ));
   }
 }
 
@@ -240,10 +292,6 @@ class DispatcherInfoScreen extends UserInfoScreen<Dispatcher, Requestee> {
       return [];
     }
     List<Requestee> requestees = [];
-    (
-      await database.getSome<Requestee>(
-          limit: 10, lastUser: null, orderBy: "id"),
-    );
     for (final id in ids) {
       requestees.addAll((await database.getOne<Requestee>(id))
           .map((snapshot) => UserAdaptor<Requestee>().adaptSnapshot(snapshot))
@@ -318,8 +366,86 @@ class EditScreenFactory {
       Dispatcher =>
         DispatchEditScreen(user: user as Dispatcher?, database: database),
       Admin => AdminEditScreen(user: user as Admin?, database: database),
+      Driver => DriverEditScreen(user: user as Driver?, database: database),
       _ => ErrorEditScreen(),
     };
+  }
+}
+
+class DriverEditScreen extends UserEditScreen<Driver> {
+  final AppDatabase database;
+  static const textName = "name";
+  static const dropdownName = "dispatcherid";
+  DriverEditScreen({
+    super.key,
+    required super.user,
+    required this.database,
+  });
+
+  @override
+  Future<Widget> addWidgets() async {
+    List<Dispatcher> dispatchers = (await database.getAll<Dispatcher>())
+        .map(
+          (e) => UserAdaptor<Dispatcher>().adaptSnapshot(e),
+        )
+        .toList();
+    var user_ = user;
+    return Column(
+      children: [
+        const SizedBox(height: 20),
+        EditTextFormField(name: textName, initial: user?.name),
+        const SizedBox(height: 20),
+        EditDropdownFormField(
+          dropdownOptions: dispatchers,
+          initialId: (user_ != null) ? user_.dispatcherid : null,
+          name: dropdownName,
+        ),
+      ],
+    );
+  }
+
+  @override
+  Future<void> createUser({required FormBuilderState state}) async {
+    if (state.fields
+        case {
+          textName: var textField,
+          dropdownName: var dropdownField,
+        }) {
+      final newDriver = Driver(
+        id: getUniqueid(),
+        name: textField.value,
+        sortBy: textField.value,
+        dispatcherid: dropdownField.value,
+      );
+      await AllDatabase().create<Driver>(newDriver);
+      return;
+    }
+  }
+
+  @override
+  Future<void> deleteUser({required Driver user}) async {
+    try {
+      await AllDatabase().delete<Driver>(user);
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  @override
+  Future<void> updateUser({
+    required FormBuilderState state,
+    required Driver user,
+  }) async {
+    if (state.fields
+        case {
+          textName: var textField,
+          dropdownName: var dropdownField,
+        }) {
+      await AllDatabase().update(user, {
+        "name": textField.value,
+        "dispatcherid": dropdownField.value,
+      });
+    }
   }
 }
 
@@ -599,7 +725,7 @@ class EditDropdownFormField extends StatelessWidget {
       padding: const EdgeInsets.all(8.0),
       child: FormBuilderDropdown<int>(
         decoration: const InputDecoration(
-          labelText: "Dispatcher",
+          labelText: "--Dispatcher--",
           labelStyle: TextStyle(fontWeight: FontWeight.normal),
         ),
         name: name,
@@ -724,6 +850,7 @@ enum UserType {
   requestee,
   dispatcher,
   admin,
+  driver,
   error,
 }
 
@@ -731,6 +858,7 @@ UserType typeToUserType<T extends User>() => switch (T) {
       Requestee => UserType.requestee,
       Dispatcher => UserType.dispatcher,
       Admin => UserType.admin,
+      Driver => UserType.driver,
       _ => UserType.error,
     };
 

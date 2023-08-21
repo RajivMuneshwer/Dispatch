@@ -29,6 +29,7 @@ class AdminDatabase extends AppDatabase {
       Requestee => 'requestees',
       Dispatcher => 'dispatchers',
       Admin => 'admin',
+      Driver => 'drivers',
       _ => '',
     };
   }
@@ -57,6 +58,13 @@ class AdminDatabase extends AppDatabase {
         {
           String dispatchPath = getpath<Dispatcher>();
           dispatchPath += "/${user.dispatcherid}/requesteesid/${user.id}";
+          await ref.child(dispatchPath).set(user.id);
+          return;
+        }
+      case Driver():
+        {
+          String dispatchPath = getpath<Dispatcher>();
+          dispatchPath += "/${user.dispatcherid}/driversid/${user.id}";
           await ref.child(dispatchPath).set(user.id);
           return;
         }
@@ -89,6 +97,20 @@ class AdminDatabase extends AppDatabase {
           await ref.child(newdispatchpath).set(user.id);
           await ref.child(olddispatchpath).remove();
         }
+      case Driver():
+        {
+          if (user.dispatcherid == value["dispatcherid"]) {
+            return;
+          }
+          String dispatchpath = getpath<Dispatcher>();
+          String newdispatchpath =
+              "$dispatchpath/${value["dispatcherid"]}/driversid/${user.id}";
+          String olddispatchpath =
+              "$dispatchpath/${user.dispatcherid}/driversid/${user.id}";
+
+          await ref.child(newdispatchpath).set(user.id);
+          await ref.child(olddispatchpath).remove();
+        }
       case Dispatcher():
         {
           return;
@@ -114,6 +136,16 @@ class AdminDatabase extends AppDatabase {
               "/${user.dispatcherid}/requesteesid/${user.id}";
 
           await ref.child(dispatchRequesteePath).remove();
+          return;
+        }
+      case Driver():
+        {
+          ref.child(path).remove();
+
+          String dispatchDriverPath = getpath<Dispatcher>();
+          dispatchDriverPath += "/${user.dispatcherid}/driversid/${user.id}";
+
+          await ref.child(dispatchDriverPath).remove();
           return;
         }
       case Dispatcher():
@@ -159,6 +191,96 @@ class AdminDatabase extends AppDatabase {
   }
 }
 
+class DriverDatabase extends AppDatabase {
+  @override
+  DatabaseReference get ref =>
+      FirebaseDatabase.instance.ref('muneshwers/drivers');
+
+  @override
+  Future<Iterable<DataSnapshot>> getOne<T extends User>(int id) async {
+    String path = '$id';
+    return switch (T) {
+      Requestee => [await ref.child(path).get()],
+      _ => [],
+    };
+  }
+
+  @override
+  Future<Iterable<DataSnapshot>> getSome<T extends User>({
+    required int limit,
+    required T? lastUser,
+    required String orderBy,
+  }) async {
+    return switch (lastUser) {
+      Dispatcher() => [],
+      Admin() => [],
+      Requestee() => [],
+      _ => (await ref
+              .orderByChild(orderBy)
+              .startAfter(lastUser?.name)
+              .limitToFirst(limit)
+              .get())
+          .children
+    };
+  }
+
+  @override
+  Future<Iterable<DataSnapshot>> getAll<T extends User>() {
+    // TODO: implement getAll
+    throw UnimplementedError();
+  }
+
+  @override
+  Future<void> create<T extends User>(T user) async {
+    String path = '${user.id}';
+    switch (user) {
+      case Driver():
+        {
+          await ref.child(path).set(user.toMap());
+          return;
+        }
+      case _:
+        {
+          return;
+        }
+    }
+  }
+
+  @override
+  Future<void> update<T extends User>(
+    T user,
+    Map<String, Object?> value,
+  ) async {
+    String path = '${user.id}';
+    switch (user) {
+      case Driver():
+        {
+          await ref.child(path).update(value);
+          return;
+        }
+      case _:
+        {
+          return;
+        }
+    }
+  }
+
+  @override
+  Future<void> delete<T extends User>(T user) async {
+    switch (user) {
+      case Driver():
+        {
+          String path = "${user.id}";
+          await ref.child(path).remove();
+        }
+      case _:
+        {
+          return;
+        }
+    }
+  }
+}
+
 class RequesteeDatabase extends AppDatabase {
   @override
   DatabaseReference get ref =>
@@ -175,8 +297,6 @@ class RequesteeDatabase extends AppDatabase {
     String path = '$id';
     return switch (T) {
       Requestee => [await ref.child(path).get()],
-      Dispatcher => [],
-      Admin => [],
       _ => [],
     };
   }
@@ -190,11 +310,7 @@ class RequesteeDatabase extends AppDatabase {
           await ref.child(path).set(user.toMap());
           return;
         }
-      case Dispatcher():
-        {
-          return;
-        }
-      case Admin():
+      case _:
         {
           return;
         }
@@ -203,7 +319,9 @@ class RequesteeDatabase extends AppDatabase {
 
   @override
   Future<void> update<T extends User>(
-      T user, Map<String, Object?> value) async {
+    T user,
+    Map<String, Object?> value,
+  ) async {
     String path = '${user.id}';
     switch (user) {
       case Requestee():
@@ -211,11 +329,7 @@ class RequesteeDatabase extends AppDatabase {
           await ref.child(path).update(value);
           return;
         }
-      case Dispatcher():
-        {
-          return;
-        }
-      case Admin():
+      case _:
         {
           return;
         }
@@ -230,11 +344,7 @@ class RequesteeDatabase extends AppDatabase {
           String path = "${user.id}";
           await ref.child(path).remove();
         }
-      case Dispatcher():
-        {
-          return;
-        }
-      case Admin():
+      case _:
         {
           return;
         }
@@ -249,6 +359,7 @@ class RequesteeDatabase extends AppDatabase {
     return switch (lastUser) {
       Dispatcher() => [],
       Admin() => [],
+      Driver() => [],
       _ => (await ref
               .orderByChild(orderBy)
               .startAfter(lastUser?.name)
@@ -268,8 +379,6 @@ class DispatcherDatabase extends AppDatabase {
   Future<Iterable<DataSnapshot>> getAll<T extends User>() async {
     return switch (T) {
       Dispatcher => (await ref.get()).children,
-      Requestee => [],
-      Admin => [],
       _ => [],
     };
   }
@@ -279,8 +388,6 @@ class DispatcherDatabase extends AppDatabase {
     String path = "$id";
     return switch (T) {
       Dispatcher => [await ref.child(path).get()],
-      Requestee => [],
-      Admin => [],
       _ => [],
     };
   }
@@ -301,6 +408,15 @@ class DispatcherDatabase extends AppDatabase {
         {
           String path = "${user.id}";
           ref.child(path).set({"id": user.id});
+          return;
+        }
+      case Driver():
+        {
+          String path = "${user.dispatcherid}/driversid/${user.id}";
+          ref.child(path).set({
+            "id": user.id,
+            "name": user.name,
+          });
           return;
         }
       case Admin():
@@ -328,6 +444,19 @@ class DispatcherDatabase extends AppDatabase {
               .child(newdispatchpath)
               .set({"id": user.id, "name": user.name});
         }
+      case Driver():
+        {
+          if (user.dispatcherid == value['dispatcherid']) {
+            return;
+          }
+          String prevdispatchpath = "${user.dispatcherid}/driversid/${user.id}";
+          await ref.child(prevdispatchpath).remove();
+          String newdispatchpath =
+              "${value['dispatcherid']}/driversid/${user.id}";
+          await ref
+              .child(newdispatchpath)
+              .set({"id": user.id, "name": user.name});
+        }
       case Dispatcher():
         {}
       case Admin():
@@ -342,6 +471,12 @@ class DispatcherDatabase extends AppDatabase {
         {
           String requesteepath = "${user.dispatcherid}/requesteesid/${user.id}";
           ref.child(requesteepath).remove();
+          return;
+        }
+      case Driver():
+        {
+          String driverspath = "${user.dispatcherid}/driversid/${user.id}";
+          ref.child(driverspath).remove();
           return;
         }
       case Dispatcher():
@@ -391,6 +526,7 @@ class AllDatabase extends AppDatabase {
         AdminDatabase(),
         DispatcherDatabase(),
         RequesteeDatabase(),
+        DriverDatabase(),
       ];
 
   @override

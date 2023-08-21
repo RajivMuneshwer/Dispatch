@@ -41,11 +41,13 @@ class Requestee extends User {
 
 class Dispatcher extends User {
   final List<int>? requesteesid;
+  final List<int>? driversid;
   Dispatcher({
     required super.id,
     required super.name,
     required super.sortBy,
     this.requesteesid,
+    this.driversid,
   });
 
   @override
@@ -75,6 +77,23 @@ class Admin extends User {
   Map<String, dynamic> toMap() => {
         "id": id,
         "name": name,
+      };
+}
+
+class Driver extends User {
+  final int? dispatcherid;
+  Driver({
+    required super.id,
+    required super.name,
+    required super.sortBy,
+    this.dispatcherid,
+  });
+
+  @override
+  Map<String, dynamic> toMap() => {
+        "id": id,
+        "name": name,
+        "dispatcherid": dispatcherid,
       };
 }
 
@@ -113,6 +132,12 @@ class UserAdaptor<T extends User> {
           id: id,
           name: name,
           sortBy: name,
+        ) as T,
+      Driver => Driver(
+          id: id,
+          name: name,
+          sortBy: name,
+          dispatcherid: objectMap['dispatcherid'] as int?,
         ) as T,
       _ => Requestee(
           id: id,

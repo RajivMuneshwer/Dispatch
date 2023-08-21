@@ -524,6 +524,7 @@ abstract class UserEditScreen<T extends User> extends StatelessWidget {
       Requestee => 'Requestee',
       Dispatcher => 'Dispatcher',
       Admin => 'Admin',
+      Driver => 'Driver',
       _ => '',
     };
     return Text("Create new $text");

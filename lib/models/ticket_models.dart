@@ -1,4 +1,5 @@
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
+import 'package:dispatch/database/user_database.dart';
 import 'package:dispatch/models/message_models.dart';
 import 'package:dispatch/models/user_objects.dart';
 import 'package:dotted_line/dotted_line.dart';
@@ -135,8 +136,8 @@ List<Widget> buildTicketWidgets({
         listBuilder.addPlusButton();
         listBuilder.addVerticalSpace(10.0);
         (ticketViewWithData.messagesState.user is! Dispatcher)
-            ? listBuilder.addCancelOrUpdateRow()
-            : listBuilder.addCancelUpdateOrConfirm();
+            ? listBuilder.addCancelOrUpdateRow(formkey)
+            : listBuilder.addCancelUpdateOrConfirm(formkey);
       }
   }
 
@@ -228,13 +229,17 @@ class ListBuilder {
     return this;
   }
 
-  ListBuilder addCancelOrUpdateRow() {
-    children.add(const CancelOrUpdateRow());
+  ListBuilder addCancelOrUpdateRow(GlobalKey<FormBuilderState> formkey) {
+    children.add(CancelOrUpdateRow(
+      formKey: formkey,
+    ));
     return this;
   }
 
-  ListBuilder addCancelUpdateOrConfirm() {
-    children.add(const CancelUpdateOrConfirm());
+  ListBuilder addCancelUpdateOrConfirm(GlobalKey<FormBuilderState> formkey) {
+    children.add(CancelUpdateOrConfirm(
+      formKey: formkey,
+    ));
     return this;
   }
 
@@ -361,12 +366,18 @@ class SubmitRow extends StatelessWidget {
 }
 
 class CancelOrUpdateRow extends StatelessWidget {
-  const CancelOrUpdateRow({super.key});
+  final GlobalKey<FormBuilderState> formKey;
+  const CancelOrUpdateRow({
+    super.key,
+    required this.formKey,
+  });
 
   @override
   Widget build(BuildContext context) {
     return RowBuilder()
-        .addUpdate()
+        .addUpdate(
+          formKey: formKey,
+        )
         .addSpace()
         .addCancel()
         .addSpace()
@@ -376,16 +387,20 @@ class CancelOrUpdateRow extends StatelessWidget {
 }
 
 class CancelUpdateOrConfirm extends StatelessWidget {
-  const CancelUpdateOrConfirm({super.key});
+  final GlobalKey<FormBuilderState> formKey;
+  const CancelUpdateOrConfirm({
+    super.key,
+    required this.formKey,
+  });
 
   @override
   Widget build(BuildContext context) {
     return RowBuilder()
         .addCancel()
         .addSpace()
-        .addUpdate()
+        .addUpdate(formKey: formKey)
         .addSpace()
-        .addConfirm()
+        .addConfirm(formKey: formKey)
         .build();
   }
 }
@@ -452,13 +467,20 @@ class RowBuilder {
     return this;
   }
 
-  RowBuilder addUpdate() {
-    children.add(const UpdateButton());
+  RowBuilder addUpdate({required GlobalKey<FormBuilderState> formKey}) {
+    children.add(UpdateButton(
+      formKey: formKey,
+    ));
     return this;
   }
 
-  RowBuilder addConfirm() {
-    children.add(const ConfirmButton());
+  RowBuilder addConfirm({required GlobalKey<FormBuilderState> formKey}) {
+    children.add( ConfirmButton(formKey: formKey,));
+    return this;
+  }
+
+  RowBuilder addDriverDropdown(){
+    children.add(const DriverDropDown());
     return this;
   }
 
@@ -633,6 +655,53 @@ class CustomTimePicker extends StatelessWidget {
                 ),
               ),
             ));
+      },
+    );
+  }
+}
+
+class DriverDropDown extends StatelessWidget {
+  const DriverDropDown({super.key,});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TicketViewCubit, TicketViewState>(
+      builder: (context, state) {
+        var state_ = state;
+        if (state_ is! TicketViewWithData) return Container();
+        var user = state_.messagesState.user;
+        if (user is! Dispatcher) return Container();
+        var driverids = user.driversid;
+        return FutureBuilder<List<Driver>>(
+          future: getDrivers(driverids),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {return Container();}
+            else if (snapshot.hasError){
+              return Text('Error: ${snapshot.error}');
+            } else if (!snapshot.hasData || snapshot.data == null) {
+              return const Text('No options available.');
+            }
+            return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: FormBuilderDropdown<int>(
+              decoration: const InputDecoration(
+                labelText: "Driver",
+                labelStyle: TextStyle(fontWeight: FontWeight.normal),
+              ),
+              name: driverDropdownName(),
+              initialValue: null,
+              items: snapshot.data!
+                  .map((driver) => DropdownMenuItem(
+                        value: driver.id,
+                        child: Text(driver.name),
+                      ))
+                  .toList(),
+              validator: FormBuilderValidators.compose([
+                FormBuilderValidators.required(),
+              ]),
+            ),
+          );}
+        );
       },
     );
   }
@@ -894,7 +963,11 @@ class CancelButton extends StatelessWidget {
 }
 
 class UpdateButton extends StatelessWidget {
-  const UpdateButton({super.key});
+  final GlobalKey<FormBuilderState> formKey;
+  const UpdateButton({
+    super.key,
+    required this.formKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -903,6 +976,13 @@ class UpdateButton extends StatelessWidget {
         if (state is! TicketViewWithData) return Container();
         return ElevatedButton(
           onPressed: () {
+            FormBuilderState? formbuilderState = formKey.currentState;
+            if (formbuilderState == null) {
+              return;
+            }
+            if (!formbuilderState.validate()) {
+              return;
+            }
             String encodedTicket =
                 FormLayoutEncoder.encode(state.formLayoutList);
             String messageID = state.id.toString();
@@ -925,7 +1005,8 @@ class UpdateButton extends StatelessWidget {
 }
 
 class ConfirmButton extends StatelessWidget {
-  const ConfirmButton({super.key});
+  final GlobalKey<FormBuilderState> formKey;
+  const ConfirmButton({super.key, required this.formKey,});
 
   @override
   Widget build(BuildContext context) {
@@ -934,8 +1015,19 @@ class ConfirmButton extends StatelessWidget {
         if (state is! TicketViewWithData) return Container();
         return ElevatedButton(
           onPressed: () {
+            FormBuilderState? formbuilderState = formKey.currentState;
+            if (formbuilderState == null) {
+              return;
+            }
+            if (!formbuilderState.validate()) {
+              return;
+            }
             state.messagesState.database
-                .updateTicketType(state.id.toString(), TicketTypes.confirmed);
+                .updateTicketType(state.id.toString(), TicketTypes.confirmed,);
+            
+
+            
+            state.messagesState.database.addMessage(message)
 
             Navigator.pop(context);
           },
@@ -1000,6 +1092,8 @@ String Function() empty = () => "";
 String Function() nowInMilliseconds =
     () => DateTime.now().millisecondsSinceEpoch.toString();
 
+String Function() driverDropdownName = () => "drivers";
+
 class FormLayoutEncoder {
   static const rowSeparator = "~";
   static const columnSeparator = "`";
@@ -1033,3 +1127,24 @@ class FormLayoutEncoder {
         .toList();
   }
 }
+
+Future<List<Driver>> getDrivers(List<int>? driverids) async {
+
+  if (driverids == null) return [];
+  List<Driver> drivers = [];
+  AdminDatabase database = AdminDatabase();
+  for (final id in driverids){
+          drivers.addAll((await database.getOne<Driver>(id))
+          .map((snapshot) => UserAdaptor<Driver>().adaptSnapshot(snapshot))
+          .toList());
+  }
+  return drivers;
+}
+
+////cannot delete dispatcher if they have drivers as well
+////build the receipt builder that returns a message and takes the driver as argument
+///the dropdown should return a driver as the value so it would be easier to get the driver for the receipt 
+///the receipt needs the current time when it was confirmed and send it as a new message 
+///The ticket should be updated first if the dispatcher wants to make changes
+///an auto message should be sent in this case or would the push notification be enough???
+///

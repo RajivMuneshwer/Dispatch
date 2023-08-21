@@ -59,6 +59,10 @@ class App extends StatelessWidget {
                             database: database,
                             title: title,
                           ),
+                        UserType.driver => AllUserListScreen<Driver>(
+                            database: database,
+                            title: title,
+                          ),
                         UserType.error => errorScreen(context),
                       });
             }
