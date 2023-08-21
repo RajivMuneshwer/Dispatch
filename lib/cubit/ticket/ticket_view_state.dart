@@ -68,5 +68,4 @@ enum BottomButtonType {
   none,
   submit,
   cancelOrUpdate,
-  cancelOrEditOrConfirm,
 }

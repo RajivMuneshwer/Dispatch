@@ -89,45 +89,55 @@ List<Widget> buildTicketWidgets({
   ///
 
   List<List<String>> formLayoutList = ticketViewWithData.formLayoutList;
-  listBuilder.addFirstRow(
-    time: int.parse(formLayoutList[0][timePos]),
-  );
 
-  for (var colPos = 1; colPos < formLayoutList.length; colPos++) {
+  for (var i = 0; i < formLayoutList.length; i++) {
     listBuilder.addConnector();
-
-    List<String> formRowList = formLayoutList[colPos];
-    if (colPos == formLayoutList.length - 1) {
-      listBuilder.addLastRow(
-        colPos: colPos,
-      );
-    } else {
-      if (formRowList[timePos] == stay()) {
-        listBuilder.addStayRow(
-          colPos: colPos,
-        );
-      } else {
-        listBuilder.addLeaveRow(
-          colPos: colPos,
-        );
-      }
+    switch (formLayoutList[i]) {
+      case [_, String time] when i == 0:
+        {
+          listBuilder.addFirstRow(time: int.parse(time));
+          break;
+        }
+      case [_, String time] when i != 0 && time != "stay":
+        {
+          listBuilder.addLeaveRow(colPos: i);
+          break;
+        }
+      case [_, "stay"] when i != formLayoutList.length - 1:
+        {
+          listBuilder.addStayRow(colPos: i);
+          break;
+        }
+      case [_, "stay"] when i == formLayoutList.length - 1:
+        {
+          listBuilder.addLastRow(colPos: i);
+          break;
+        }
     }
   }
+  listBuilder.children.removeAt(0); //to remove the top most connecting line
 
-  if (ticketViewWithData.bottomButtonType == BottomButtonType.submit) {
-    listBuilder.addConnector();
-    listBuilder.addPlusButton();
-    listBuilder.addVerticalSpace(10.0);
-    listBuilder.addSubmitRow(formkey);
-  }
-
-  if (ticketViewWithData.bottomButtonType == BottomButtonType.cancelOrUpdate) {
-    listBuilder.addConnector();
-    listBuilder.addPlusButton();
-    listBuilder.addVerticalSpace(10.0);
-    (ticketViewWithData.messagesState.user is! Dispatcher)
-        ? listBuilder.addCancelOrUpdateRow()
-        : listBuilder.addCancelUpdateOrConfirm();
+  switch (ticketViewWithData.bottomButtonType) {
+    case BottomButtonType.none:
+      {
+        break;
+      }
+    case BottomButtonType.submit:
+      {
+        listBuilder.addConnector();
+        listBuilder.addPlusButton();
+        listBuilder.addVerticalSpace(10.0);
+        listBuilder.addSubmitRow(formkey);
+      }
+    case BottomButtonType.cancelOrUpdate:
+      {
+        listBuilder.addConnector();
+        listBuilder.addPlusButton();
+        listBuilder.addVerticalSpace(10.0);
+        (ticketViewWithData.messagesState.user is! Dispatcher)
+            ? listBuilder.addCancelOrUpdateRow()
+            : listBuilder.addCancelUpdateOrConfirm();
+      }
   }
 
   return listBuilder.build();
