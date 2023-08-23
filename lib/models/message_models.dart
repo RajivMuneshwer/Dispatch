@@ -1,10 +1,9 @@
 import 'dart:async';
 import 'package:dispatch/cubit/message/messages_view_cubit.dart';
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
-import 'package:dispatch/models/rnd_message_generator.dart';
+import 'package:dispatch/models/message_objects.dart';
 import 'package:dispatch/models/ticket_models.dart';
 import 'package:dispatch/models/user_objects.dart';
-import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:grouped_list/grouped_list.dart';
@@ -23,14 +22,17 @@ class NewMessageWidget extends StatelessWidget {
     return BlocBuilder<MessagesViewCubit, MessagesViewState>(
         builder: (context, state) {
       var state_ = state;
+      var user = state_.user;
+      bool isDispatch = switch (user) {
+        Dispatcher() => true,
+        _ => false,
+      };
       Future<void> submit(String text) async {
-        var user = state_.user;
-        bool isDispatch = switch (user) {
-          Dispatcher() => true,
-          _ => false,
-        };
-        print(isDispatch);
-        Message newMessage = MessageAdaptor.adaptText(text, isDispatch);
+        Message newMessage =
+            MessageAdaptor(messagesViewState: state_).adaptText(
+          text,
+          isDispatch,
+        );
         context.read<MessagesViewCubit>().add(newMessage);
         await state_.database.addMessage(newMessage);
         scrollDown(controller);
@@ -47,10 +49,17 @@ class NewMessageWidget extends StatelessWidget {
             child: InkWell(
               child: IconButton(
                 onPressed: () {
+                  var newTicket = TicketSubmittedMessage(
+                    text: "",
+                    date: DateTime.now(),
+                    isDispatch: isDispatch,
+                    sent: false,
+                    messagesViewState: state_,
+                  );
                   Navigator.pushNamed(context, '/ticket',
                       arguments: TicketViewWithData(
                         formLayoutList: getNewTicketLayout(),
-                        id: generateNewTicketID(),
+                        ticketMessage: newTicket,
                         messagesState: state_,
                         color: Colors.blue,
                         animate: true,
@@ -71,8 +80,11 @@ class NewMessageWidget extends StatelessWidget {
   }
 }
 
-GroupedListView<Message, DateTime> groupListView(BuildContext context,
-    MessagesViewLoaded state, ScrollController controller) {
+GroupedListView<Message, DateTime> groupListView(
+  BuildContext context,
+  MessagesViewLoaded state,
+  ScrollController controller,
+) {
   return GroupedListView<Message, DateTime>(
     physics: const AlwaysScrollableScrollPhysics(),
     keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
@@ -82,33 +94,12 @@ GroupedListView<Message, DateTime> groupListView(BuildContext context,
         child: Text(DateFormat.yMMMd().format(element.date)),
       ),
     ),
-    itemBuilder: (BuildContext context, Message element) =>
-        renderItem(context: context, element: element, state: state),
+    itemBuilder: (BuildContext context, Message message) =>
+        MessageBubble(message: message),
     elements: state.messages,
     groupBy: (message) =>
         DateTime(message.date.year, message.date.month, message.date.day),
   );
-}
-
-Widget renderItem({
-  required BuildContext context,
-  required Message element,
-  required MessagesViewState state,
-}) {
-  var user = state.user;
-  bool isSender_ = switch (user) {
-    Dispatcher() => (element.isDispatch),
-    _ => (!element.isDispatch),
-  };
-
-  return (element.isTicket)
-      ? ticketRendered(
-          context: context,
-          ticket: element,
-          isSender: isSender_,
-          messageState: state)
-      : messageRendered(
-          context: context, message: element, isSender: isSender_);
 }
 
 void scrollDown(ScrollController controller) {
@@ -206,169 +197,48 @@ Widget refreshIndicator(BuildContext context, IndicatorController controller) {
   );
 }
 
-Widget messageRendered({
-  required BuildContext context,
-  required Message message,
-  required bool isSender,
-}) =>
-    TextBubble(
-      date: message.date,
-      text: message.text,
-      color: (isSender)
-          ? Color.fromRGBO(220, 220, 220, 1)
-          : Color.fromRGBO(200, 200, 200, 1),
-      tail: true,
-      sent: message.sent,
-      isSender: isSender,
-    );
-
-Widget ticketRendered({
-  required BuildContext context,
-  required Message ticket,
-  required bool isSender,
-  required MessagesViewState messageState,
-}) {
-  bool isDispatch = switch (messageState.user) {
-    Dispatcher() => true,
-    _ => false,
-  };
-  return TicketBubble(
-    onPressed: () {
-      final List<List<String>> formLayoutList =
-          FormLayoutEncoder.decode(ticket.text);
-      Navigator.pushNamed(
-        context,
-        '/ticket',
-        arguments: ticketTypeToState(
-          formLayoutList: formLayoutList,
-          ticketTypes: ticket.ticketType,
-          id: ticket.id,
-          messageState: messageState,
-        ),
-      );
-    },
-    isSender: isSender,
-    date: ticket.date,
-    text: MessageGenerator.generate(
-      number: ticket.text.length,
-      isDispatch: isDispatch,
-    ),
-    iconColor: ticketTypeToColor[ticket.ticketType] ?? Colors.blue,
-    ticketTypes: ticket.ticketType,
-    color: (isSender)
-        ? Color.fromRGBO(220, 220, 220, 1)
-        : Color.fromRGBO(200, 200, 200, 1),
-  );
-}
-
-class Message {
-  final String text;
-  final DateTime date;
-  final bool isDispatch;
-  final bool isTicket;
-  final TicketTypes ticketType;
-  bool sent;
-
-  Message({
-    required this.text,
-    required this.date,
-    required this.isDispatch,
-    required this.sent,
-    required this.isTicket,
-    required this.ticketType,
-  });
-
-  int get id => dateToInt();
-
-  int dateToInt() {
-    return date.millisecondsSinceEpoch;
-  }
-}
-
-class MessageAdaptor {
-  static Message adaptText(String text, bool isDispatch) {
-    return Message(
-      text: text,
-      date: DateTime.now(),
-      isDispatch: isDispatch,
-      sent: false,
-      isTicket: false,
-      ticketType: TicketTypes.submitted,
-    );
-  }
-
-  static Message adaptSnapshot(DataSnapshot snapshot) {
-    Map<dynamic, dynamic> objectMap = snapshot.value as Map<dynamic, dynamic>;
-    return Message(
-      text: objectMap["text"] as String,
-      date: DateTime.fromMillisecondsSinceEpoch(objectMap["date"] as int),
-      isDispatch: objectMap["isDispatch"] as bool,
-      sent: objectMap["sent"] as bool,
-      isTicket: objectMap["isTicket"] as bool,
-      ticketType: stringToticketType[objectMap["ticketType"] as String] ??
-          TicketTypes.submitted,
-    );
-  }
-
-  static Message adaptTicketState(
-      TicketViewWithData ticketState, bool isDispatch) {
-    String encodedFormLayout =
-        FormLayoutEncoder.encode(ticketState.formLayoutList);
-    return Message(
-      text: encodedFormLayout,
-      date: DateTime.now(),
-      isDispatch: isDispatch,
-      sent: false,
-      isTicket: true,
-      ticketType: TicketTypes.submitted,
-    );
-  }
-}
-
 enum TicketTypes {
   submitted,
   cancelled,
   confirmed,
 }
 
-const stringToticketType = {
-  'submitted': TicketTypes.submitted,
-  'cancelled': TicketTypes.cancelled,
-  'confirmed': TicketTypes.confirmed,
-};
-
-const ticketTypeToColor = {
-  TicketTypes.submitted: Colors.blue,
-  TicketTypes.confirmed: Colors.green,
-  TicketTypes.cancelled: Colors.red
-};
-
 TicketViewWithData ticketTypeToState({
   required TicketTypes ticketTypes,
   required List<List<String>> formLayoutList,
   required MessagesViewState messageState,
+  required TicketMessage ticketMessage,
   required int id,
-}) {
-  var ticketTypeToStateMap = {
-    TicketTypes.submitted: TicketViewSubmitted(
-      formLayoutList: formLayoutList,
-      id: id,
-      messagesState: messageState,
-    ),
-    TicketTypes.cancelled: TicketViewCanceled(
-      formLayoutList: formLayoutList,
-      id: id,
-      messagesState: messageState,
-    ),
-    TicketTypes.confirmed: TicketViewConfirmed(
-      formLayoutList: formLayoutList,
-      id: id,
-      messagesState: messageState,
-    ),
-  };
+}) =>
+    switch (ticketTypes) {
+      TicketTypes.submitted => TicketViewSubmitted(
+          formLayoutList: formLayoutList,
+          ticketMessage: ticketMessage,
+          messagesState: messageState,
+        ),
+      TicketTypes.cancelled => TicketViewCanceled(
+          formLayoutList: formLayoutList,
+          ticketMessage: ticketMessage,
+          messagesState: messageState,
+        ),
+      TicketTypes.confirmed => TicketViewConfirmed(
+          formLayoutList: formLayoutList,
+          ticketMessage: ticketMessage,
+          messagesState: messageState),
+    };
 
-  TicketViewWithData defaultTicket = TicketViewSubmitted(
-      formLayoutList: formLayoutList, id: id, messagesState: messageState);
 
-  return ticketTypeToStateMap[ticketTypes] ?? defaultTicket;
-}
+// class Receipt {
+//   const Receipt();
+
+//   Message confirm(Driver driver) {
+//     String text =
+//         "Thank you for waiting. Your ticket has been confirmed as of ${DateFormat.yMd().add_jm().format(DateTime.now())}!\n Your driver is ${driver.name} contact on tel ${driver.tel}";
+//     return TextMessage(
+//       text: text,
+//       date: DateTime.now(),
+//       isDispatch: true,
+//       sent: false,
+//     );
+//   }
+// }

@@ -1,15 +1,41 @@
-import 'package:dispatch/models/message_models.dart';
+import 'package:dispatch/models/message_objects.dart';
+import 'package:dispatch/models/user_objects.dart';
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
 
-abstract class GenericBubble extends StatelessWidget {
+class MessageBubble extends StatelessWidget {
+  final Message message;
+  const MessageBubble({
+    super.key,
+    required this.message,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final bool isSender = switch (message.messagesViewState.user) {
+      Dispatcher() => (message.isDispatch),
+      _ => (!message.isDispatch)
+    };
+    return GenericBubble(
+      date: message.date,
+      isSender: isSender,
+      bubbleMain: message.build(context),
+      sent: message.sent,
+      tail: true,
+      color: (isSender)
+          ? const Color.fromRGBO(220, 220, 220, 1)
+          : const Color.fromRGBO(200, 200, 200, 1),
+    );
+  }
+}
+
+class GenericBubble extends StatelessWidget {
   final bool isSender;
-  final String text;
   final bool tail;
   final Color color;
   final bool sent;
   final bool delivered;
+  final Widget bubbleMain;
   final bool seen;
   final DateTime date;
   final TextStyle textStyle;
@@ -17,8 +43,8 @@ abstract class GenericBubble extends StatelessWidget {
   const GenericBubble({
     Key? key,
     required this.date,
-    required this.text,
     required this.isSender,
+    required this.bubbleMain,
     this.color = Colors.white70,
     this.tail = true,
     this.sent = false,
@@ -29,8 +55,6 @@ abstract class GenericBubble extends StatelessWidget {
       fontSize: 14,
     ),
   }) : super(key: key);
-
-  Widget bubbleMain();
 
   ///chat bubble builder method
   @override
@@ -90,7 +114,7 @@ abstract class GenericBubble extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        bubbleMain(),
+                        bubbleMain,
                         const SizedBox(
                           height: 5,
                         ),
@@ -119,87 +143,6 @@ abstract class GenericBubble extends StatelessWidget {
       ),
     );
   }
-}
-
-class TextBubble extends GenericBubble {
-  const TextBubble({
-    super.key,
-    required super.text,
-    required super.date,
-    required super.isSender,
-    super.color,
-    super.tail,
-    super.textStyle,
-    super.sent,
-    super.seen,
-    super.delivered,
-  });
-
-  @override
-  Widget bubbleMain() => Text(
-        text,
-        style: textStyle,
-        textAlign: TextAlign.left,
-      );
-}
-
-class TicketBubble extends GenericBubble {
-  final TicketTypes ticketTypes;
-  final void Function()? onPressed;
-  final Color iconColor;
-  const TicketBubble({
-    required super.text,
-    required super.date,
-    required super.isSender,
-    required this.ticketTypes,
-    required this.onPressed,
-    required this.iconColor,
-    super.color,
-    super.textStyle,
-    super.sent,
-    super.seen,
-    super.delivered,
-    super.key,
-  });
-
-  Text ticketText() {
-    Map<TicketTypes, TextDetails> ticketTypeToColorAndText = {
-      TicketTypes.cancelled:
-          const TextDetails(text: "Cancelled", color: Colors.red),
-      TicketTypes.submitted:
-          const TextDetails(text: "Submitted", color: Colors.blue),
-      TicketTypes.confirmed:
-          const TextDetails(text: "Confirmed", color: Colors.green),
-    };
-    TextDetails textDetails = ticketTypeToColorAndText[ticketTypes] ??
-        const TextDetails(text: "", color: Colors.white);
-
-    return Text(
-      textDetails.text,
-      style: TextStyle(color: textDetails.color),
-    );
-  }
-
-  @override
-  Widget bubbleMain() => Column(children: [
-        MaterialButton(
-          padding: EdgeInsets.zero,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          minWidth: 80,
-          onPressed: onPressed,
-          child: FaIcon(
-            FontAwesomeIcons.ticket,
-            color: iconColor,
-            size: 30,
-          ),
-        ),
-        ticketText(),
-        Text(
-          text,
-          style: textStyle,
-          textAlign: TextAlign.end,
-        ),
-      ]);
 }
 
 class TextDetails {

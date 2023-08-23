@@ -17,7 +17,7 @@ class App extends StatelessWidget {
         final args = settings.arguments;
 
         switch (settings.name) {
-          case '/':
+          case '/requestee':
             return MaterialPageRoute(
               builder: (_) => RequesteeMessageScreen(
                 user: Requestee(
@@ -27,7 +27,7 @@ class App extends StatelessWidget {
               ),
             );
 
-          case '/dispatcher':
+          case '/':
             return MaterialPageRoute(
                 builder: (_) => RequesteeMessageListScreen());
 

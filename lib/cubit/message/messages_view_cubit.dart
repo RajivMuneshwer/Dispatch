@@ -1,11 +1,11 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:dispatch/database/requestee_database.dart';
+import 'package:dispatch/models/message_objects.dart';
 import 'package:dispatch/models/user_objects.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:meta/meta.dart';
-import '../../models/message_models.dart';
 
 part 'messages_view_state.dart';
 
@@ -31,7 +31,8 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
         childAddStream.listen(
       (event) {
         final snapshot = event.snapshot;
-        Message newMessage = MessageAdaptor.adaptSnapshot(snapshot);
+        Message newMessage =
+            MessageAdaptor(messagesViewState: state).adaptSnapshot(snapshot);
 
         if (state is MessagesViewInitial) {
           earliestMessageTime = newMessage.dateToInt();
@@ -69,7 +70,8 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
         childUpdateStream.listen(
       (event) {
         final snapshot = event.snapshot;
-        Message updatedMessage = MessageAdaptor.adaptSnapshot(snapshot);
+        Message updatedMessage =
+            MessageAdaptor(messagesViewState: state).adaptSnapshot(snapshot);
         Message? messageInMap = messagesMap[updatedMessage.id];
 
         if (messageInMap == null) return;
@@ -111,7 +113,8 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
             database: database));
       } else {
         for (final snapshot in previousMessagesSnapshots) {
-          Message previousMessage = MessageAdaptor.adaptSnapshot(snapshot);
+          Message previousMessage =
+              MessageAdaptor(messagesViewState: state).adaptSnapshot(snapshot);
 
           earliestMessageTime =
               (previousMessage.dateToInt() < earliestMessageTime)

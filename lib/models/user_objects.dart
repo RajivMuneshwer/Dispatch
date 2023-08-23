@@ -82,11 +82,13 @@ class Admin extends User {
 
 class Driver extends User {
   final int? dispatcherid;
+  final String? tel;
   Driver({
     required super.id,
     required super.name,
     required super.sortBy,
     this.dispatcherid,
+    this.tel,
   });
 
   @override
@@ -94,6 +96,7 @@ class Driver extends User {
         "id": id,
         "name": name,
         "dispatcherid": dispatcherid,
+        "tel": tel,
       };
 }
 
@@ -138,7 +141,7 @@ class UserAdaptor<T extends User> {
           name: name,
           sortBy: name,
           dispatcherid: objectMap['dispatcherid'] as int?,
-        ) as T,
+          tel: objectMap['tel'] as String?) as T,
       _ => Requestee(
           id: id,
           name: name,

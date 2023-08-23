@@ -1,6 +1,6 @@
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
 import 'package:dispatch/database/user_database.dart';
-import 'package:dispatch/models/message_models.dart';
+import 'package:dispatch/models/message_objects.dart';
 import 'package:dispatch/models/user_objects.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
@@ -87,7 +87,6 @@ List<Widget> buildTicketWidgets({
   /// if you re-write to another system, there will be difficulties
   /// adding rows or deleting rows,
   /// controlling the maximum and minimum number of stops.
-  ///
 
   List<List<String>> formLayoutList = ticketViewWithData.formLayoutList;
 
@@ -118,6 +117,8 @@ List<Widget> buildTicketWidgets({
   }
   listBuilder.children.removeAt(0); //to remove the top most connecting line
 
+  var user = ticketViewWithData.messagesState.user;
+
   switch (ticketViewWithData.bottomButtonType) {
     case BottomButtonType.none:
       {
@@ -135,9 +136,14 @@ List<Widget> buildTicketWidgets({
         listBuilder.addConnector();
         listBuilder.addPlusButton();
         listBuilder.addVerticalSpace(10.0);
-        (ticketViewWithData.messagesState.user is! Dispatcher)
-            ? listBuilder.addCancelOrUpdateRow(formkey)
-            : listBuilder.addCancelUpdateOrConfirm(formkey);
+
+        if (user is! Dispatcher) {
+          listBuilder.addCancelOrUpdateRow(formkey);
+        } else {
+          listBuilder.addDriverDropdownRow();
+          listBuilder.addVerticalSpace(60.0);
+          listBuilder.addCancelUpdateOrConfirm(formkey);
+        }
       }
   }
 
@@ -240,6 +246,11 @@ class ListBuilder {
     children.add(CancelUpdateOrConfirm(
       formKey: formkey,
     ));
+    return this;
+  }
+
+  ListBuilder addDriverDropdownRow() {
+    children.add(const DriverDropdownRow());
     return this;
   }
 
@@ -405,6 +416,21 @@ class CancelUpdateOrConfirm extends StatelessWidget {
   }
 }
 
+class DriverDropdownRow extends StatelessWidget {
+  const DriverDropdownRow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return RowBuilder()
+        .addDriverDropdown()
+        .addSpace()
+        .addBlank()
+        .addSpace()
+        .addBlank()
+        .build();
+  }
+}
+
 class RowBuilder {
   List<Widget> children = [];
   RowBuilder();
@@ -475,11 +501,13 @@ class RowBuilder {
   }
 
   RowBuilder addConfirm({required GlobalKey<FormBuilderState> formKey}) {
-    children.add( ConfirmButton(formKey: formKey,));
+    children.add(ConfirmButton(
+      formKey: formKey,
+    ));
     return this;
   }
 
-  RowBuilder addDriverDropdown(){
+  RowBuilder addDriverDropdown() {
     children.add(const DriverDropDown());
     return this;
   }
@@ -661,7 +689,9 @@ class CustomTimePicker extends StatelessWidget {
 }
 
 class DriverDropDown extends StatelessWidget {
-  const DriverDropDown({super.key,});
+  const DriverDropDown({
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -673,38 +703,55 @@ class DriverDropDown extends StatelessWidget {
         if (user is! Dispatcher) return Container();
         var driverids = user.driversid;
         return FutureBuilder<List<Driver>>(
-          future: getDrivers(driverids),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {return Container();}
-            else if (snapshot.hasError){
-              return Text('Error: ${snapshot.error}');
-            } else if (!snapshot.hasData || snapshot.data == null) {
-              return const Text('No options available.');
-            }
-            return Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: FormBuilderDropdown<int>(
-              decoration: const InputDecoration(
-                labelText: "Driver",
-                labelStyle: TextStyle(fontWeight: FontWeight.normal),
-              ),
-              name: driverDropdownName(),
-              initialValue: null,
-              items: snapshot.data!
-                  .map((driver) => DropdownMenuItem(
-                        value: driver.id,
-                        child: Text(driver.name),
-                      ))
-                  .toList(),
-              validator: FormBuilderValidators.compose([
-                FormBuilderValidators.required(),
-              ]),
-            ),
-          );}
-        );
+            future: getDrivers(driverids),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return driverDropDownWidget([], "temp");
+              } else if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}');
+              } else if (!snapshot.hasData || snapshot.data == null) {
+                return const Text('No options available.');
+              }
+              print(driverids);
+              return driverDropDownWidget(
+                snapshot.data ?? [],
+                driverDropdownName(),
+              );
+            });
       },
     );
   }
+}
+
+Widget driverDropDownWidget(List<Driver> drivers, String name) {
+  return Flexible(
+    child: Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade300,
+        borderRadius: BorderRadius.circular(25.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 16.0),
+        child: FormBuilderDropdown<Driver>(
+          decoration: const InputDecoration(
+              labelText: "Driver",
+              labelStyle: TextStyle(fontWeight: FontWeight.normal),
+              border: InputBorder.none),
+          name: name,
+          initialValue: null,
+          items: drivers
+              .map((driver) => DropdownMenuItem(
+                    value: driver,
+                    child: Text(driver.name),
+                  ))
+              .toList(),
+          validator: FormBuilderValidators.compose([
+            FormBuilderValidators.required(),
+          ]),
+        ),
+      ),
+    ),
+  );
 }
 
 class WaitSwitch extends StatefulWidget {
@@ -814,7 +861,7 @@ class ConnectingLine extends StatelessWidget {
               alignment: WrapAlignment.center,
               direction: Axis.vertical,
               lineLength: 40,
-              lineThickness: 1.5,
+              lineThickness: 1.75,
               dashColor: state.color,
             ),
           ),
@@ -905,14 +952,10 @@ class CustomSubmitButton extends StatelessWidget {
             if (ticketViewState is! TicketViewWithData) {
               return;
             }
-            final bool isDispatch =
-                switch (ticketViewState.messagesState.user) {
-              Dispatcher() => true,
-              _ => false,
-            };
-            Message newMessageTicket = MessageAdaptor.adaptTicketState(
+            Message newMessageTicket =
+                MessageAdaptor(messagesViewState: ticketViewState.messagesState)
+                    .adaptNewTicket(
               ticketViewState,
-              isDispatch,
             );
             Navigator.pop(
               context,
@@ -941,8 +984,16 @@ class CancelButton extends StatelessWidget {
         if (state is! TicketViewWithData) return Container();
         return ElevatedButton(
           onPressed: () {
-            state.messagesState.database
-                .updateTicketType(state.id.toString(), TicketTypes.cancelled);
+            var ticketMessage = state.ticketMessage;
+            var cancelledMessage = TicketCancelledMessage(
+              text: ticketMessage.text,
+              date: ticketMessage.date,
+              isDispatch: ticketMessage.isDispatch,
+              sent: ticketMessage.sent,
+              messagesViewState: state.messagesState,
+              cancelledTime: DateTime.now().millisecondsSinceEpoch,
+            );
+            state.messagesState.database.updateTicket(cancelledMessage);
             Navigator.pop(context);
           },
           style: ElevatedButton.styleFrom(
@@ -983,11 +1034,18 @@ class UpdateButton extends StatelessWidget {
             if (!formbuilderState.validate()) {
               return;
             }
-            String encodedTicket =
-                FormLayoutEncoder.encode(state.formLayoutList);
-            String messageID = state.id.toString();
-            state.messagesState.database
-                .updateTicketMessage(messageID, encodedTicket);
+            String encodedTicket = FormLayoutEncoder.encode(
+              state.formLayoutList,
+            );
+            var ticketMessage = state.ticketMessage;
+            TicketSubmittedMessage submittedMessage = TicketSubmittedMessage(
+              text: encodedTicket,
+              date: ticketMessage.date,
+              isDispatch: ticketMessage.isDispatch,
+              sent: ticketMessage.sent,
+              messagesViewState: state.messagesState,
+            );
+            state.messagesState.database.updateTicket(submittedMessage);
             Navigator.pop(context);
           },
           style: ElevatedButton.styleFrom(
@@ -1006,7 +1064,10 @@ class UpdateButton extends StatelessWidget {
 
 class ConfirmButton extends StatelessWidget {
   final GlobalKey<FormBuilderState> formKey;
-  const ConfirmButton({super.key, required this.formKey,});
+  const ConfirmButton({
+    super.key,
+    required this.formKey,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1022,12 +1083,23 @@ class ConfirmButton extends StatelessWidget {
             if (!formbuilderState.validate()) {
               return;
             }
-            state.messagesState.database
-                .updateTicketType(state.id.toString(), TicketTypes.confirmed,);
-            
+            Driver driver =
+                formbuilderState.fields[driverDropdownName()]!.value;
+            var ticketMessage = state.ticketMessage;
+            var confirmedMessage = TicketConfirmedMessage(
+              text: ticketMessage.text,
+              date: ticketMessage.date,
+              isDispatch: ticketMessage.isDispatch,
+              sent: ticketMessage.sent,
+              messagesViewState: state.messagesState,
+              confirmedTime: DateTime.now().millisecondsSinceEpoch,
+              driverid: driver.id,
+            );
+            state.messagesState.database.updateTicket(confirmedMessage);
 
-            
-            state.messagesState.database.addMessage(message)
+            // state.messagesState.database.addMessage(
+            //   const Receipt().confirm(selectedDriver),
+            // );
 
             Navigator.pop(context);
           },
@@ -1129,22 +1201,28 @@ class FormLayoutEncoder {
 }
 
 Future<List<Driver>> getDrivers(List<int>? driverids) async {
-
   if (driverids == null) return [];
   List<Driver> drivers = [];
   AdminDatabase database = AdminDatabase();
-  for (final id in driverids){
-          drivers.addAll((await database.getOne<Driver>(id))
-          .map((snapshot) => UserAdaptor<Driver>().adaptSnapshot(snapshot))
-          .toList());
+  for (final id in driverids) {
+    drivers.addAll((await database.getOne<Driver>(id))
+        .map((snapshot) => UserAdaptor<Driver>().adaptSnapshot(snapshot))
+        .toList());
   }
   return drivers;
 }
 
+
+
 ////cannot delete dispatcher if they have drivers as well
-////build the receipt builder that returns a message and takes the driver as argument
-///the dropdown should return a driver as the value so it would be easier to get the driver for the receipt 
-///the receipt needs the current time when it was confirmed and send it as a new message 
-///The ticket should be updated first if the dispatcher wants to make changes
-///an auto message should be sent in this case or would the push notification be enough???
+///Also the ticket needs to show the time and driver for confirmation
+///an auto message should be sent in case of update or would the push notification be enough???
+///flesh out the widget for the dispatcher to see the dropdown for drivers
+///and make a confirmation stamp on the end of the ticket
 ///
+///
+///COMPLETED
+///the dropdown should return a driver as the value so it would be easier to get the driver for the receipt 
+////build the receipt builder that returns a message and takes the driver as argument
+///The ticket should be updated first if the dispatcher wants to make changes
+///the receipt needs the current time when it was confirmed and send it as a new message 

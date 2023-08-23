@@ -9,7 +9,7 @@ class MessageGenerator {
     "Good day. Please review the ticket I generated!"
   ];
 
-  static generate({
+  static String generate({
     required int number,
     required bool isDispatch,
   }) {

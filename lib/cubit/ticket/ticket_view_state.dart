@@ -9,7 +9,7 @@ class TicketViewLoading extends TicketViewState {}
 
 class TicketViewWithData extends TicketViewState {
   final List<List<String>> formLayoutList;
-  final int id;
+  final TicketMessage ticketMessage;
   final Color color;
   final bool enabled;
   final bool animate;
@@ -17,7 +17,7 @@ class TicketViewWithData extends TicketViewState {
   final BottomButtonType bottomButtonType;
   TicketViewWithData({
     required this.formLayoutList,
-    required this.id,
+    required this.ticketMessage,
     required this.color,
     required this.enabled,
     required this.animate,
@@ -29,7 +29,7 @@ class TicketViewWithData extends TicketViewState {
 class TicketViewSubmitted extends TicketViewWithData {
   TicketViewSubmitted({
     required super.formLayoutList,
-    required super.id,
+    required super.ticketMessage,
     required super.messagesState,
     super.color = Colors.blue,
     super.enabled = true,
@@ -41,7 +41,7 @@ class TicketViewSubmitted extends TicketViewWithData {
 class TicketViewCanceled extends TicketViewWithData {
   TicketViewCanceled({
     required super.formLayoutList,
-    required super.id,
+    required super.ticketMessage,
     required super.messagesState,
     super.color = Colors.red,
     super.animate = false,
@@ -53,7 +53,7 @@ class TicketViewCanceled extends TicketViewWithData {
 class TicketViewConfirmed extends TicketViewWithData {
   TicketViewConfirmed({
     required super.formLayoutList,
-    required super.id,
+    required super.ticketMessage,
     required super.messagesState,
     super.color = Colors.green,
     super.animate = false,
