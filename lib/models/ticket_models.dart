@@ -12,30 +12,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:intl/intl.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
 
-AppBar ticketAppBar(BuildContext context) {
+AppBar ticketAppBar(BuildContext context, TicketMessage ticketMessage) {
   return AppBar(
-    backgroundColor: Colors.white,
-    actions: [
-      IconButton(
-        iconSize: 60,
-        onPressed: () {
-          Navigator.pop(
-            context,
-          );
-        },
-        icon: const Text(
-          "Back",
-          style: TextStyle(
-            color: Colors.blue,
-            fontWeight: FontWeight.w400,
-            fontSize: 14.5,
-          ),
-        ),
-      ),
-      const SizedBox(
-        width: 20,
-      ),
-    ],
+    centerTitle: false,
+    backgroundColor: ticketMessage.iconColor,
+    title: Text(ticketMessage.title),
   );
 }
 
@@ -86,7 +67,7 @@ List<Widget> buildTicketWidgets({
   //// the below loop should only be for the main ticket body i.e. everything above the plus button
   /// if you re-write to another system, there will be difficulties
   /// adding rows or deleting rows,
-  /// controlling the maximum and minimum number of stops.
+  /// controlling the maximum and minimum number of rows.
 
   List<List<String>> formLayoutList = ticketViewWithData.formLayoutList;
 
@@ -119,31 +100,52 @@ List<Widget> buildTicketWidgets({
 
   var user = ticketViewWithData.messagesState.user;
 
-  switch (ticketViewWithData.bottomButtonType) {
-    case BottomButtonType.none:
+  switch (ticketViewWithData.ticketMessage) {
+    case TicketConfirmedMessage():
       {
+        listBuilder
+          ..addVerticalSpace(30)
+          ..addConfirmationRow()
+          ..addVerticalSpace(20)
+          ..addTimeStampRow();
         break;
       }
-    case BottomButtonType.submit:
+    case TicketCancelledMessage():
       {
-        listBuilder.addConnector();
-        listBuilder.addPlusButton();
-        listBuilder.addVerticalSpace(10.0);
-        listBuilder.addSubmitRow(formkey);
+        listBuilder
+          ..addVerticalSpace(30)
+          ..addCancelledRow()
+          ..addVerticalSpace(10)
+          ..addTimeStampRow();
+
+        break;
       }
-    case BottomButtonType.cancelOrUpdate:
+    case TicketSubmittedMessage():
       {
-        listBuilder.addConnector();
-        listBuilder.addPlusButton();
-        listBuilder.addVerticalSpace(10.0);
+        listBuilder
+          ..addConnector()
+          ..addPlusButton()
+          ..addVerticalSpace(10.0);
 
         if (user is! Dispatcher) {
           listBuilder.addCancelOrUpdateRow(formkey);
         } else {
-          listBuilder.addDriverDropdownRow();
-          listBuilder.addVerticalSpace(60.0);
-          listBuilder.addCancelUpdateOrConfirm(formkey);
+          listBuilder
+            ..addDriverDropdownRow()
+            ..addVerticalSpace(60.0)
+            ..addCancelUpdateOrConfirm(formkey);
         }
+        break;
+      }
+    case TicketNewMessage():
+      {
+        listBuilder
+          ..addConnector()
+          ..addPlusButton()
+          ..addVerticalSpace(10.0)
+          ..addSubmitRow(formkey);
+
+        break;
       }
   }
 
@@ -251,6 +253,21 @@ class ListBuilder {
 
   ListBuilder addDriverDropdownRow() {
     children.add(const DriverDropdownRow());
+    return this;
+  }
+
+  ListBuilder addConfirmationRow() {
+    children.add(const ConfirmationRow());
+    return this;
+  }
+
+  ListBuilder addCancelledRow() {
+    children.add(const CancellationRow());
+    return this;
+  }
+
+  ListBuilder addTimeStampRow() {
+    children.add(const TimeStampRow());
     return this;
   }
 
@@ -431,6 +448,51 @@ class DriverDropdownRow extends StatelessWidget {
   }
 }
 
+class ConfirmationRow extends StatelessWidget {
+  const ConfirmationRow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return RowBuilder()
+        .addDriverConfirmText()
+        .addSpace()
+        .addBlank()
+        .addSpace()
+        .addBlank()
+        .build();
+  }
+}
+
+class CancellationRow extends StatelessWidget {
+  const CancellationRow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return RowBuilder()
+        .addCancelIcon()
+        .addSpace()
+        .addBlank()
+        .addSpace()
+        .addBlank()
+        .build();
+  }
+}
+
+class TimeStampRow extends StatelessWidget {
+  const TimeStampRow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return RowBuilder()
+        .addTimeStampText()
+        .addSpace()
+        .addBlank()
+        .addSpace()
+        .addBlank()
+        .build();
+  }
+}
+
 class RowBuilder {
   List<Widget> children = [];
   RowBuilder();
@@ -512,6 +574,26 @@ class RowBuilder {
     return this;
   }
 
+  RowBuilder addConfirmIcon() {
+    children.add(const ConfirmIcon());
+    return this;
+  }
+
+  RowBuilder addDriverConfirmText() {
+    children.add(const DriverConfirmText());
+    return this;
+  }
+
+  RowBuilder addTimeStampText() {
+    children.add(const TimeStampText());
+    return this;
+  }
+
+  RowBuilder addCancelIcon() {
+    children.add(const CancelledIcon());
+    return this;
+  }
+
   Row build() {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -550,7 +632,6 @@ class CustomTextFormField extends StatelessWidget {
               initialValue: state.formLayoutList[colPos][textPos],
               autocorrect: true,
               textAlign: TextAlign.center,
-              enabled: state.enabled,
               style: const TextStyle(
                 color: Colors.grey,
                 fontWeight: FontWeight.w500,
@@ -624,7 +705,6 @@ class CustomTimePicker extends StatelessWidget {
                   bottom: (colPos != 0) ? 15.0 : 0.0,
                 ),
                 child: FormBuilderDateTimePicker(
-                  enabled: state.enabled,
                   name: UniqueKey().toString(),
                   autovalidateMode: AutovalidateMode.onUserInteraction,
                   format: DateFormat.jm(),
@@ -796,7 +876,12 @@ class _WaitSwitchState extends State<WaitSwitch> {
                 )
               ],
               child: FlutterSwitch(
-                disabled: !state.enabled,
+                disabled: switch (state.ticketMessage) {
+                  TicketCancelledMessage() => true,
+                  TicketConfirmedMessage() => true,
+                  TicketNewMessage() => false,
+                  TicketSubmittedMessage() => false,
+                },
                 value: leave,
                 onToggle: (value) {
                   TicketViewCubit ticketViewCubit =
@@ -861,7 +946,7 @@ class ConnectingLine extends StatelessWidget {
               alignment: WrapAlignment.center,
               direction: Axis.vertical,
               lineLength: 40,
-              lineThickness: 1.75,
+              lineThickness: 2,
               dashColor: state.color,
             ),
           ),
@@ -994,6 +1079,22 @@ class CancelButton extends StatelessWidget {
               cancelledTime: DateTime.now().millisecondsSinceEpoch,
             );
             state.messagesState.database.updateTicket(cancelledMessage);
+
+            bool isDispatch = switch (state.messagesState.user) {
+              Dispatcher() => true,
+              _ => false,
+            };
+            var cancelReceipt = CancelReceipt(
+              text: "",
+              date: DateTime.now(),
+              isDispatch: isDispatch,
+              sent: false,
+              messagesViewState: state.messagesState,
+              cancelTime: DateTime.now().millisecondsSinceEpoch,
+              ticketTime: ticketMessage.date.millisecondsSinceEpoch,
+            );
+            state.messagesState.database.addMessage(cancelReceipt);
+
             Navigator.pop(context);
           },
           style: ElevatedButton.styleFrom(
@@ -1046,6 +1147,22 @@ class UpdateButton extends StatelessWidget {
               messagesViewState: state.messagesState,
             );
             state.messagesState.database.updateTicket(submittedMessage);
+
+            bool isDispatch = switch (state.messagesState.user) {
+              Dispatcher() => true,
+              _ => false,
+            };
+            var updateReceipt = UpdateReceipt(
+              text: "",
+              date: DateTime.now(),
+              isDispatch: isDispatch,
+              sent: false,
+              messagesViewState: state.messagesState,
+              ticketTime: ticketMessage.date.millisecondsSinceEpoch,
+              updateTime: DateTime.now().millisecondsSinceEpoch,
+            );
+            state.messagesState.database.addMessage(updateReceipt);
+
             Navigator.pop(context);
           },
           style: ElevatedButton.styleFrom(
@@ -1093,13 +1210,21 @@ class ConfirmButton extends StatelessWidget {
               sent: ticketMessage.sent,
               messagesViewState: state.messagesState,
               confirmedTime: DateTime.now().millisecondsSinceEpoch,
-              driverid: driver.id,
+              driver: driver.name,
             );
             state.messagesState.database.updateTicket(confirmedMessage);
 
-            // state.messagesState.database.addMessage(
-            //   const Receipt().confirm(selectedDriver),
-            // );
+            var confirmReceipt = ConfirmReceipt(
+              text: "",
+              date: DateTime.now(),
+              isDispatch: true,
+              sent: false,
+              messagesViewState: state.messagesState,
+              driverName: driver.name,
+              confirmTime: DateTime.now().millisecondsSinceEpoch,
+              ticketTime: ticketMessage.date.millisecondsSinceEpoch,
+            );
+            state.messagesState.database.addMessage(confirmReceipt);
 
             Navigator.pop(context);
           },
@@ -1117,6 +1242,166 @@ class ConfirmButton extends StatelessWidget {
         );
       },
     );
+  }
+}
+
+class ConfirmIcon extends StatelessWidget {
+  const ConfirmIcon({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Flexible(
+      child: Padding(
+        padding: const EdgeInsets.all(15.0),
+        child: CustomPaint(
+          painter: CirclePainter(),
+        ),
+      ),
+    );
+  }
+}
+
+class CirclePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = 20.0;
+
+    final fillPaint = Paint()
+      ..color = Colors.transparent
+      ..style = PaintingStyle.fill;
+
+    final strokePaint = Paint()
+      ..color = Colors.green
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 5.0;
+
+    canvas.drawCircle(center, radius, fillPaint);
+    canvas.drawCircle(center, radius, strokePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
+  }
+}
+
+class DriverConfirmText extends StatelessWidget {
+  const DriverConfirmText({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TicketViewCubit, TicketViewState>(
+      builder: (context, state) {
+        if (state is! TicketViewWithData) return Container();
+        var message = state.ticketMessage;
+        if (message is! TicketConfirmedMessage) return Container();
+        return Text(
+          "Driver: ${message.driver}",
+          style: const TextStyle(
+            fontSize: 15.0,
+            color: Colors.grey,
+            fontWeight: FontWeight.w600,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class TimeStampText extends StatelessWidget {
+  const TimeStampText({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TicketViewCubit, TicketViewState>(
+      builder: (context, state) {
+        if (state is! TicketViewWithData) return Container();
+        var message = state.ticketMessage;
+        switch (message) {
+          case TicketConfirmedMessage():
+            {
+              String confirmedDateString = DateFormat()
+                  .add_yMMMd()
+                  .add_jm()
+                  .format(DateTime.fromMillisecondsSinceEpoch(
+                      message.confirmedTime));
+              return Text(
+                "Confirm time: $confirmedDateString",
+                style: const TextStyle(
+                  fontSize: 15.0,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w600,
+                ),
+              );
+            }
+          case TicketCancelledMessage():
+            {
+              String confirmedDateString =
+                  DateFormat().add_yMMMd().add_jm().format(
+                        DateTime.fromMillisecondsSinceEpoch(
+                          message.cancelledTime,
+                        ),
+                      );
+              return Text(
+                "Cancelled time: $confirmedDateString",
+                style: const TextStyle(
+                  fontSize: 15.0,
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w600,
+                ),
+              );
+            }
+
+          case TicketSubmittedMessage():
+            {
+              return Container();
+            }
+          case TicketNewMessage():
+            {
+              return Container();
+            }
+        }
+      },
+    );
+  }
+}
+
+class CancelledIcon extends StatelessWidget {
+  const CancelledIcon({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Flexible(
+      child: CustomPaint(
+        painter: XPainter(),
+      ),
+    );
+  }
+}
+
+class XPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.red
+      ..style = PaintingStyle.fill;
+
+    canvas.drawPath(_getXPath(size.width, size.height), paint);
+  }
+
+  Path _getXPath(double width, double height) {
+    final path = Path();
+    path.moveTo(0, 0);
+    path.lineTo(width, height);
+    path.moveTo(width, 0);
+    path.lineTo(0, height);
+    return path;
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) {
+    return false;
   }
 }
 

@@ -37,6 +37,7 @@ class DispatcherMessageScreen extends StatelessWidget {
       title: Row(
         children: [
           ProfilePicture(name: requestee.name, radius: 22, fontsize: 20),
+          const SizedBox(width: 15),
           Text(
             requestee.name,
             style: const TextStyle(fontSize: 17.5),

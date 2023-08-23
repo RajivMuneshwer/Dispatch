@@ -49,7 +49,7 @@ class NewMessageWidget extends StatelessWidget {
             child: InkWell(
               child: IconButton(
                 onPressed: () {
-                  var newTicket = TicketSubmittedMessage(
+                  var newTicket = TicketNewMessage(
                     text: "",
                     date: DateTime.now(),
                     isDispatch: isDispatch,
@@ -63,8 +63,6 @@ class NewMessageWidget extends StatelessWidget {
                         messagesState: state_,
                         color: Colors.blue,
                         animate: true,
-                        enabled: true,
-                        bottomButtonType: BottomButtonType.submit,
                       ));
                 },
                 icon: const FaIcon(

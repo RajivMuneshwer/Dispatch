@@ -16,7 +16,7 @@ class TicketScreen extends StatelessWidget {
     return BlocProvider(
       create: (context) => TicketViewCubit(ticketViewWithData),
       child: Scaffold(
-        appBar: ticketAppBar(context),
+        appBar: ticketAppBar(context, ticketViewWithData.ticketMessage),
         body: DispatchForm(),
       ),
     );

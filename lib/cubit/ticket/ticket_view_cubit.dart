@@ -81,9 +81,7 @@ class TicketViewCubit extends Cubit<TicketViewState> {
             ticketMessage: currentState.ticketMessage,
             color: currentState.color,
             messagesState: currentState.messagesState,
-            enabled: true,
             animate: true,
-            bottomButtonType: currentState.bottomButtonType,
           ));
         }
         return;
@@ -106,9 +104,7 @@ class TicketViewCubit extends Cubit<TicketViewState> {
               ticketMessage: currentState.ticketMessage,
               messagesState: currentState.messagesState,
               color: currentState.color,
-              enabled: true,
               animate: false,
-              bottomButtonType: currentState.bottomButtonType,
             ),
           );
           return;
@@ -136,9 +132,7 @@ class TicketViewCubit extends Cubit<TicketViewState> {
             ticketMessage: state_.ticketMessage,
             messagesState: state_.messagesState,
             color: state_.color,
-            enabled: state_.enabled,
             animate: state_.animate,
-            bottomButtonType: state_.bottomButtonType,
           ),
         );
         return;
@@ -169,9 +163,7 @@ class TicketViewCubit extends Cubit<TicketViewState> {
             ticketMessage: state_.ticketMessage,
             messagesState: state_.messagesState,
             animate: false,
-            enabled: true,
             color: state_.color,
-            bottomButtonType: state_.bottomButtonType,
           ),
         );
         return;
@@ -197,9 +189,7 @@ class TicketViewCubit extends Cubit<TicketViewState> {
           ticketMessage: state_.ticketMessage,
           messagesState: state_.messagesState,
           animate: false,
-          enabled: true,
           color: state_.color,
-          bottomButtonType: state_.bottomButtonType,
         ),
       );
       return;
