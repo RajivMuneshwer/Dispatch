@@ -224,19 +224,3 @@ TicketViewWithData ticketTypeToState({
           ticketMessage: ticketMessage,
           messagesState: messageState),
     };
-
-
-// class Receipt {
-//   const Receipt();
-
-//   Message confirm(Driver driver) {
-//     String text =
-//         "Thank you for waiting. Your ticket has been confirmed as of ${DateFormat.yMd().add_jm().format(DateTime.now())}!\n Your driver is ${driver.name} contact on tel ${driver.tel}";
-//     return TextMessage(
-//       text: text,
-//       date: DateTime.now(),
-//       isDispatch: true,
-//       sent: false,
-//     );
-//   }
-// }

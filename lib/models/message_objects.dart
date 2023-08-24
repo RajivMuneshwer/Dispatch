@@ -45,15 +45,15 @@ class UpdateReceipt extends Message {
       child: Text.rich(
         TextSpan(
           children: [
-            TextSpan(text: "${(isUser) ? "My" : "Your"} ticket made on \n"),
-            TextSpan(text: "$timeMade \n"),
+            TextSpan(text: "${(isUser) ? "My" : "Your"} ticket made on \n\n"),
+            TextSpan(text: "$timeMade \n\n"),
             const TextSpan(text: "has been "),
             const TextSpan(
               text: "updated ",
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
-            const TextSpan(text: "on\n"),
-            TextSpan(text: "$timeUpdated\n"),
+            const TextSpan(text: "on\n\n"),
+            TextSpan(text: "$timeUpdated\n\n"),
           ],
         ),
       ),
@@ -108,15 +108,15 @@ class CancelReceipt extends Message {
       child: Text.rich(
         TextSpan(
           children: [
-            TextSpan(text: "${(isUser) ? "My" : "Your"} ticket made on \n"),
-            TextSpan(text: "$timeMade \n"),
+            TextSpan(text: "${(isUser) ? "My" : "Your"} ticket made on \n\n"),
+            TextSpan(text: "$timeMade \n\n"),
             const TextSpan(text: "has been "),
             const TextSpan(
               text: "cancelled ",
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
-            const TextSpan(text: "on\n"),
-            TextSpan(text: "$timeCancelled\n"),
+            const TextSpan(text: "on\n\n"),
+            TextSpan(text: "$timeCancelled\n\n"),
           ],
         ),
       ),
