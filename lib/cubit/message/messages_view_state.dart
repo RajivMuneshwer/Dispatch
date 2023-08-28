@@ -3,7 +3,7 @@ part of 'messages_view_cubit.dart';
 @immutable
 abstract class MessagesViewState {
   final User user;
-  final RequesteeMessagesDatabase database;
+  final MessageDatabase database;
   const MessagesViewState({required this.user, required this.database});
 }
 

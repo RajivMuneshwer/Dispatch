@@ -1220,7 +1220,7 @@ class ConfirmButton extends StatelessWidget {
               isDispatch: true,
               sent: false,
               messagesViewState: state.messagesState,
-              driverName: driver.name,
+              driver: driver,
               confirmTime: DateTime.now().millisecondsSinceEpoch,
               ticketTime: ticketMessage.date.millisecondsSinceEpoch,
             );

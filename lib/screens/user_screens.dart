@@ -133,6 +133,8 @@ abstract class UserInfoScreen<T extends User, M extends User>
                         children: [
                           const SizedBox(height: 40.0),
                           NameInfoBox(user: user),
+                          const SizedBox(height: 40.0),
+                          TelInfoBox(user: user),
                           const SizedBox(height: 20.0),
                           HeaderText<M>(),
                           Expanded(
@@ -183,6 +185,46 @@ class EditUserButton<T extends User> extends StatelessWidget {
           child: const Text("Edit"),
         ),
       )),
+    );
+  }
+}
+
+class TelInfoBox extends StatelessWidget {
+  final User user;
+  const TelInfoBox({
+    super.key,
+    required this.user,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      alignment: Alignment.centerLeft,
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.grey.shade50,
+        border: Border(
+          bottom: BorderSide(
+            width: 1.5,
+            color: Colors.grey.shade300,
+          ),
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(
+          top: 8.0,
+          bottom: 8.0,
+          left: 16.0,
+        ),
+        child: Text(
+          "Phone: ${user.tel?.international}",
+          style: TextStyle(
+            fontWeight: FontWeight.w600,
+            color: Colors.grey.shade700,
+            fontSize: 15,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -344,18 +386,33 @@ class GenericUserRowFactory extends UserRowFactory<User> {
   }
 }
 
-class RequesteeMessagesRowFactory extends UserRowFactory<Requestee> {
+class MessageInfoRowFactory<T extends User> extends UserRowFactory<T> {
   @override
-  List<Widget> make(Requestee? user) {
-    if (user == null) return [];
-    return [
-      UserProfilePic(name: user.name),
-      UserNameBox(name: user.name),
-      UserMessageInfo(
-        numOfUnreadMessages: user.numOfUnreadMessages ?? 2,
-        time: user.lastMessageTime ?? DateTime.now().millisecondsSinceEpoch,
-      ),
-    ];
+  List<Widget> make(T? user) {
+    var user_ = user;
+    if (user_ == null) return [];
+    return switch (user_) {
+      Driver() => [
+          UserProfilePic(name: user_.name),
+          UserNameBox(name: user_.name),
+          UserMessageInfo(
+            numOfUnreadMessages: user_.numOfUnreadMessages ?? 2,
+            time:
+                user_.lastMessageTime ?? DateTime.now().millisecondsSinceEpoch,
+          ),
+        ],
+      Requestee() => [
+          UserProfilePic(name: user_.name),
+          UserNameBox(name: user_.name),
+          UserMessageInfo(
+            numOfUnreadMessages: user_.numOfUnreadMessages ?? 2,
+            time:
+                user_.lastMessageTime ?? DateTime.now().millisecondsSinceEpoch,
+          ),
+        ],
+      Dispatcher() => [],
+      Admin() => [],
+    };
   }
 }
 
@@ -619,10 +676,10 @@ class EditSubmitButton<T extends User> extends StatelessWidget {
             (user_ == null)
                 ? await createUser(state: state)
                 : await updateUser(state: state, user: user_);
+            int count = 0;
+            Navigator.popUntil(context,
+                (route) => (user_ == null) ? ++count > 1 : ++count > 2);
           }
-          int count = 0;
-          Navigator.popUntil(
-              context, (route) => (user_ == null) ? ++count > 1 : ++count > 2);
         },
         child: Text(
           (user != null) ? "Update" : "Create",

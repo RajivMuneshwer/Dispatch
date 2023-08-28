@@ -10,7 +10,7 @@ import 'package:meta/meta.dart';
 part 'messages_view_state.dart';
 
 class MessagesViewCubit extends Cubit<MessagesViewState> {
-  final RequesteeMessagesDatabase database;
+  final MessageDatabase database;
   final User user;
   final int initialNumOfMessages = 3;
   final int numOfMessagesToLoadAfterInitial = 10;

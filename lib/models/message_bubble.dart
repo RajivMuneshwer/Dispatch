@@ -19,7 +19,7 @@ class MessageBubble extends StatelessWidget {
     return GenericBubble(
       date: message.date,
       isSender: isSender,
-      bubbleMain: message.build(context),
+      bubbleMain: message.toWidget(context),
       sent: message.sent,
       tail: true,
       color: (isSender)

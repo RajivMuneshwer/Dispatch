@@ -8,27 +8,89 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_profile_picture/flutter_profile_picture.dart';
 import '../models/message_models.dart';
 
+class DriverMessageScreen extends StatelessWidget {
+  final Driver user;
+  final Dispatcher dispatcher;
+  const DriverMessageScreen({
+    super.key,
+    required this.user,
+    required this.dispatcher,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return MessageScreen<Driver>(
+      user: user,
+      database: DriverMessageDatabase(user: user),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            ProfilePicture(name: dispatcher.name, radius: 22, fontsize: 20),
+            const SizedBox(width: 15),
+            Text(
+              dispatcher.name,
+              style: const TextStyle(fontSize: 17.5),
+            )
+          ],
+        ),
+        actions: [
+          CallButton(
+            user: dispatcher,
+          ),
+          const SizedBox(
+            width: 15,
+          )
+        ],
+      ),
+    );
+  }
+}
+
 class RequesteeMessageScreen extends StatelessWidget {
   final Requestee user;
-  const RequesteeMessageScreen({super.key, required this.user});
+  final Dispatcher dispatcher;
+  const RequesteeMessageScreen({
+    super.key,
+    required this.user,
+    required this.dispatcher,
+  });
 
   @override
   Widget build(BuildContext context) {
     return MessageScreen<Requestee>(
       user: user,
-      database: RequesteeMessagesDatabase(requestee: user),
-      appBar: AppBar(),
+      database: RequesteesMessageDatabase(user: user),
+      appBar: AppBar(
+        title: Row(
+          children: [
+            ProfilePicture(name: dispatcher.name, radius: 22, fontsize: 20),
+            const SizedBox(width: 15),
+            Text(
+              dispatcher.name,
+              style: const TextStyle(fontSize: 17.5),
+            )
+          ],
+        ),
+        actions: [
+          CallButton(
+            user: dispatcher,
+          ),
+          const SizedBox(
+            width: 15,
+          )
+        ],
+      ),
     );
   }
 }
 
-class DispatcherMessageScreen extends StatelessWidget {
-  final Dispatcher user;
-  final Requestee requestee;
+class DispatcherMessageScreen<T extends User> extends StatelessWidget {
+  final Dispatcher dispatcher;
+  final T receiver;
   const DispatcherMessageScreen({
     super.key,
-    required this.user,
-    required this.requestee,
+    required this.dispatcher,
+    required this.receiver,
   });
 
   @override
@@ -36,18 +98,20 @@ class DispatcherMessageScreen extends StatelessWidget {
     var appBar = AppBar(
       title: Row(
         children: [
-          ProfilePicture(name: requestee.name, radius: 22, fontsize: 20),
+          ProfilePicture(name: receiver.name, radius: 22, fontsize: 20),
           const SizedBox(width: 15),
           Text(
-            requestee.name,
+            receiver.name,
             style: const TextStyle(fontSize: 17.5),
           )
         ],
       ),
+      actions: [CallButton(user: receiver)],
     );
+
     return MessageScreen<Dispatcher>(
-      user: user,
-      database: RequesteeMessagesDatabase(requestee: requestee),
+      user: dispatcher,
+      database: MessageDatabaseFactory<T>().create(user: receiver),
       appBar: appBar,
     );
   }
@@ -55,7 +119,7 @@ class DispatcherMessageScreen extends StatelessWidget {
 
 class MessageScreen<T extends User> extends StatefulWidget {
   final T user;
-  final RequesteeMessagesDatabase database;
+  final MessageDatabase database;
   final AppBar appBar;
   const MessageScreen({
     super.key,

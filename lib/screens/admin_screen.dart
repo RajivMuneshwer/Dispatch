@@ -4,6 +4,7 @@ import 'package:dispatch/screens/user_screens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
 import 'package:form_builder_validators/form_builder_validators.dart';
+import 'package:phone_form_field/phone_form_field.dart';
 
 class AdminScreen extends StatelessWidget {
   const AdminScreen({super.key});
@@ -376,6 +377,7 @@ class DriverEditScreen extends UserEditScreen<Driver> {
   final AppDatabase database;
   static const textName = "name";
   static const dropdownName = "dispatcherid";
+  static const telName = "tel";
   DriverEditScreen({
     super.key,
     required super.user,
@@ -393,7 +395,9 @@ class DriverEditScreen extends UserEditScreen<Driver> {
     return Column(
       children: [
         const SizedBox(height: 20),
-        EditTextFormField(name: textName, initial: user?.name),
+        EditNameField(name: textName, initial: user?.name),
+        const SizedBox(height: 20),
+        EditTelField(name: telName, initialTel: user?.tel),
         const SizedBox(height: 20),
         EditDropdownFormField(
           dropdownOptions: dispatchers,
@@ -410,12 +414,14 @@ class DriverEditScreen extends UserEditScreen<Driver> {
         case {
           textName: var textField,
           dropdownName: var dropdownField,
+          telName: var telField,
         }) {
       final newDriver = Driver(
         id: getUniqueid(),
         name: textField.value,
         sortBy: textField.value,
         dispatcherid: dropdownField.value,
+        tel: telField.value,
       );
       await AllDatabase().create<Driver>(newDriver);
       return;
@@ -440,10 +446,12 @@ class DriverEditScreen extends UserEditScreen<Driver> {
         case {
           textName: var textField,
           dropdownName: var dropdownField,
+          telName: var telField,
         }) {
       await AllDatabase().update(user, {
         "name": textField.value,
         "dispatcherid": dropdownField.value,
+        "tel": (telField.value as PhoneNumber).toJson(),
       });
     }
   }
@@ -453,6 +461,7 @@ class RequesteeEditScreen extends UserEditScreen<Requestee> {
   final AppDatabase database;
   static const textName = "name";
   static const dropdownName = "dispatcherid";
+  static const telName = "tel";
   RequesteeEditScreen({
     super.key,
     required super.user,
@@ -470,7 +479,9 @@ class RequesteeEditScreen extends UserEditScreen<Requestee> {
     return Column(
       children: [
         const SizedBox(height: 20),
-        EditTextFormField(name: textName, initial: user?.name),
+        EditNameField(name: textName, initial: user?.name),
+        const SizedBox(height: 20),
+        EditTelField(name: telName, initialTel: user?.tel),
         const SizedBox(height: 20),
         EditDropdownFormField(
           dropdownOptions: dispatchers,
@@ -489,13 +500,14 @@ class RequesteeEditScreen extends UserEditScreen<Requestee> {
         case {
           textName: var textField,
           dropdownName: var dropdownField,
+          telName: var telField,
         }) {
       final newRequestee = Requestee(
-        id: getUniqueid(),
-        name: textField.value,
-        sortBy: textField.value,
-        dispatcherid: dropdownField.value,
-      );
+          id: getUniqueid(),
+          name: textField.value,
+          sortBy: textField.value,
+          dispatcherid: dropdownField.value,
+          tel: telField.value);
       await AllDatabase().create<Requestee>(newRequestee);
       return;
     }
@@ -510,10 +522,12 @@ class RequesteeEditScreen extends UserEditScreen<Requestee> {
         case {
           textName: var textField,
           dropdownName: var dropdownField,
+          telName: var telField,
         }) {
       await AllDatabase().update(user, {
         "name": textField.value,
         "dispatcherid": dropdownField.value,
+        "tel": (telField.value as PhoneNumber).toJson(),
       });
     }
   }
@@ -531,7 +545,7 @@ class RequesteeEditScreen extends UserEditScreen<Requestee> {
 class DispatchEditScreen extends UserEditScreen<Dispatcher> {
   final AppDatabase database;
   static const textName = "name";
-
+  static const telName = "tel";
   DispatchEditScreen({
     super.key,
     required super.user,
@@ -542,7 +556,10 @@ class DispatchEditScreen extends UserEditScreen<Dispatcher> {
   Future<Widget> addWidgets() async => Column(
         children: [
           const SizedBox(height: 20),
-          EditTextFormField(name: textName, initial: user?.name)
+          EditNameField(name: textName, initial: user?.name),
+          const SizedBox(height: 20),
+          EditTelField(name: telName, initialTel: user?.tel),
+          const SizedBox(height: 20),
         ],
       );
 
@@ -551,13 +568,14 @@ class DispatchEditScreen extends UserEditScreen<Dispatcher> {
     if (state.fields
         case {
           textName: var textField,
+          telName: var telField,
         }) {
       final newDispatcher = Dispatcher(
-        id: getUniqueid(),
-        name: textField.value,
-        sortBy: textField.value,
-        requesteesid: [],
-      );
+          id: getUniqueid(),
+          name: textField.value,
+          sortBy: textField.value,
+          requesteesid: [],
+          tel: telField.value);
       await AllDatabase().create<Dispatcher>(newDispatcher);
     }
   }
@@ -570,8 +588,12 @@ class DispatchEditScreen extends UserEditScreen<Dispatcher> {
     if (state.fields
         case {
           textName: var textField,
+          telName: var telField,
         }) {
-      await AllDatabase().update(user, {"name": textField.value});
+      await AllDatabase().update(user, {
+        "name": textField.value,
+        "tel": (telField.value as PhoneNumber).toJson(),
+      });
     }
   }
 
@@ -588,7 +610,7 @@ class DispatchEditScreen extends UserEditScreen<Dispatcher> {
 class AdminEditScreen extends UserEditScreen<Admin> {
   final AppDatabase database;
   static const textName = "name";
-
+  static const telName = "tel";
   AdminEditScreen({
     super.key,
     required super.user,
@@ -599,7 +621,9 @@ class AdminEditScreen extends UserEditScreen<Admin> {
   Future<Widget> addWidgets() async => Column(
         children: [
           const SizedBox(height: 20),
-          EditTextFormField(
+          EditTelField(name: telName, initialTel: user?.tel),
+          const SizedBox(height: 20),
+          EditNameField(
             name: textName,
             initial: user?.name,
           )
@@ -611,11 +635,13 @@ class AdminEditScreen extends UserEditScreen<Admin> {
     if (state.fields
         case {
           textName: var textField,
+          telName: var telField,
         }) {
       final newAdmin = Admin(
         id: getUniqueid(),
         name: textField.value,
         sortBy: textField.value,
+        tel: telField.value,
       );
       await AllDatabase().create<Admin>(newAdmin);
     }
@@ -629,8 +655,12 @@ class AdminEditScreen extends UserEditScreen<Admin> {
     if (state.fields
         case {
           textName: var textField,
+          telName: var telField,
         }) {
-      await AllDatabase().update(user, {"name": textField});
+      await AllDatabase().update(user, {
+        "name": textField,
+        "tel": telField,
+      });
       return;
     }
   }
@@ -725,7 +755,7 @@ class EditDropdownFormField extends StatelessWidget {
       padding: const EdgeInsets.all(8.0),
       child: FormBuilderDropdown<int>(
         decoration: const InputDecoration(
-          labelText: "--Dispatcher--",
+          labelText: "Dispatcher",
           labelStyle: TextStyle(fontWeight: FontWeight.normal),
         ),
         name: name,
@@ -744,11 +774,46 @@ class EditDropdownFormField extends StatelessWidget {
   }
 }
 
-class EditTextFormField extends StatelessWidget {
+class EditTelField extends StatelessWidget {
+  final String name;
+  final PhoneNumber? initialTel;
+  const EditTelField({
+    super.key,
+    required this.name,
+    this.initialTel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: FormBuilderField<PhoneNumber>(
+        name: name,
+        validator: FormBuilderValidators.required(),
+        builder: (field) => PhoneFormField(
+          autofillHints: const [AutofillHints.telephoneNumber],
+          decoration: const InputDecoration(
+              labelText: 'Phone', border: UnderlineInputBorder()),
+          validator: PhoneValidator.validMobile(
+            errorText: "invalid phone number",
+            allowEmpty: false,
+          ),
+          initialValue: initialTel,
+          onChanged: (value) {
+            if (value!.isValid(type: PhoneNumberType.mobile)) {
+              field.didChange(value);
+            }
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class EditNameField extends StatelessWidget {
   final String name;
   final String? initial;
-  const EditTextFormField(
-      {super.key, required this.name, required this.initial});
+  const EditNameField({super.key, required this.name, required this.initial});
 
   @override
   Widget build(BuildContext context) {

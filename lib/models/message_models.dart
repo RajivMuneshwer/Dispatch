@@ -12,6 +12,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:custom_refresh_indicator/custom_refresh_indicator.dart';
 import 'package:dispatch/models/message_bubble.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class NewMessageWidget extends StatelessWidget {
   final ScrollController controller;
@@ -224,3 +225,26 @@ TicketViewWithData ticketTypeToState({
           ticketMessage: ticketMessage,
           messagesState: messageState),
     };
+
+class CallButton extends StatelessWidget {
+  final User user;
+  const CallButton({super.key, required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton.outlined(
+        onPressed: () async {
+          var tel = user.tel;
+          if (tel == null) return;
+          final Uri url = Uri.parse("tel:${tel.international}");
+          if (await canLaunchUrl(url)) {
+            launchUrl(url);
+          }
+        },
+        icon: const FaIcon(
+          FontAwesomeIcons.phone,
+          color: Colors.white,
+          size: 18,
+        ));
+  }
+}

@@ -5,9 +5,11 @@ import 'package:dispatch/models/rnd_message_generator.dart';
 import 'package:dispatch/models/ticket_models.dart';
 import 'package:dispatch/models/user_objects.dart';
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class UpdateReceipt extends Message {
   final int ticketTime;
@@ -29,7 +31,7 @@ class UpdateReceipt extends Message {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget toWidget(BuildContext context) {
     String timeMade = DateFormat().add_yMMMd().add_jm().format(
           DateTime.fromMillisecondsSinceEpoch(
             ticketTime,
@@ -92,7 +94,7 @@ class CancelReceipt extends Message {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget toWidget(BuildContext context) {
     String timeMade = DateFormat().add_yMMMd().add_jm().format(
           DateTime.fromMillisecondsSinceEpoch(
             ticketTime,
@@ -136,7 +138,7 @@ class CancelReceipt extends Message {
 }
 
 class ConfirmReceipt extends Message {
-  final String driverName;
+  final Driver driver;
   final int confirmTime;
   final int ticketTime;
   ConfirmReceipt({
@@ -145,13 +147,13 @@ class ConfirmReceipt extends Message {
     required super.isDispatch,
     required super.sent,
     required super.messagesViewState,
-    required this.driverName,
+    required this.driver,
     required this.confirmTime,
     required this.ticketTime,
   });
 
   @override
-  Widget build(BuildContext context) {
+  Widget toWidget(BuildContext context) {
     String timeMade = DateFormat().add_yMMMd().add_jm().format(
           DateTime.fromMillisecondsSinceEpoch(
             ticketTime,
@@ -167,18 +169,27 @@ class ConfirmReceipt extends Message {
       child: Text.rich(
         TextSpan(
           children: [
-            const TextSpan(text: "Thank you! 🎉 🎉 \n"),
-            const TextSpan(text: "Your ticket made \n"),
+            const TextSpan(text: "Thank you! 🎉 🎉 \n\n"),
+            const TextSpan(text: "Your ticket made \n\n"),
             TextSpan(text: "$timeMade \n"),
             const TextSpan(text: "has been "),
             const TextSpan(
               text: "confirmed ",
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
-            const TextSpan(text: "on\n"),
-            TextSpan(text: "$timeConfirmed\n"),
-            TextSpan(text: "Your driver is $driverName \n"),
-            const TextSpan(text: "Please contact on")
+            const TextSpan(text: "on\n\n"),
+            TextSpan(text: "$timeConfirmed\n\n"),
+            TextSpan(text: "Contact your driver ${driver.name} on \n\n"),
+            TextSpan(
+              text: "${driver.tel?.international}",
+              style: const TextStyle(
+                color: Colors.blue,
+              ),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () => launchUrl(
+                      Uri.parse("tel:${driver.tel?.international}"),
+                    ),
+            )
           ],
         ),
       ),
@@ -191,7 +202,7 @@ class ConfirmReceipt extends Message {
         "date": date.millisecondsSinceEpoch,
         "isDispatch": isDispatch,
         "sent": sent,
-        "driver": driverName,
+        "driver": driver.toMap(),
         "confirmedTime": confirmTime,
         "ticketTime": ticketTime,
         "isReceipt": true
@@ -216,7 +227,7 @@ class TextMessage extends Message {
       };
 
   @override
-  Widget build(BuildContext context) => Text(
+  Widget toWidget(BuildContext context) => Text(
         text,
         textAlign: TextAlign.left,
       );
@@ -242,7 +253,7 @@ class ErrorMessage extends Message {
   }
 
   @override
-  Widget build(BuildContext context) => const Text(
+  Widget toWidget(BuildContext context) => const Text(
         "Error! Please contact Admin",
         style: TextStyle(color: Colors.red),
         textAlign: TextAlign.left,
@@ -381,7 +392,7 @@ sealed class TicketMessage extends Message {
       };
 
   @override
-  Widget build(BuildContext context) => Column(children: [
+  Widget toWidget(BuildContext context) => Column(children: [
         MaterialButton(
           padding: EdgeInsets.zero,
           materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -432,7 +443,7 @@ sealed class Message {
 
   Map<String, dynamic> toMap();
 
-  Widget build(BuildContext context);
+  Widget toWidget(BuildContext context);
 }
 
 class MessageAdaptor {
@@ -497,7 +508,7 @@ class MessageAdaptor {
           "date": int date,
           "isDispatch": bool isDispatch,
           "sent": bool sent,
-          "driver": String driverName,
+          "driver": Map<dynamic, dynamic> dmap,
           "confirmedTime": int confirmTime,
           "ticketTime": int ticketTime,
           "isReceipt": true
@@ -509,7 +520,7 @@ class MessageAdaptor {
             isDispatch: isDispatch,
             sent: sent,
             messagesViewState: messagesViewState,
-            driverName: driverName,
+            driver: UserAdaptor<Driver>().adaptMap(dmap),
             confirmTime: confirmTime,
             ticketTime: ticketTime,
           );

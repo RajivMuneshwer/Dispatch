@@ -151,14 +151,20 @@ class AdminDatabase extends AppDatabase {
       case Dispatcher():
         {
           var requesteesid_ = user.requesteesid;
+          var driversids = user.driversid;
           if (requesteesid_ == null) {
-            await ref.child(path).remove();
-            return;
+            if (driversids == null || driversids.isEmpty) {
+              await ref.child(path).remove();
+              return;
+            }
           } else if (requesteesid_.isEmpty) {
-            await ref.child(path).remove();
-            return;
+            if (driversids == null || driversids.isEmpty) {
+              await ref.child(path).remove();
+              return;
+            }
           }
-          throw Exception("Cannot delete dispatcher with requeestes");
+          throw Exception(
+              "Cannot delete dispatcher with requeestes or drivers");
         }
       case Admin():
         {
@@ -401,6 +407,7 @@ class DispatcherDatabase extends AppDatabase {
           ref.child(path).set({
             "id": user.id,
             "name": user.name,
+            "tel": user.tel?.toJson(),
           });
           return;
         }
@@ -416,6 +423,7 @@ class DispatcherDatabase extends AppDatabase {
           ref.child(path).set({
             "id": user.id,
             "name": user.name,
+            "tel": user.tel?.toJson(),
           });
           return;
         }
@@ -440,9 +448,11 @@ class DispatcherDatabase extends AppDatabase {
           await ref.child(prevdispatchpath).remove();
           String newdispatchpath =
               "${value['dispatcherid']}/requesteesid/${user.id}";
-          await ref
-              .child(newdispatchpath)
-              .set({"id": user.id, "name": user.name});
+          await ref.child(newdispatchpath).set({
+            "id": user.id,
+            "name": user.name,
+            "tel": user.tel?.toJson(),
+          });
         }
       case Driver():
         {
@@ -453,9 +463,11 @@ class DispatcherDatabase extends AppDatabase {
           await ref.child(prevdispatchpath).remove();
           String newdispatchpath =
               "${value['dispatcherid']}/driversid/${user.id}";
-          await ref
-              .child(newdispatchpath)
-              .set({"id": user.id, "name": user.name});
+          await ref.child(newdispatchpath).set({
+            "id": user.id,
+            "name": user.name,
+            "tel": user.tel?.toJson(),
+          });
         }
       case Dispatcher():
         {}
@@ -483,12 +495,17 @@ class DispatcherDatabase extends AppDatabase {
         {
           String dispatcherpath = "${user.id}";
           var requesteesid_ = user.requesteesid;
+          var driversids = user.driversid;
           if (requesteesid_ == null) {
-            ref.child(dispatcherpath).remove();
-            return;
+            if (driversids == null || driversids.isEmpty) {
+              ref.child(dispatcherpath).remove();
+              return;
+            }
           } else if (requesteesid_.isEmpty) {
-            ref.child(dispatcherpath).remove();
-            return;
+            if (driversids == null || driversids.isEmpty) {
+              ref.child(dispatcherpath).remove();
+              return;
+            }
           }
           throw Exception("Cannot delete dispatcher with requeestes");
         }
@@ -518,6 +535,10 @@ class DispatcherDatabase extends AppDatabase {
 
   Future<Iterable<DataSnapshot>> getRequestees({required int id}) async {
     return (await ref.child("$id/requesteesid").get()).children;
+  }
+
+  Future<Iterable<DataSnapshot>> getDrivers({required int id}) async {
+    return (await ref.child("$id/driversid").get()).children;
   }
 }
 
