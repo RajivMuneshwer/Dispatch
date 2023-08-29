@@ -1075,6 +1075,8 @@ class CancelButton extends StatelessWidget {
               date: ticketMessage.date,
               isDispatch: ticketMessage.isDispatch,
               sent: ticketMessage.sent,
+              seen: ticketMessage.seen,
+              senderid: state.messagesState.user.id,
               messagesViewState: state.messagesState,
               cancelledTime: DateTime.now().millisecondsSinceEpoch,
             );
@@ -1089,9 +1091,11 @@ class CancelButton extends StatelessWidget {
               date: DateTime.now(),
               isDispatch: isDispatch,
               sent: false,
+              seen: false,
               messagesViewState: state.messagesState,
               cancelTime: DateTime.now().millisecondsSinceEpoch,
               ticketTime: ticketMessage.date.millisecondsSinceEpoch,
+              senderid: state.messagesState.user.id,
             );
             state.messagesState.database.addMessage(cancelReceipt);
 
@@ -1144,7 +1148,9 @@ class UpdateButton extends StatelessWidget {
               date: ticketMessage.date,
               isDispatch: ticketMessage.isDispatch,
               sent: ticketMessage.sent,
+              seen: ticketMessage.seen,
               messagesViewState: state.messagesState,
+              senderid: state.messagesState.user.id,
             );
             state.messagesState.database.updateTicket(submittedMessage);
 
@@ -1157,9 +1163,11 @@ class UpdateButton extends StatelessWidget {
               date: DateTime.now(),
               isDispatch: isDispatch,
               sent: false,
+              seen: false,
               messagesViewState: state.messagesState,
               ticketTime: ticketMessage.date.millisecondsSinceEpoch,
               updateTime: DateTime.now().millisecondsSinceEpoch,
+              senderid: state.messagesState.user.id,
             );
             state.messagesState.database.addMessage(updateReceipt);
 
@@ -1208,6 +1216,8 @@ class ConfirmButton extends StatelessWidget {
               date: ticketMessage.date,
               isDispatch: ticketMessage.isDispatch,
               sent: ticketMessage.sent,
+              seen: ticketMessage.seen,
+              senderid: ticketMessage.messagesViewState.user.id,
               messagesViewState: state.messagesState,
               confirmedTime: DateTime.now().millisecondsSinceEpoch,
               driver: driver.name,
@@ -1219,6 +1229,8 @@ class ConfirmButton extends StatelessWidget {
               date: DateTime.now(),
               isDispatch: true,
               sent: false,
+              seen: false,
+              senderid: state.messagesState.user.id,
               messagesViewState: state.messagesState,
               driver: driver,
               confirmTime: DateTime.now().millisecondsSinceEpoch,

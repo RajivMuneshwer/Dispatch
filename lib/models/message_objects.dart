@@ -23,6 +23,8 @@ class UpdateReceipt extends Message {
     required super.messagesViewState,
     required this.ticketTime,
     required this.updateTime,
+    required super.senderid,
+    required super.seen,
   }) {
     isUser = switch (messagesViewState.user) {
       Dispatcher() => (isDispatch),
@@ -71,6 +73,7 @@ class UpdateReceipt extends Message {
         "updateTime": updateTime,
         "ticketTime": ticketTime,
         "isReceipt": true,
+        "senderid": senderid,
       };
 }
 
@@ -86,6 +89,8 @@ class CancelReceipt extends Message {
     required super.messagesViewState,
     required this.cancelTime,
     required this.ticketTime,
+    required super.senderid,
+    required super.seen,
   }) {
     isUser = switch (messagesViewState.user) {
       Dispatcher() => (isDispatch),
@@ -134,6 +139,7 @@ class CancelReceipt extends Message {
         "cancelTime": cancelTime,
         "ticketTime": ticketTime,
         "isReceipt": true,
+        "senderid": senderid,
       };
 }
 
@@ -150,6 +156,8 @@ class ConfirmReceipt extends Message {
     required this.driver,
     required this.confirmTime,
     required this.ticketTime,
+    required super.senderid,
+    required super.seen,
   });
 
   @override
@@ -205,7 +213,8 @@ class ConfirmReceipt extends Message {
         "driver": driver.toMap(),
         "confirmedTime": confirmTime,
         "ticketTime": ticketTime,
-        "isReceipt": true
+        "isReceipt": true,
+        "senderid": senderid,
       };
 }
 
@@ -216,6 +225,8 @@ class TextMessage extends Message {
     required super.isDispatch,
     required super.sent,
     required super.messagesViewState,
+    required super.senderid,
+    required super.seen,
   });
 
   @override
@@ -224,6 +235,7 @@ class TextMessage extends Message {
         "date": date.millisecondsSinceEpoch,
         "isDispatch": isDispatch,
         "sent": sent,
+        "senderid": senderid,
       };
 
   @override
@@ -240,6 +252,8 @@ class ErrorMessage extends Message {
     super.isDispatch = false,
     super.sent = false,
     required super.messagesViewState,
+    required super.senderid,
+    required super.seen,
   });
 
   @override
@@ -274,6 +288,8 @@ class TicketConfirmedMessage extends TicketMessage {
     required super.messagesViewState,
     required this.confirmedTime,
     required this.driver,
+    required super.senderid,
+    required super.seen,
   });
 
   @override
@@ -285,6 +301,7 @@ class TicketConfirmedMessage extends TicketMessage {
         "ticketType": ticketTypes.name,
         "confirmedTime": confirmedTime,
         "driver": driver,
+        "senderid": senderid,
       };
 }
 
@@ -300,6 +317,8 @@ class TicketCancelledMessage extends TicketMessage {
     super.title = "Cancelled",
     required super.messagesViewState,
     required this.cancelledTime,
+    required super.senderid,
+    required super.seen,
   });
 
   @override
@@ -310,6 +329,7 @@ class TicketCancelledMessage extends TicketMessage {
         "sent": sent,
         "ticketType": ticketTypes.name,
         "cancelledTime": cancelledTime,
+        "senderid": senderid,
       };
 }
 
@@ -323,6 +343,8 @@ class TicketNewMessage extends TicketMessage {
     super.iconColor = Colors.blue,
     required super.messagesViewState,
     super.title = "New Ticket",
+    required super.senderid,
+    required super.seen,
   });
 
   @override
@@ -342,6 +364,8 @@ class TicketSubmittedMessage extends TicketMessage {
     super.iconColor = Colors.blue,
     super.title = "Submitted",
     required super.messagesViewState,
+    required super.senderid,
+    required super.seen,
   });
 
   @override
@@ -350,7 +374,8 @@ class TicketSubmittedMessage extends TicketMessage {
         "date": date.millisecondsSinceEpoch,
         "isDispatch": isDispatch,
         "sent": sent,
-        "ticketType": ticketTypes.name
+        "ticketType": ticketTypes.name,
+        "senderid": senderid,
       };
 }
 
@@ -367,6 +392,8 @@ sealed class TicketMessage extends Message {
     required this.iconColor,
     required super.messagesViewState,
     required this.title,
+    required super.senderid,
+    required super.seen,
   });
 
   @override
@@ -421,18 +448,22 @@ sealed class TicketMessage extends Message {
 }
 
 sealed class Message {
+  final int senderid;
   final String text;
   final DateTime date;
   final bool isDispatch;
   final MessagesViewState messagesViewState;
   bool sent;
+  bool seen;
 
   Message({
     required this.text,
     required this.date,
     required this.isDispatch,
     required this.sent,
+    required this.senderid,
     required this.messagesViewState,
+    required this.seen,
   });
 
   int get id => dateToInt();
@@ -451,12 +482,14 @@ class MessageAdaptor {
   MessageAdaptor({
     required this.messagesViewState,
   });
-  Message adaptText(String text, bool isDispatch) {
+  Message adaptText(String text, int senderid, bool isDispatch) {
     return TextMessage(
       text: text,
       date: DateTime.now(),
       isDispatch: isDispatch,
       sent: false,
+      seen: false,
+      senderid: senderid,
       messagesViewState: messagesViewState,
     );
   }
@@ -469,25 +502,32 @@ class MessageAdaptor {
           "date": int date,
           "isDispatch": bool isDispatch,
           "sent": bool sent,
+          "seen": bool seen,
           "updateTime": int updateTime,
           "ticketTime": int ticketTime,
+          "senderid": int senderid,
           "isReceipt": true,
         }:
         {
           return UpdateReceipt(
-              text: text,
-              date: DateTime.fromMillisecondsSinceEpoch(date),
-              isDispatch: isDispatch,
-              sent: sent,
-              messagesViewState: messagesViewState,
-              ticketTime: ticketTime,
-              updateTime: updateTime);
+            text: text,
+            date: DateTime.fromMillisecondsSinceEpoch(date),
+            isDispatch: isDispatch,
+            sent: sent,
+            senderid: senderid,
+            messagesViewState: messagesViewState,
+            ticketTime: ticketTime,
+            updateTime: updateTime,
+            seen: seen,
+          );
         }
       case {
           "text": String text,
           "date": int date,
           "isDispatch": bool isDispatch,
           "sent": bool sent,
+          "seen": bool seen,
+          "senderid": int senderid,
           "cancelTime": int cancelTime,
           "ticketTime": int ticketTime,
           "isReceipt": true
@@ -498,9 +538,11 @@ class MessageAdaptor {
             date: DateTime.fromMillisecondsSinceEpoch(date),
             isDispatch: isDispatch,
             sent: sent,
+            seen: seen,
             messagesViewState: messagesViewState,
             cancelTime: cancelTime,
             ticketTime: ticketTime,
+            senderid: senderid,
           );
         }
       case {
@@ -508,6 +550,8 @@ class MessageAdaptor {
           "date": int date,
           "isDispatch": bool isDispatch,
           "sent": bool sent,
+          "seen": bool seen,
+          "senderid": int senderid,
           "driver": Map<dynamic, dynamic> dmap,
           "confirmedTime": int confirmTime,
           "ticketTime": int ticketTime,
@@ -519,10 +563,12 @@ class MessageAdaptor {
             date: DateTime.fromMillisecondsSinceEpoch(date),
             isDispatch: isDispatch,
             sent: sent,
+            seen: seen,
             messagesViewState: messagesViewState,
             driver: UserAdaptor<Driver>().adaptMap(dmap),
             confirmTime: confirmTime,
             ticketTime: ticketTime,
+            senderid: senderid,
           );
         }
       case {
@@ -530,6 +576,8 @@ class MessageAdaptor {
           "date": int date,
           "isDispatch": bool isDispatch,
           "sent": bool sent,
+          "seen": bool seen,
+          "senderid": int senderid,
           "ticketType": "submitted",
         }:
         {
@@ -538,7 +586,9 @@ class MessageAdaptor {
             date: DateTime.fromMillisecondsSinceEpoch(date),
             isDispatch: isDispatch,
             sent: sent,
+            seen: seen,
             messagesViewState: messagesViewState,
+            senderid: senderid,
           );
         }
       case {
@@ -546,6 +596,8 @@ class MessageAdaptor {
           "date": int date,
           "isDispatch": bool isDispatch,
           "sent": bool sent,
+          "seen": bool seen,
+          "senderid": int senderid,
           "ticketType": "cancelled",
           "cancelledTime": int cancelledTime,
         }:
@@ -555,8 +607,10 @@ class MessageAdaptor {
             date: DateTime.fromMillisecondsSinceEpoch(date),
             isDispatch: isDispatch,
             sent: sent,
+            seen: seen,
             messagesViewState: messagesViewState,
             cancelledTime: cancelledTime,
+            senderid: senderid,
           );
         }
       case {
@@ -564,6 +618,8 @@ class MessageAdaptor {
           "date": int date,
           "isDispatch": bool isDispatch,
           "sent": bool sent,
+          "seen": bool seen,
+          "senderid": int senderid,
           "ticketType": "confirmed",
           "confirmedTime": int confirmedTime,
           "driver": String driver
@@ -574,9 +630,11 @@ class MessageAdaptor {
             date: DateTime.fromMillisecondsSinceEpoch(date),
             isDispatch: isDispatch,
             sent: sent,
+            seen: seen,
             messagesViewState: messagesViewState,
             confirmedTime: confirmedTime,
             driver: driver,
+            senderid: senderid,
           );
         }
       case {
@@ -584,6 +642,8 @@ class MessageAdaptor {
           "date": int date,
           "isDispatch": bool isDispatch,
           "sent": bool sent,
+          "seen": bool seen,
+          "senderid": int senderid,
         }:
         {
           return TextMessage(
@@ -591,13 +651,17 @@ class MessageAdaptor {
             date: DateTime.fromMillisecondsSinceEpoch(date),
             isDispatch: isDispatch,
             sent: sent,
+            seen: seen,
             messagesViewState: messagesViewState,
+            senderid: senderid,
           );
         }
       case _:
         return ErrorMessage(
           date: DateTime.now(),
           messagesViewState: messagesViewState,
+          senderid: 0,
+          seen: false,
         );
     }
   }
@@ -614,8 +678,10 @@ class MessageAdaptor {
       date: DateTime.now(),
       isDispatch: isDispatch,
       sent: false,
+      seen: false,
       ticketTypes: TicketTypes.submitted,
       messagesViewState: ticketState.messagesState,
+      senderid: ticketState.messagesState.user.id,
     );
   }
 }

@@ -32,6 +32,7 @@ class NewMessageWidget extends StatelessWidget {
         Message newMessage =
             MessageAdaptor(messagesViewState: state_).adaptText(
           text,
+          state_.user.id,
           isDispatch,
         );
         context.read<MessagesViewCubit>().add(newMessage);
@@ -55,7 +56,9 @@ class NewMessageWidget extends StatelessWidget {
                     date: DateTime.now(),
                     isDispatch: isDispatch,
                     sent: false,
+                    seen: false,
                     messagesViewState: state_,
+                    senderid: state_.user.id,
                   );
                   Navigator.pushNamed(context, '/ticket',
                       arguments: TicketViewWithData(
