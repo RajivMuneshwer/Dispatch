@@ -1,3 +1,4 @@
+import 'package:dispatch/models/settings_object.dart';
 import 'package:dispatch/models/user_objects.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +23,8 @@ int getUniqueid() {
 
 class AdminDatabase extends AppDatabase {
   @override
-  DatabaseReference ref = FirebaseDatabase.instance.ref('muneshwers/admin');
+  DatabaseReference ref =
+      FirebaseDatabase.instance.ref('${Settings.companyid.toString()}/admin');
 
   String getpath<T extends User>() {
     return switch (T) {
@@ -45,6 +47,7 @@ class AdminDatabase extends AppDatabase {
     String path = getpath<T>();
     path += "/$id";
     DataSnapshot snapshot = (await ref.child(path).get());
+    print(ref.path);
     return [snapshot];
   }
 
@@ -200,7 +203,7 @@ class AdminDatabase extends AppDatabase {
 class DriverDatabase extends AppDatabase {
   @override
   DatabaseReference get ref =>
-      FirebaseDatabase.instance.ref('muneshwers/drivers');
+      FirebaseDatabase.instance.ref('${Settings.companyid.toString()}/drivers');
 
   @override
   Future<Iterable<DataSnapshot>> getOne<T extends User>(int id) async {
@@ -289,8 +292,8 @@ class DriverDatabase extends AppDatabase {
 
 class RequesteeDatabase extends AppDatabase {
   @override
-  DatabaseReference get ref =>
-      FirebaseDatabase.instance.ref('muneshwers/requestees');
+  DatabaseReference get ref => FirebaseDatabase.instance
+      .ref('${Settings.companyid.toString()}/requestees');
 
   @override
   Future<Iterable<DataSnapshot>> getAll<T extends User>() {
@@ -379,7 +382,7 @@ class RequesteeDatabase extends AppDatabase {
 class DispatcherDatabase extends AppDatabase {
   @override
   DatabaseReference get ref =>
-      FirebaseDatabase.instance.ref('muneshwers/dispatchers');
+      FirebaseDatabase.instance.ref('${Settings.companyid}/dispatchers');
 
   @override
   Future<Iterable<DataSnapshot>> getAll<T extends User>() async {
@@ -563,7 +566,8 @@ class AllDatabase extends AppDatabase {
   }
 
   @override
-  DatabaseReference get ref => FirebaseDatabase.instance.ref('muneshwers');
+  DatabaseReference get ref =>
+      FirebaseDatabase.instance.ref(Settings.companyid.toString());
 
   @override
   Future<void> create<T extends User>(T user) async {

@@ -1,4 +1,5 @@
 import 'package:dispatch/models/message_objects.dart';
+import 'package:dispatch/models/settings_object.dart';
 import 'package:dispatch/models/user_objects.dart';
 import 'package:firebase_database/firebase_database.dart';
 
@@ -18,7 +19,7 @@ class RequesteesMessageDatabase extends MessageDatabase<Requestee> {
 
   @override
   DatabaseReference get ref => FirebaseDatabase.instance
-      .ref("muneshwers/requestees/${user.id}/messages");
+      .ref("${Settings.companyid.toString()}/requestees/${user.id}/messages");
 
   @override
   Future<void> addMessage(Message message) async {
@@ -50,8 +51,8 @@ class DriverMessageDatabase extends MessageDatabase<Driver> {
   DriverMessageDatabase({required super.user});
 
   @override
-  DatabaseReference get ref =>
-      FirebaseDatabase.instance.ref("muneshwers/drivers/${user.id}/messages");
+  DatabaseReference get ref => FirebaseDatabase.instance
+      .ref("${Settings.companyid.toString()}/drivers/${user.id}/messages");
 
   @override
   Future<void> addMessage(Message message) async {

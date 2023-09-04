@@ -1,4 +1,6 @@
+import 'package:cloud_functions/cloud_functions.dart';
 import 'package:dispatch/database/user_database.dart';
+import 'package:dispatch/models/settings_object.dart';
 import 'package:dispatch/models/user_objects.dart';
 import 'package:dispatch/screens/user_screens.dart';
 import 'package:flutter/material.dart';
@@ -7,7 +9,11 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 import 'package:phone_form_field/phone_form_field.dart';
 
 class AdminScreen extends StatelessWidget {
-  const AdminScreen({super.key});
+  final Admin admin;
+  const AdminScreen({
+    super.key,
+    required this.admin,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -416,14 +422,21 @@ class DriverEditScreen extends UserEditScreen<Driver> {
           dropdownName: var dropdownField,
           telName: var telField,
         }) {
+      final int id = getUniqueid();
       final newDriver = Driver(
-        id: getUniqueid(),
+        id: id,
         name: textField.value,
         sortBy: textField.value,
         dispatcherid: dropdownField.value,
         tel: telField.value,
       );
       await AllDatabase().create<Driver>(newDriver);
+      await FirebaseFunctions.instance.httpsCallable('makeUser').call({
+        "userid": id,
+        "companyid": Settings.companyid,
+        "role": "driver",
+        "telephone": (telField.value as PhoneNumber).international,
+      });
       return;
     }
   }

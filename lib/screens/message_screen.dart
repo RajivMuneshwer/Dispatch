@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:dispatch/cubit/message/messages_view_cubit.dart';
 import 'package:dispatch/database/requestee_database.dart';
+import 'package:dispatch/database/user_database.dart';
 import 'package:dispatch/models/user_objects.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
@@ -48,38 +49,56 @@ class DriverMessageScreen extends StatelessWidget {
 
 class RequesteeMessageScreen extends StatelessWidget {
   final Requestee user;
-  final Dispatcher dispatcher;
   const RequesteeMessageScreen({
     super.key,
     required this.user,
-    required this.dispatcher,
   });
 
   @override
   Widget build(BuildContext context) {
-    return MessageScreen<Requestee>(
-      user: user,
-      database: RequesteesMessageDatabase(user: user),
-      appBar: AppBar(
-        title: Row(
-          children: [
-            ProfilePicture(name: dispatcher.name, radius: 22, fontsize: 20),
-            const SizedBox(width: 15),
-            Text(
-              dispatcher.name,
-              style: const TextStyle(fontSize: 17.5),
-            )
-          ],
-        ),
-        actions: [
-          CallButton(
-            user: dispatcher,
+    var dispatchid = user.dispatcherid;
+    if (dispatchid == null) return Container();
+    return FutureBuilder(
+      future: AdminDatabase().getOne<Dispatcher>(dispatchid),
+      builder: (context, snapshot) {
+        var snapshot_ = snapshot;
+        var data_ = snapshot_.data;
+        if (snapshot_.connectionState == ConnectionState.waiting) {
+          return Container();
+        } else if (snapshot_.hasError) {
+          return Container();
+        } else if (!snapshot_.hasData || data_ == null) {
+          return Container();
+        }
+
+        final Dispatcher dispatcher = UserAdaptor<Dispatcher>().adaptSnapshot(
+          data_.first,
+        );
+        return MessageScreen<Requestee>(
+          user: user,
+          database: RequesteesMessageDatabase(user: user),
+          appBar: AppBar(
+            title: Row(
+              children: [
+                ProfilePicture(name: dispatcher.name, radius: 22, fontsize: 20),
+                const SizedBox(width: 15),
+                Text(
+                  dispatcher.name,
+                  style: const TextStyle(fontSize: 17.5),
+                )
+              ],
+            ),
+            actions: [
+              CallButton(
+                user: dispatcher,
+              ),
+              const SizedBox(
+                width: 15,
+              )
+            ],
           ),
-          const SizedBox(
-            width: 15,
-          )
-        ],
-      ),
+        );
+      },
     );
   }
 }

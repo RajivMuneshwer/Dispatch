@@ -1,15 +1,23 @@
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
-import 'package:dispatch/database/user_database.dart';
+import 'package:dispatch/models/settings_object.dart';
 import 'package:dispatch/models/user_objects.dart';
 import 'package:dispatch/screens/admin_screen.dart';
 import 'package:dispatch/screens/dispatch_requestee_list_screen.dart';
 import 'package:dispatch/screens/message_screen.dart';
 import 'package:dispatch/screens/ticket_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:phone_form_field/phone_form_field.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
+
+  String initialRoute(User user) {
+    return switch (user) {
+      Requestee() => '/requestee',
+      Dispatcher() => '/dispatcher',
+      Admin() => '/admin',
+      Driver() => '/driver',
+    };
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -21,25 +29,23 @@ class App extends StatelessWidget {
           case '/requestee':
             return MaterialPageRoute(
               builder: (_) => RequesteeMessageScreen(
-                user: Requestee(
-                  id: 1691793872626,
-                  name: "Rajiv Muneshwer",
-                  sortBy: "Rajiv Muneshwer",
-                ),
-                dispatcher: Dispatcher(
-                  id: 1691793507356,
-                  name: "Tasha",
-                  sortBy: "Tasha",
-                  tel: const PhoneNumber(
-                    isoCode: IsoCode.GY,
-                    nsn: "6082356",
-                  ),
-                ),
+                user: Settings.user as Requestee,
               ),
             );
 
-          case '/':
-            return MaterialPageRoute(builder: (_) => DispatcherHomeScreen());
+          case '/dispatcher':
+            return MaterialPageRoute(
+              builder: (_) => DispatcherHomeScreen(
+                dispatcher: Settings.user as Dispatcher,
+              ),
+            );
+
+          case '/admin':
+            return MaterialPageRoute(
+              builder: (_) => AdminScreen(
+                admin: Settings.user as Admin,
+              ),
+            );
 
           case '/ticket':
             if (args is TicketViewWithData) {
@@ -47,44 +53,10 @@ class App extends StatelessWidget {
                 builder: (_) => TicketScreen(ticketViewWithData: args),
               );
             }
-
-          case '/all':
-            if (args
-                case {
-                  "type": UserType userType,
-                  "database": AppDatabase database,
-                  "title": String title
-                }) {
-              return MaterialPageRoute(
-                  builder: (_) => switch (userType) {
-                        UserType.admin => AllUserListScreen<Admin>(
-                            database: database,
-                            title: title,
-                          ),
-                        UserType.dispatcher => AllUserListScreen<Dispatcher>(
-                            database: database,
-                            title: title,
-                          ),
-                        UserType.requestee => AllUserListScreen<Requestee>(
-                            database: database,
-                            title: title,
-                          ),
-                        UserType.driver => AllUserListScreen<Driver>(
-                            database: database,
-                            title: title,
-                          ),
-                        UserType.error => errorScreen(context),
-                      });
-            }
-
-          case '/admin':
-            return MaterialPageRoute(
-              builder: (_) => const AdminScreen(),
-            );
         }
         return null;
       },
-      initialRoute: '/',
+      initialRoute: initialRoute(Settings.user),
     );
   }
 }

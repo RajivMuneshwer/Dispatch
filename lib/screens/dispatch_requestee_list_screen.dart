@@ -7,7 +7,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 
 class DispatcherHomeScreen extends StatefulWidget {
-  const DispatcherHomeScreen({super.key});
+  final Dispatcher dispatcher;
+  const DispatcherHomeScreen({
+    super.key,
+    required this.dispatcher,
+  });
 
   @override
   State<DispatcherHomeScreen> createState() => _DispatcherHomeScreenState();
@@ -15,20 +19,15 @@ class DispatcherHomeScreen extends StatefulWidget {
 
 class _DispatcherHomeScreenState extends State<DispatcherHomeScreen> {
   final DispatcherDatabase database = DispatcherDatabase();
-  final Dispatcher dispatcher = Dispatcher(
-    id: 1691793507356,
-    name: "Tasha",
-    sortBy: "Tasha",
-    driversid: [1692736506506],
-  );
   int currentIndex = 0;
   List<Widget> screens = [];
 
   @override
   void initState() {
     screens = [
-      RequesteeMessageListScreen(database: database, dispatcher: dispatcher),
-      DriverMessageListScreen(dispatcher: dispatcher, database: database)
+      RequesteeMessageListScreen(
+          database: database, dispatcher: widget.dispatcher),
+      DriverMessageListScreen(dispatcher: widget.dispatcher, database: database)
     ];
     super.initState();
   }

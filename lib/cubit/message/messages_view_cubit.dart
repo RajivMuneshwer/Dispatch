@@ -138,24 +138,3 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
     }
   }
 }
-
-////TODO
-///Fix the date card on the messages
-///make a login screen
-///make some class that has static variables that effectively sign the user in
-///add the phone numbers to the dispatcher and the requestees
-///
-///
-///
-///COMPLETED Aug 19
-///Fixed the inability to reload once already loaded
-///Fix that the tickets pop up on the user's side and not the dispatcher's
-///Fix the random messages for the dispatcher
-///Put the name and profile picture of the requestee
-///Make the dispatcher able to confirm the ticket
-///Fix the ticket color
-///re-write the ticket parsing, but how? With a data structure? with json and json parsing.
-///Put a time stamp when the ticket was completed
-///Put a widget to chose the driver but where? We need to create the driver user 
-///add a little space between profile picture and name
-///make receipt
