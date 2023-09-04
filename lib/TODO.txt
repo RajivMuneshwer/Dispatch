@@ -1,0 +1,9 @@
+////TO TEST
+///updateMessageSent
+///decreaseMessageSent
+///updateMessageSeen
+///makeUser
+///send push notifications, background and foreground
+///make the driver's message screen
+///Fix the date card on the messages
+///Fix the login screen

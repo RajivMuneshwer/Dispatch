@@ -11,38 +11,55 @@ import '../models/message_models.dart';
 
 class DriverMessageScreen extends StatelessWidget {
   final Driver user;
-  final Dispatcher dispatcher;
   const DriverMessageScreen({
     super.key,
     required this.user,
-    required this.dispatcher,
   });
 
   @override
   Widget build(BuildContext context) {
-    return MessageScreen<Driver>(
-      user: user,
-      database: DriverMessageDatabase(user: user),
-      appBar: AppBar(
-        title: Row(
-          children: [
-            ProfilePicture(name: dispatcher.name, radius: 22, fontsize: 20),
-            const SizedBox(width: 15),
-            Text(
-              dispatcher.name,
-              style: const TextStyle(fontSize: 17.5),
-            )
-          ],
-        ),
-        actions: [
-          CallButton(
-            user: dispatcher,
+    var dispatchid = user.dispatcherid;
+    if (dispatchid == null) return Container();
+    return FutureBuilder(
+      future: AdminDatabase().getOne<Dispatcher>(dispatchid),
+      builder: (context, snapshot) {
+        var snapshot_ = snapshot;
+        var data_ = snapshot_.data;
+        if (snapshot_.connectionState == ConnectionState.waiting) {
+          return Container();
+        } else if (snapshot_.hasError) {
+          return Container();
+        } else if (!snapshot_.hasData || data_ == null) {
+          return Container();
+        }
+        final Dispatcher dispatcher = UserAdaptor<Dispatcher>().adaptSnapshot(
+          data_.first,
+        );
+        return MessageScreen<Driver>(
+          user: user,
+          database: DriverMessageDatabase(user: user),
+          appBar: AppBar(
+            title: Row(
+              children: [
+                ProfilePicture(name: dispatcher.name, radius: 22, fontsize: 20),
+                const SizedBox(width: 15),
+                Text(
+                  dispatcher.name,
+                  style: const TextStyle(fontSize: 17.5),
+                )
+              ],
+            ),
+            actions: [
+              CallButton(
+                user: dispatcher,
+              ),
+              const SizedBox(
+                width: 15,
+              )
+            ],
           ),
-          const SizedBox(
-            width: 15,
-          )
-        ],
-      ),
+        );
+      },
     );
   }
 }
@@ -222,8 +239,3 @@ class _DisplayMessagesWidgetState extends State<DisplayMessagesWidget> {
     );
   }
 }
-
-////TODO
-
-////log the user in with firebase auth see  https://github.com/simonbengtsson/airdash/blob/main/lib/interface/setup_screen.dart
-////change the status of delivered and read

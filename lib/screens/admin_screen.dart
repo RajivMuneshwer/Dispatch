@@ -939,11 +939,3 @@ UserType typeToUserType<T extends User>() => switch (T) {
       Driver => UserType.driver,
       _ => UserType.error,
     };
-
-////TODO
-///make it so that I do not download all the user data at once
-///sense how far the user is scrolled down an then call the function to grab more 
-///from the database
-///
-///This will be useful for the dispatcher screen and the catalogue in the future.
-///

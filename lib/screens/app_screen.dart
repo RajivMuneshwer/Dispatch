@@ -33,6 +33,13 @@ class App extends StatelessWidget {
               ),
             );
 
+          case '/driver':
+            return MaterialPageRoute(
+              builder: (_) => DriverMessageScreen(
+                user: Settings.user as Driver,
+              ),
+            );
+
           case '/dispatcher':
             return MaterialPageRoute(
               builder: (_) => DispatcherHomeScreen(

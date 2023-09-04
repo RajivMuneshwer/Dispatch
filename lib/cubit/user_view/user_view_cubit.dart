@@ -52,9 +52,3 @@ class UserViewCubit<M> extends Cubit<UserViewState> {
 const duration = Duration(
   microseconds: 500,
 );
-
-
-////TODO
-///Make the functions be an update function that takes in the current data
-///and a stop function that tells the system when to stop
-///for comparing lists use the listEquals a built in flutter function
