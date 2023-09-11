@@ -1,7 +1,6 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:dispatch/models/settings_object.dart';
 import 'package:dispatch/screens/app_screen.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_login/flutter_login.dart';
@@ -13,62 +12,59 @@ class SignInScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: Scaffold(
-        body: FlutterLogin(
-          title: "Dispatch",
-          theme: LoginTheme(
-            primaryColor: Colors.blue.shade700,
-            accentColor: Colors.blue.shade100,
+      home: Builder(builder: (context) {
+        return Scaffold(
+          body: FlutterLogin(
+            title: "Dispatch",
+            theme: LoginTheme(
+              primaryColor: Colors.blue.shade700,
+              accentColor: Colors.blue.shade100,
+            ),
+            hideForgotPasswordButton: true,
+            onLogin: (LoginData loginData) async {
+              var fcmToken = await FirebaseMessaging.instance.getToken();
+              if (fcmToken == null) {
+                return throw Exception("null token");
+              }
+              final result = await FirebaseFunctions.instance
+                  .httpsCallable('loginUser')
+                  .call(
+                {
+                  "token": fcmToken,
+                  "id": loginData.password,
+                },
+              );
+              String status = result.data["status"] as String;
+              Map<dynamic, dynamic> info =
+                  result.data["info"] as Map<dynamic, dynamic>;
+              if (status != "success") {
+                return "Login failed. Check with admin";
+              }
+              int userid = info["userid"] as int;
+              int companyid = info["companyid"] as int;
+              String role = info["role"] as String;
+
+              final SharedPreferences prefs =
+                  await SharedPreferences.getInstance();
+              prefs.setBool("exists", true);
+              prefs.setInt("userid", userid);
+              prefs.setInt("companyid", companyid);
+              prefs.setString("role", role);
+              prefs.setString("token", fcmToken);
+
+              Settings.initializeFromPref(prefs);
+
+              return null;
+            },
+            onSubmitAnimationCompleted: () => Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const App(),
+                )),
+            onRecoverPassword: (p) => null,
           ),
-          hideForgotPasswordButton: true,
-          onLogin: (LoginData loginData) async {
-            var fcmToken = await FirebaseMessaging.instance.getToken();
-            if (fcmToken == null) {
-              return throw Exception("null token");
-            }
-            await FirebaseAuth.instance.signInWithEmailAndPassword(
-              email: loginData.name,
-              password: loginData.password,
-            );
-            final result = await FirebaseFunctions.instance
-                .httpsCallable('loginUser')
-                .call(
-              {
-                "token": fcmToken,
-                "id": loginData.password,
-              },
-            );
-            print(result.data);
-            String status = result.data["status"] as String;
-            Map<dynamic, dynamic> info =
-                result.data["info"] as Map<dynamic, dynamic>;
-            if (status != "success") {
-              return "Login failed. Check with admin";
-            }
-            int userid = info["userid"] as int;
-            int companyid = info["companyid"] as int;
-            String role = info["role"] as String;
-
-            final SharedPreferences prefs =
-                await SharedPreferences.getInstance();
-            prefs.setBool("exists", true);
-            prefs.setInt("userid", userid);
-            prefs.setInt("companyid", companyid);
-            prefs.setString("role", role);
-            prefs.setString("token", fcmToken);
-
-            Settings.initializeFromPref(prefs);
-
-            return null;
-          },
-          onSubmitAnimationCompleted: () => Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const App(),
-              )),
-          onRecoverPassword: (p) => null,
-        ),
-      ),
+        );
+      }),
     );
   }
 }

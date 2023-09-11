@@ -15,10 +15,9 @@ Future<void> main() async {
     name: "dispatch-muneshwers",
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  FirebaseAuth.instance.authStateChanges().listen((event) {
-    print(event!.uid);
-  });
+  FirebaseAuth.instance.authStateChanges().listen((event) {});
   final SharedPreferences pref = await SharedPreferences.getInstance();
+  //await pref.clear();
   final bool? doesUserExist = pref.getBool('exists');
   if (doesUserExist != true) {
     return runApp(const SignInScreen());

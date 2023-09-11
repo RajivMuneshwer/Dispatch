@@ -1,4 +1,6 @@
+//import 'package:dispatch/cubit/message/messages_view_cubit.dart';
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
+import 'package:dispatch/database/requestee_database.dart';
 import 'package:dispatch/database/user_database.dart';
 import 'package:dispatch/models/message_objects.dart';
 import 'package:dispatch/models/user_objects.dart';
@@ -129,13 +131,21 @@ List<Widget> buildTicketWidgets({
 
         if (user is! Dispatcher) {
           listBuilder.addCancelOrUpdateRow(formkey);
-        } else {
+          break;
+        }
+        if (ticketViewWithData.messagesState.other is Requestee) {
           listBuilder
             ..addDriverDropdownRow()
             ..addVerticalSpace(60.0)
             ..addCancelUpdateOrConfirm(formkey);
+          break;
+        } else if (ticketViewWithData.messagesState.other is Driver) {
+          listBuilder
+            ..addRequesteeDropdownRow()
+            ..addVerticalSpace(60.0)
+            ..addCancelUpdateOrConfirm(formkey);
+          break;
         }
-        break;
       }
     case TicketNewMessage():
       {
@@ -253,6 +263,11 @@ class ListBuilder {
 
   ListBuilder addDriverDropdownRow() {
     children.add(const DriverDropdownRow());
+    return this;
+  }
+
+  ListBuilder addRequesteeDropdownRow() {
+    children.add(const RequesteeDropdownRow());
     return this;
   }
 
@@ -448,6 +463,21 @@ class DriverDropdownRow extends StatelessWidget {
   }
 }
 
+class RequesteeDropdownRow extends StatelessWidget {
+  const RequesteeDropdownRow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return RowBuilder()
+        .addRequesteeDropdown()
+        .addSpace()
+        .addBlank()
+        .addSpace()
+        .addBlank()
+        .build();
+  }
+}
+
 class ConfirmationRow extends StatelessWidget {
   const ConfirmationRow({super.key});
 
@@ -571,6 +601,11 @@ class RowBuilder {
 
   RowBuilder addDriverDropdown() {
     children.add(const DriverDropDown());
+    return this;
+  }
+
+  RowBuilder addRequesteeDropdown() {
+    children.add(const RequesteeDropDown());
     return this;
   }
 
@@ -698,74 +733,142 @@ class CustomTimePicker extends StatelessWidget {
           int.parse(state.formLayoutList[colPos][timePos]),
         );
         return Animate(
-            effects: const [ScaleEffect(duration: Duration(milliseconds: 125))],
-            child: Flexible(
-              child: Padding(
-                padding: EdgeInsets.only(
-                  bottom: (colPos != 0) ? 15.0 : 0.0,
-                ),
-                child: FormBuilderDateTimePicker(
-                  name: UniqueKey().toString(),
-                  autovalidateMode: AutovalidateMode.onUserInteraction,
-                  format: DateFormat.jm(),
-                  initialEntryMode: DatePickerEntryMode.calendarOnly,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  initialDate: dateTime,
-                  initialTime: TimeOfDay.fromDateTime(
-                    dateTime,
-                  ),
-                  initialValue: dateTime,
-                  firstDate: dateTime,
-                  decoration: InputDecoration(
-                    helperText: text,
-                    helperStyle: TextStyle(
-                      color: state.color,
-                    ),
-                    enabledBorder: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: state.color,
-                        width: 1.25,
-                      ),
-                    ),
-                  ),
-                  onChanged: (DateTime? changedTime) {
-                    context.read<TicketViewCubit>().updateRow(
-                          colPos: colPos,
-                          rowPos: timePos,
-                          newValue:
-                              changedTime?.millisecondsSinceEpoch.toString() ??
-                                  nowInMilliseconds(),
-                        );
-                  },
-                  validator: (DateTime? dateTimeSubmitted) {
-                    if (() {
-                      if (dateTimeSubmitted == null) {
-                        return true;
-                      }
-                      if (colPos == 0) {
-                        return false;
-                      }
-                      int previousTimeinForm = context
-                          .read<TicketViewCubit>()
-                          .findPreviousTimeinForm(colPos);
-                      return dateTimeSubmitted.millisecondsSinceEpoch <=
-                          previousTimeinForm;
-                    }()) {
-                      return "invalid time";
-                    } else {
-                      return null;
-                    }
-                  },
-                ),
+          effects: const [ScaleEffect(duration: Duration(milliseconds: 125))],
+          child: Flexible(
+            child: Padding(
+              padding: EdgeInsets.only(
+                bottom: (colPos != 0) ? 15.0 : 0.0,
               ),
-            ));
+              child: FormBuilderDateTimePicker(
+                name: UniqueKey().toString(),
+                autovalidateMode: AutovalidateMode.onUserInteraction,
+                format: DateFormat.jm(),
+                initialEntryMode: DatePickerEntryMode.calendarOnly,
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: Colors.grey,
+                  fontWeight: FontWeight.w500,
+                ),
+                initialDate: dateTime,
+                initialTime: TimeOfDay.fromDateTime(
+                  dateTime,
+                ),
+                initialValue: dateTime,
+                firstDate: dateTime,
+                decoration: InputDecoration(
+                  helperText: text,
+                  helperStyle: TextStyle(
+                    color: state.color,
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderSide: BorderSide(
+                      color: state.color,
+                      width: 1.25,
+                    ),
+                  ),
+                ),
+                onChanged: (DateTime? changedTime) {
+                  context.read<TicketViewCubit>().updateRow(
+                        colPos: colPos,
+                        rowPos: timePos,
+                        newValue:
+                            changedTime?.millisecondsSinceEpoch.toString() ??
+                                nowInMilliseconds(),
+                      );
+                },
+                validator: (DateTime? dateTimeSubmitted) {
+                  if (() {
+                    if (dateTimeSubmitted == null) {
+                      return true;
+                    }
+                    if (colPos == 0) {
+                      return false;
+                    }
+                    int previousTimeinForm = context
+                        .read<TicketViewCubit>()
+                        .findPreviousTimeinForm(colPos);
+                    return dateTimeSubmitted.millisecondsSinceEpoch <=
+                        previousTimeinForm;
+                  }()) {
+                    return "invalid time";
+                  } else {
+                    return null;
+                  }
+                },
+              ),
+            ),
+          ),
+        );
       },
     );
   }
+}
+
+class RequesteeDropDown extends StatelessWidget {
+  const RequesteeDropDown({
+    super.key,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TicketViewCubit, TicketViewState>(
+      builder: (context, state) {
+        var state_ = state;
+        if (state_ is! TicketViewWithData) return Container();
+        var user = state_.messagesState.user;
+        if (user is! Dispatcher) return Container();
+        var requesteesid = user.requesteesid;
+        print(user.toMap());
+        return FutureBuilder<List<Requestee>>(
+            future: getRequestees(requesteesid),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return driverDropDownWidget([], "temp");
+              } else if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}');
+              } else if (!snapshot.hasData || snapshot.data == null) {
+                return const Text('No options available.');
+              }
+              print(requesteesid);
+              return requesteeDropDownWidget(
+                snapshot.data ?? [],
+                requesteeDropdownName(),
+              );
+            });
+      },
+    );
+  }
+}
+
+Widget requesteeDropDownWidget(List<Requestee> requestees, String name) {
+  return Flexible(
+    child: Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade300,
+        borderRadius: BorderRadius.circular(25.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 16.0),
+        child: FormBuilderDropdown<Requestee>(
+          decoration: const InputDecoration(
+              labelText: "Requestee",
+              labelStyle: TextStyle(fontWeight: FontWeight.normal),
+              border: InputBorder.none),
+          name: name,
+          initialValue: null,
+          items: requestees
+              .map((requestee) => DropdownMenuItem(
+                    value: requestee,
+                    child: Text(requestee.name),
+                  ))
+              .toList(),
+          validator: FormBuilderValidators.compose([
+            FormBuilderValidators.required(),
+          ]),
+        ),
+      ),
+    ),
+  );
 }
 
 class DriverDropDown extends StatelessWidget {
@@ -782,6 +885,7 @@ class DriverDropDown extends StatelessWidget {
         var user = state_.messagesState.user;
         if (user is! Dispatcher) return Container();
         var driverids = user.driversid;
+        print(user.toMap());
         return FutureBuilder<List<Driver>>(
             future: getDrivers(driverids),
             builder: (context, snapshot) {
@@ -1046,6 +1150,7 @@ class CustomSubmitButton extends StatelessWidget {
               context,
             );
             //Add the message bloc to add this new message to the message
+            //context.read<MessagesViewCubit>().add(newMessageTicket);
             await ticketViewState.messagesState.database
                 .addMessage(newMessageTicket);
           },
@@ -1087,7 +1192,6 @@ class CancelButton extends StatelessWidget {
               _ => false,
             };
             var cancelReceipt = CancelReceipt(
-              text: "",
               date: DateTime.now(),
               isDispatch: isDispatch,
               sent: false,
@@ -1159,7 +1263,6 @@ class UpdateButton extends StatelessWidget {
               _ => false,
             };
             var updateReceipt = UpdateReceipt(
-              text: "",
               date: DateTime.now(),
               isDispatch: isDispatch,
               sent: false,
@@ -1187,7 +1290,7 @@ class UpdateButton extends StatelessWidget {
   }
 }
 
-class ConfirmButton extends StatelessWidget {
+class ConfirmButton extends StatefulWidget {
   final GlobalKey<FormBuilderState> formKey;
   const ConfirmButton({
     super.key,
@@ -1195,66 +1298,150 @@ class ConfirmButton extends StatelessWidget {
   });
 
   @override
+  State<ConfirmButton> createState() => _ConfirmButtonState();
+}
+
+class _ConfirmButtonState extends State<ConfirmButton> {
+  bool isRunning = false;
+
+  @override
   Widget build(BuildContext context) {
     return BlocBuilder<TicketViewCubit, TicketViewState>(
       builder: (context, state) {
         if (state is! TicketViewWithData) return Container();
         return ElevatedButton(
-          onPressed: () {
-            FormBuilderState? formbuilderState = formKey.currentState;
-            if (formbuilderState == null) {
-              return;
-            }
-            if (!formbuilderState.validate()) {
-              return;
-            }
-            Driver driver =
-                formbuilderState.fields[driverDropdownName()]!.value;
-            var ticketMessage = state.ticketMessage;
-            var confirmedMessage = TicketConfirmedMessage(
-              text: ticketMessage.text,
-              date: ticketMessage.date,
-              isDispatch: ticketMessage.isDispatch,
-              sent: ticketMessage.sent,
-              seen: ticketMessage.seen,
-              senderid: ticketMessage.messagesViewState.user.id,
-              messagesViewState: state.messagesState,
-              confirmedTime: DateTime.now().millisecondsSinceEpoch,
-              driver: driver.name,
-            );
-            state.messagesState.database.updateTicket(confirmedMessage);
+          onPressed: (isRunning)
+              ? () {}
+              : () {
+                  setState(() {
+                    isRunning = true;
+                  });
+                  FormBuilderState? formbuilderState =
+                      widget.formKey.currentState;
+                  if (formbuilderState == null) {
+                    return;
+                  }
+                  if (!formbuilderState.validate()) {
+                    return;
+                  }
+                  Driver? driver =
+                      formbuilderState.fields[driverDropdownName()]?.value;
+                  Requestee? requestee =
+                      formbuilderState.fields[requesteeDropdownName()]?.value;
 
-            var confirmReceipt = ConfirmReceipt(
-              text: "",
-              date: DateTime.now(),
-              isDispatch: true,
-              sent: false,
-              seen: false,
-              senderid: state.messagesState.user.id,
-              messagesViewState: state.messagesState,
-              driver: driver,
-              confirmTime: DateTime.now().millisecondsSinceEpoch,
-              ticketTime: ticketMessage.date.millisecondsSinceEpoch,
-            );
-            state.messagesState.database.addMessage(confirmReceipt);
+                  if (driver == null && requestee == null) {
+                    throw Exception(
+                        "both driver and requestee fields inactive");
+                  }
+                  if (driver != null && requestee != null) {
+                    throw Exception("both driver and requestee fields active");
+                  }
+                  //either one or the other is null
 
-            Navigator.pop(context);
-          },
+                  updateTicketToConfirmed(state, driver, requestee);
+                  sendReceiptToRequestee(state, driver, requestee);
+                  sendReceiptToDriver(state, driver, requestee);
+                  Navigator.pop(context);
+                },
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.green,
+            backgroundColor: (!isRunning) ? Colors.green : Colors.grey,
             side: const BorderSide(width: 1, color: Colors.green),
           ),
-          child: const Text(
-            "Confirm",
-            style: TextStyle(
-              color: Colors.white,
-              backgroundColor: Colors.green,
-            ),
-          ),
+          child: (!isRunning)
+              ? const Text(
+                  "Confirm",
+                  style: TextStyle(
+                    color: Colors.white,
+                    backgroundColor: Colors.green,
+                  ),
+                )
+              : const SizedBox(
+                  width: 10,
+                  height: 10,
+                  child: CircularProgressIndicator(
+                    color: Colors.green,
+                  )),
         );
       },
     );
   }
+}
+
+void updateTicketToConfirmed(
+  TicketViewWithData state,
+  Driver? driver,
+  Requestee? requestee,
+) {
+  var ticketMessage = state.ticketMessage;
+  var messagesState = state.messagesState;
+  User other = state.messagesState.other;
+  MessageDatabase messageDatabase = state.messagesState.database;
+  var confirmedMessage = TicketConfirmedMessage(
+    text: ticketMessage.text,
+    date: ticketMessage.date,
+    isDispatch: ticketMessage.isDispatch,
+    sent: ticketMessage.sent,
+    seen: ticketMessage.seen,
+    senderid: ticketMessage.messagesViewState.user.id,
+    messagesViewState: messagesState,
+    confirmedTime: DateTime.now().millisecondsSinceEpoch,
+    driver: (driver !=
+            null) // if the driver is not in the form field then they are the other user
+        ? driver.name
+        : other.name,
+    requestee: (requestee !=
+            null) // if the requestee is not in the form field then they are the other user
+        ? requestee.name
+        : other.name,
+  );
+  messageDatabase.updateTicket(confirmedMessage);
+}
+
+void sendReceiptToRequestee(
+  TicketViewWithData state,
+  Driver? driver,
+  Requestee? requestee,
+) {
+  var ticketMessage = state.ticketMessage;
+  User other = state.messagesState.other;
+
+  var confirmRequesteeReceipt = ConfirmRequesteeReceipt(
+    date: DateTime.now(),
+    isDispatch: true,
+    sent: false,
+    seen: false,
+    senderid: state.messagesState.user.id,
+    messagesViewState: state.messagesState,
+    driver: (driver != null) ? driver : other as Driver,
+    confirmTime: DateTime.now().millisecondsSinceEpoch,
+    ticketTime: ticketMessage.date.millisecondsSinceEpoch,
+  );
+  RequesteesMessageDatabase(
+    user: (requestee != null) ? requestee : other as Requestee,
+  ).addMessage(confirmRequesteeReceipt);
+}
+
+void sendReceiptToDriver(
+  TicketViewWithData state,
+  Driver? driver,
+  Requestee? requestee,
+) {
+  var ticketMessage = state.ticketMessage;
+  User other = state.messagesState.other;
+  var confirmDriverReceipt = ConfirmDriverReceipt(
+    date: DateTime.now(),
+    isDispatch: true,
+    sent: false,
+    senderid: state.messagesState.user.id,
+    messagesViewState: state.messagesState,
+    seen: false,
+    requestee: (requestee != null) ? requestee : other as Requestee,
+    confirmTime: DateTime.now().millisecondsSinceEpoch,
+    ticketTime: ticketMessage.date.millisecondsSinceEpoch,
+  );
+  DriverMessageDatabase(
+    user: (driver != null) ? driver : other as Driver,
+  ).addMessage(confirmDriverReceipt);
 }
 
 class ConfirmIcon extends StatelessWidget {
@@ -1463,6 +1650,8 @@ String Function() nowInMilliseconds =
 
 String Function() driverDropdownName = () => "drivers";
 
+String Function() requesteeDropdownName = () => "requestees";
+
 class FormLayoutEncoder {
   static const rowSeparator = "~";
   static const columnSeparator = "`";
@@ -1509,7 +1698,17 @@ Future<List<Driver>> getDrivers(List<int>? driverids) async {
   return drivers;
 }
 
-
+Future<List<Requestee>> getRequestees(List<int>? requesteesid) async {
+  if (requesteesid == null) return [];
+  List<Requestee> requestees = [];
+  AdminDatabase database = AdminDatabase();
+  for (final id in requesteesid) {
+    requestees.addAll((await database.getOne<Requestee>(id))
+        .map((snapshot) => UserAdaptor<Requestee>().adaptSnapshot(snapshot))
+        .toList());
+  }
+  return requestees;
+}
 
 ////cannot delete dispatcher if they have drivers as well
 ///Also the ticket needs to show the time and driver for confirmation
@@ -1519,7 +1718,7 @@ Future<List<Driver>> getDrivers(List<int>? driverids) async {
 ///
 ///
 ///COMPLETED
-///the dropdown should return a driver as the value so it would be easier to get the driver for the receipt 
+///the dropdown should return a driver as the value so it would be easier to get the driver for the receipt
 ////build the receipt builder that returns a message and takes the driver as argument
 ///The ticket should be updated first if the dispatcher wants to make changes
-///the receipt needs the current time when it was confirmed and send it as a new message 
+///the receipt needs the current time when it was confirmed and send it as a new message

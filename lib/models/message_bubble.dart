@@ -62,7 +62,7 @@ class GenericBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     bool stateTick = false;
     Icon? stateIcon;
-    if (sent) {
+    if (sent && isSender) {
       stateTick = true;
       stateIcon = const Icon(
         Icons.done,
@@ -70,7 +70,7 @@ class GenericBubble extends StatelessWidget {
         color: Color(0xFF97AD8E),
       );
     }
-    if (delivered) {
+    if (delivered && isSender) {
       stateTick = true;
       stateIcon = const Icon(
         Icons.done_all,
@@ -78,12 +78,12 @@ class GenericBubble extends StatelessWidget {
         color: Color(0xFF97AD8E),
       );
     }
-    if (seen) {
+    if (seen && isSender) {
       stateTick = true;
       stateIcon = const Icon(
         Icons.done_all,
         size: 18,
-        color: Color(0xFF92DEDA),
+        color: Colors.lightBlue,
       );
     }
 
@@ -122,7 +122,7 @@ class GenericBubble extends StatelessWidget {
                         Text(
                           DateFormat.jm().format(date),
                           style: const TextStyle(
-                            color: Colors.grey,
+                            color: Colors.black,
                             fontSize: 10,
                           ),
                         ),

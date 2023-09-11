@@ -68,10 +68,10 @@ class UserChoiceBubble<T extends User> extends StatelessWidget {
 
   String bubbleText() {
     return switch (T) {
-      Requestee => "Requestee",
-      Dispatcher => "Dispatcher",
-      Admin => "Admin",
-      Driver => "Driver",
+      Requestee => "Requestees",
+      Dispatcher => "Dispatchers",
+      Admin => "Admins",
+      Driver => "Drivers",
       _ => "",
     };
   }
@@ -138,7 +138,7 @@ class AllUserListScreen<T extends User> extends UserListScreen<T> {
       );
 
   @override
-  Future<List<T>?> Function() loadUsers(T lastUsers) {
+  Future<List<T>?> Function() loadUsers(T? lastUsers) {
     return () async {
       List<T> newUsers = (await database.getSome<T>(
               limit: limit, lastUser: lastUsers, orderBy: orderBy))
@@ -425,13 +425,13 @@ class DriverEditScreen extends UserEditScreen<Driver> {
       final int id = getUniqueid();
       final newDriver = Driver(
         id: id,
-        name: textField.value,
-        sortBy: textField.value,
+        name: (textField.value as String).trim(),
+        sortBy: (textField.value as String).trim(),
         dispatcherid: dropdownField.value,
         tel: telField.value,
       );
-      await AllDatabase().create<Driver>(newDriver);
-      await FirebaseFunctions.instance.httpsCallable('makeUser').call({
+      AllDatabase().create<Driver>(newDriver);
+      FirebaseFunctions.instance.httpsCallable('makeUser').call({
         "userid": id,
         "companyid": Settings.companyid,
         "role": "driver",
@@ -462,7 +462,7 @@ class DriverEditScreen extends UserEditScreen<Driver> {
           telName: var telField,
         }) {
       await AllDatabase().update(user, {
-        "name": textField.value,
+        "name": (textField.value as String).trim(),
         "dispatcherid": dropdownField.value,
         "tel": (telField.value as PhoneNumber).toJson(),
       });
@@ -515,13 +515,21 @@ class RequesteeEditScreen extends UserEditScreen<Requestee> {
           dropdownName: var dropdownField,
           telName: var telField,
         }) {
+      var id = getUniqueid();
       final newRequestee = Requestee(
-          id: getUniqueid(),
-          name: textField.value,
-          sortBy: textField.value,
-          dispatcherid: dropdownField.value,
-          tel: telField.value);
-      await AllDatabase().create<Requestee>(newRequestee);
+        id: id,
+        name: (textField.value as String).trim(),
+        sortBy: (textField.value as String).trim(),
+        dispatcherid: dropdownField.value,
+        tel: telField.value,
+      );
+      AllDatabase().create<Requestee>(newRequestee);
+      FirebaseFunctions.instance.httpsCallable('makeUser').call({
+        "userid": id,
+        "companyid": Settings.companyid,
+        "role": "requestee",
+        "telephone": (telField.value as PhoneNumber).international,
+      });
       return;
     }
   }
@@ -538,7 +546,7 @@ class RequesteeEditScreen extends UserEditScreen<Requestee> {
           telName: var telField,
         }) {
       await AllDatabase().update(user, {
-        "name": textField.value,
+        "name": (textField.value as String).trim(),
         "dispatcherid": dropdownField.value,
         "tel": (telField.value as PhoneNumber).toJson(),
       });
@@ -583,13 +591,20 @@ class DispatchEditScreen extends UserEditScreen<Dispatcher> {
           textName: var textField,
           telName: var telField,
         }) {
+      var id = getUniqueid();
       final newDispatcher = Dispatcher(
-          id: getUniqueid(),
-          name: textField.value,
-          sortBy: textField.value,
+          id: id,
+          name: (textField.value as String).trim(),
+          sortBy: (textField.value as String).trim(),
           requesteesid: [],
           tel: telField.value);
-      await AllDatabase().create<Dispatcher>(newDispatcher);
+      AllDatabase().create<Dispatcher>(newDispatcher);
+      FirebaseFunctions.instance.httpsCallable('makeUser').call({
+        "userid": id,
+        "companyid": Settings.companyid,
+        "role": "dispatcher",
+        "telephone": (telField.value as PhoneNumber).international,
+      });
     }
   }
 
@@ -604,7 +619,7 @@ class DispatchEditScreen extends UserEditScreen<Dispatcher> {
           telName: var telField,
         }) {
       await AllDatabase().update(user, {
-        "name": textField.value,
+        "name": (textField.value as String).trim(),
         "tel": (telField.value as PhoneNumber).toJson(),
       });
     }
@@ -650,13 +665,20 @@ class AdminEditScreen extends UserEditScreen<Admin> {
           textName: var textField,
           telName: var telField,
         }) {
+      var id = getUniqueid();
       final newAdmin = Admin(
-        id: getUniqueid(),
-        name: textField.value,
-        sortBy: textField.value,
+        id: id,
+        name: (textField.value as String).trim(),
+        sortBy: (textField.value as String).trim(),
         tel: telField.value,
       );
-      await AllDatabase().create<Admin>(newAdmin);
+      AllDatabase().create<Admin>(newAdmin);
+      FirebaseFunctions.instance.httpsCallable('makeUser').call({
+        "userid": id,
+        "companyid": Settings.companyid,
+        "role": "admin",
+        "telephone": (telField.value as PhoneNumber).international,
+      });
     }
   }
 
@@ -670,9 +692,9 @@ class AdminEditScreen extends UserEditScreen<Admin> {
           textName: var textField,
           telName: var telField,
         }) {
-      await AllDatabase().update(user, {
-        "name": textField,
-        "tel": telField,
+      await AllDatabase().update<Admin>(user, {
+        "name": (textField.value as String).trim(),
+        "tel": (telField.value as PhoneNumber).toJson(),
       });
       return;
     }

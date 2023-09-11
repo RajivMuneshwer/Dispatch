@@ -16,7 +16,7 @@ abstract class UserListScreen<T extends User> extends StatelessWidget {
   });
 
   Future<List<T>> initUsers();
-  Future<List<T>?> Function() loadUsers(T lastUsers);
+  Future<List<T>?> Function() loadUsers(T? lastUsers);
   UserRowFactory rowFactory();
   void Function() onTap(T user, BuildContext context);
   Widget? floatingActionButton();
@@ -42,7 +42,9 @@ abstract class UserListScreen<T extends User> extends StatelessWidget {
                       notification.metrics.maxScrollExtent) {
                     if (state.canUpdate) {
                       context.read<UserViewCubit<List<T>>>().update(
-                            downloadfunc: loadUsers(state.data.last),
+                            downloadfunc: (state.data.isEmpty)
+                                ? loadUsers(null)
+                                : loadUsers(state.data.last),
                             combine: (newdata, olddata) {
                               olddata.addAll(newdata);
                               return olddata;
@@ -311,16 +313,51 @@ class UserList<T extends User> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (initUsers.isEmpty) {
+      return ListView();
+    }
     List<T?> orderedUserList = ObjectListSorter(objectList: initUsers).sort();
     return ListView.builder(
-      itemCount: orderedUserList.length,
-      itemBuilder: (context, index) {
-        return UserProfileRow<T>(
-          user: orderedUserList[index],
-          rowFactory: rowFactory,
-          onTap: onTap,
-        );
-      },
+        itemCount: orderedUserList.length,
+        itemBuilder: (context, index) => UserProfileRow<T>(
+              user: orderedUserList[index],
+              rowFactory: rowFactory,
+              onTap: onTap,
+            ));
+  }
+}
+
+class UserProfileRowV2 extends StatelessWidget {
+  final void Function() onTap;
+  final List<Widget> children;
+  const UserProfileRowV2({
+    super.key,
+    required this.onTap,
+    required this.children,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.grey.shade50,
+          border: Border(
+            bottom: BorderSide(
+              width: 1.5,
+              color: Colors.grey.shade300,
+            ),
+          ),
+        ),
+        height: 95,
+        child: Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            children: children,
+          ),
+        ),
+      ),
     );
   }
 }
@@ -396,18 +433,16 @@ class MessageInfoRowFactory<T extends User> extends UserRowFactory<T> {
           UserProfilePic(name: user_.name),
           UserNameBox(name: user_.name),
           UserMessageInfo(
-            numOfUnreadMessages: user_.numOfUnreadMessages ?? 2,
-            time:
-                user_.lastMessageTime ?? DateTime.now().millisecondsSinceEpoch,
+            numOfUnreadMessages: user_.numOfUnreadMessages ?? 0,
+            time: user_.lastMessageTime,
           ),
         ],
       Requestee() => [
           UserProfilePic(name: user_.name),
           UserNameBox(name: user_.name),
           UserMessageInfo(
-            numOfUnreadMessages: user_.numOfUnreadMessages ?? 2,
-            time:
-                user_.lastMessageTime ?? DateTime.now().millisecondsSinceEpoch,
+            numOfUnreadMessages: user_.numOfUnreadMessages ?? 0,
+            time: user_.lastMessageTime,
           ),
         ],
       Dispatcher() => [],
@@ -526,25 +561,7 @@ class MessageTimeTextWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    DateTime now = DateTime.now();
-    DateTime todayDateTime = DateTime(now.year, now.month, now.day);
-    int today = todayDateTime.millisecondsSinceEpoch;
-    String text = "";
-    var time_ = time;
-    if (time_ == null) return Text(text);
-    DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(time_);
-    if (time_ >= today) {
-      text = DateFormat.jm().format(dateTime);
-    } else {
-      Duration difference = todayDateTime.difference(dateTime);
-      if (difference.inDays == 0) {
-        text = "Yesterday";
-      } else if (difference.inDays >= 7) {
-        text = "${difference.inDays} days ago";
-      } else {
-        text = DateFormat.yMd().format(dateTime);
-      }
-    }
+    final String text = customTimeString(time);
     return Text(
       text,
       style: TextStyle(
@@ -552,6 +569,32 @@ class MessageTimeTextWidget extends StatelessWidget {
         fontSize: 15,
       ),
     );
+  }
+}
+
+String customTimeString(int? time) {
+  DateTime now = DateTime.now();
+  DateTime todayDateTime = DateTime(now.year, now.month, now.day);
+  int today = todayDateTime.millisecondsSinceEpoch;
+  String text = "";
+  var time_ = time;
+  if (time_ == null) return text;
+  DateTime dateTime = DateTime.fromMillisecondsSinceEpoch(time_);
+  if (time_ >= today) {
+    text = DateFormat.jm().format(dateTime);
+    return text;
+  } else {
+    Duration difference = todayDateTime.difference(dateTime);
+    if (difference.inDays == 0) {
+      text = "Yesterday";
+      return text;
+    } else if (difference.inDays >= 7) {
+      text = "${difference.inDays} days ago";
+      return text;
+    } else {
+      text = DateFormat.yMd().format(dateTime);
+      return text;
+    }
   }
 }
 
@@ -650,7 +693,7 @@ abstract class UserEditScreen<T extends User> extends StatelessWidget {
   }
 }
 
-class EditSubmitButton<T extends User> extends StatelessWidget {
+class EditSubmitButton<T extends User> extends StatefulWidget {
   final T? user;
   final GlobalKey<FormBuilderState> formKey;
   final Future<void> Function({required FormBuilderState state}) createUser;
@@ -665,25 +708,49 @@ class EditSubmitButton<T extends User> extends StatelessWidget {
   });
 
   @override
+  State<EditSubmitButton<T>> createState() => _EditSubmitButtonState<T>();
+}
+
+class _EditSubmitButtonState<T extends User>
+    extends State<EditSubmitButton<T>> {
+  bool free = true;
+  @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: ElevatedButton(
-        onPressed: () async {
-          var state = formKey.currentState;
-          var user_ = user;
-          if (state!.validate() == true) {
-            (user_ == null)
-                ? await createUser(state: state)
-                : await updateUser(state: state, user: user_);
-            int count = 0;
-            Navigator.popUntil(context,
-                (route) => (user_ == null) ? ++count > 1 : ++count > 2);
-          }
-        },
-        child: Text(
-          (user != null) ? "Update" : "Create",
+        style: ElevatedButton.styleFrom(
+          backgroundColor: (free) ? Colors.blue : Colors.grey,
         ),
+        onPressed: (free)
+            ? () async {
+                setState(() {
+                  free = false;
+                });
+                await Future.delayed(Duration(seconds: 3), () {});
+                var state = widget.formKey.currentState;
+                var user_ = widget.user;
+                if (state!.validate() == true) {
+                  (user_ == null)
+                      ? await widget.createUser(state: state)
+                      : await widget.updateUser(state: state, user: user_);
+                  int count = 0;
+                  Navigator.popUntil(context,
+                      (route) => (user_ == null) ? ++count > 1 : ++count > 2);
+                }
+              }
+            : () {},
+        child: (free)
+            ? Text(
+                (widget.user != null) ? "Update" : "Create",
+              )
+            : const SizedBox(
+                height: 20,
+                width: 20,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                ),
+              ),
       ),
     );
   }

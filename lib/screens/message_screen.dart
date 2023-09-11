@@ -35,9 +35,10 @@ class DriverMessageScreen extends StatelessWidget {
         final Dispatcher dispatcher = UserAdaptor<Dispatcher>().adaptSnapshot(
           data_.first,
         );
-        return MessageScreen<Driver>(
+        return MessageScreen<Driver, Dispatcher>(
           user: user,
           database: DriverMessageDatabase(user: user),
+          other: dispatcher,
           appBar: AppBar(
             title: Row(
               children: [
@@ -91,9 +92,10 @@ class RequesteeMessageScreen extends StatelessWidget {
         final Dispatcher dispatcher = UserAdaptor<Dispatcher>().adaptSnapshot(
           data_.first,
         );
-        return MessageScreen<Requestee>(
+        return MessageScreen<Requestee, Dispatcher>(
           user: user,
           database: RequesteesMessageDatabase(user: user),
+          other: dispatcher,
           appBar: AppBar(
             title: Row(
               children: [
@@ -120,9 +122,9 @@ class RequesteeMessageScreen extends StatelessWidget {
   }
 }
 
-class DispatcherMessageScreen<T extends User> extends StatelessWidget {
+class DispatcherMessageScreen<M extends User> extends StatelessWidget {
   final Dispatcher dispatcher;
-  final T receiver;
+  final M receiver;
   const DispatcherMessageScreen({
     super.key,
     required this.dispatcher,
@@ -145,16 +147,18 @@ class DispatcherMessageScreen<T extends User> extends StatelessWidget {
       actions: [CallButton(user: receiver)],
     );
 
-    return MessageScreen<Dispatcher>(
+    return MessageScreen<Dispatcher, M>(
       user: dispatcher,
-      database: MessageDatabaseFactory<T>().create(user: receiver),
+      database: MessageDatabaseFactory<M>().create(user: receiver),
       appBar: appBar,
+      other: receiver,
     );
   }
 }
 
-class MessageScreen<T extends User> extends StatefulWidget {
+class MessageScreen<T extends User, M extends User> extends StatefulWidget {
   final T user;
+  final M other;
   final MessageDatabase database;
   final AppBar appBar;
   const MessageScreen({
@@ -162,6 +166,7 @@ class MessageScreen<T extends User> extends StatefulWidget {
     required this.user,
     required this.database,
     required this.appBar,
+    required this.other,
   });
 
   @override
@@ -183,8 +188,10 @@ class _MessageScreenState extends State<MessageScreen> {
       appBar: widget.appBar,
       body: BlocProvider(
         create: (context) => MessagesViewCubit(
+          widget.other,
           widget.user,
           widget.database,
+          widget.other,
         ),
         child: Column(
           children: [

@@ -88,20 +88,62 @@ GroupedListView<Message, DateTime> groupListView(
   ScrollController controller,
 ) {
   return GroupedListView<Message, DateTime>(
+    sort: false,
     physics: const AlwaysScrollableScrollPhysics(),
     keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.manual,
     controller: controller,
-    groupHeaderBuilder: (element) => Center(
-      child: Card(
-        child: Text(DateFormat.yMMMd().format(element.date)),
-      ),
-    ),
+    groupHeaderBuilder: (element) => DateTimeCard(element: element),
     itemBuilder: (BuildContext context, Message message) =>
         MessageBubble(message: message),
     elements: state.messages,
     groupBy: (message) =>
         DateTime(message.date.year, message.date.month, message.date.day),
   );
+}
+
+class DateTimeCard extends StatelessWidget {
+  final Message element;
+  const DateTimeCard({
+    super.key,
+    required this.element,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Card(
+        elevation: 2.0,
+        child: Padding(
+          padding: const EdgeInsets.all(10.0),
+          child: Text(customDateString(element.date)),
+        ),
+      ),
+    );
+  }
+}
+
+String customDateString(DateTime? date) {
+  DateTime now = DateTime.now();
+  DateTime todayDateTime = DateTime(now.year, now.month, now.day);
+  String text = "";
+  var date_ = date;
+  if (date_ == null) return text;
+  if (date_.isAfter(todayDateTime)) {
+    text = "Today";
+    return text;
+  } else {
+    Duration difference = todayDateTime.difference(date_);
+    if (difference.inDays == 0) {
+      text = "Yesterday";
+      return text;
+    } else if (difference.inDays >= 7) {
+      text = "${difference.inDays} days ago";
+      return text;
+    } else {
+      text = DateFormat.yMMMd().format(date_);
+      return text;
+    }
+  }
 }
 
 void scrollDown(ScrollController controller) {

@@ -47,7 +47,6 @@ class AdminDatabase extends AppDatabase {
     String path = getpath<T>();
     path += "/$id";
     DataSnapshot snapshot = (await ref.child(path).get());
-    print(ref.path);
     return [snapshot];
   }
 
@@ -534,14 +533,6 @@ class DispatcherDatabase extends AppDatabase {
               .get())
           .children,
     };
-  }
-
-  Future<Iterable<DataSnapshot>> getRequestees({required int id}) async {
-    return (await ref.child("$id/requesteesid").get()).children;
-  }
-
-  Future<Iterable<DataSnapshot>> getDrivers({required int id}) async {
-    return (await ref.child("$id/driversid").get()).children;
   }
 }
 

@@ -8,6 +8,7 @@ environment:
 
 dependencies:
   bloc: ^8.1.2
+  change_app_package_name: ^1.1.0
   chat_bubbles: ^1.4.1
   cloud_functions: ^4.4.0
   convex_bottom_bar: ^3.2.0

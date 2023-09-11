@@ -59,6 +59,7 @@ class Dispatcher extends User {
   @override
   Map<String, dynamic> toMap() {
     var requesteesid_ = requesteesid;
+    var driversid_ = driversid;
     return {
       "id": id,
       "name": name,
@@ -69,6 +70,11 @@ class Dispatcher extends User {
                 "$requesteeid": requesteeid,
             },
       "tel": tel?.toJson(),
+      "driversid": (driversid_ == null)
+          ? {}
+          : {
+              for (final driverid in driversid_) "$driverid": driverid,
+            }
     };
   }
 }
@@ -149,6 +155,16 @@ class UserAdaptor<T extends User> {
               return null;
             }
             return (requesteesidmap as Map<Object?, Object?>)
+                .values
+                .map((e) => e as int)
+                .toList();
+          }(),
+          driversid: () {
+            var driversidmap = map['driversid'];
+            if (driversidmap == null) {
+              return null;
+            }
+            return (driversidmap as Map<Object?, Object?>)
                 .values
                 .map((e) => e as int)
                 .toList();

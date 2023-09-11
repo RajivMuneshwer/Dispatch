@@ -1,8 +1,14 @@
-import 'package:dispatch/database/user_database.dart';
+import 'dart:async';
+import 'package:cloud_functions/cloud_functions.dart';
+import 'package:dispatch/cubit/msgInfo/msg_info_cubit.dart';
+import 'package:dispatch/database/dispatcher_message_info_database.dart';
+import 'package:dispatch/models/settings_object.dart';
 import 'package:dispatch/models/user_objects.dart';
 import 'package:dispatch/screens/message_screen.dart';
 import 'package:dispatch/screens/user_screens.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:convex_bottom_bar/convex_bottom_bar.dart';
 
@@ -18,16 +24,18 @@ class DispatcherHomeScreen extends StatefulWidget {
 }
 
 class _DispatcherHomeScreenState extends State<DispatcherHomeScreen> {
-  final DispatcherDatabase database = DispatcherDatabase();
   int currentIndex = 0;
   List<Widget> screens = [];
 
   @override
   void initState() {
     screens = [
-      RequesteeMessageListScreen(
-          database: database, dispatcher: widget.dispatcher),
-      DriverMessageListScreen(dispatcher: widget.dispatcher, database: database)
+      RequesteeInfoList(
+        dispatcher: widget.dispatcher,
+      ),
+      DriverInfoList(
+        dispatcher: widget.dispatcher,
+      )
     ];
     super.initState();
   }
@@ -79,84 +87,185 @@ class NavStyle extends StyleHook {
   }
 }
 
-class DriverMessageListScreen extends UserListScreen<Driver> {
-  final Dispatcher dispatcher;
-  final DispatcherDatabase database;
-  const DriverMessageListScreen({
-    super.key,
-    super.title = "Driver Messages",
-    required this.dispatcher,
-    required this.database,
-  });
-
-  @override
-  Widget? floatingActionButton() => null;
-
-  @override
-  Future<List<Driver>> initUsers() async =>
-      (await database.getDrivers(id: dispatcher.id))
-          .map((snapshot) => UserAdaptor<Driver>().adaptSnapshot(snapshot))
-          .toList();
-
-  @override
-  Future<List<Driver>?> Function() loadUsers(Driver lastUsers) =>
-      () async => [];
-
-  @override
-  void Function() onTap(Driver user, BuildContext context) {
-    return () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DispatcherMessageScreen<Driver>(
-              dispatcher: dispatcher,
-              receiver: user,
-            ),
-          ),
-        );
-  }
-
-  @override
-  UserRowFactory<User> rowFactory() => MessageInfoRowFactory();
-}
-
-class RequesteeMessageListScreen extends UserListScreen<Requestee> {
-  final DispatcherDatabase database;
-  final Dispatcher dispatcher;
-  const RequesteeMessageListScreen({
-    super.key,
-    super.title = "Requestee Messages",
-    required this.database,
-    required this.dispatcher,
-  });
-
-  @override
-  Future<List<Requestee>> initUsers() async =>
-      (await database.getRequestees(id: dispatcher.id))
-          .map((snapshot) => UserAdaptor<Requestee>().adaptSnapshot(snapshot))
-          .toList();
-
-  @override
-  UserRowFactory<Requestee> rowFactory() => MessageInfoRowFactory();
-
-  @override
-  void Function() onTap(Requestee user, BuildContext context) {
-    return () => Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => DispatcherMessageScreen<Requestee>(
-              dispatcher: dispatcher,
-              receiver: user,
-            ),
-          ),
-        );
-  }
-
-  @override
-  Widget? floatingActionButton() => null;
-
-  @override
-  Future<List<Requestee>> Function() loadUsers(User lastUsers) =>
-      () async => [];
-}
-
 const duration = Duration(microseconds: 100);
+
+class DriverInfoList extends StatefulWidget {
+  final Dispatcher dispatcher;
+  const DriverInfoList({
+    super.key,
+    required this.dispatcher,
+  });
+
+  @override
+  State<DriverInfoList> createState() => _DriverInfoListState();
+}
+
+class _DriverInfoListState extends State<DriverInfoList> {
+  List<StreamSubscription<DatabaseEvent>> subscriptions = [];
+
+  @override
+  void dispose() {
+    for (final sub in subscriptions) {
+      sub.cancel();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text("Drivers"),
+      ),
+      body: BlocProvider(
+        create: (context) => MsgInfoCubit(
+          dispatcherMessageInfoDatabase:
+              DispatcherMessageInfoDatabase(dispatcher: widget.dispatcher),
+        ),
+        child: BlocBuilder<MsgInfoCubit, MsgInfoState>(
+          builder: (context, state) {
+            switch (state) {
+              case MsgInfoInitial():
+                subscriptions =
+                    context.read<MsgInfoCubit>().driverOnChangedSub();
+
+                context.read<MsgInfoCubit>().loadDrivers();
+                return Container();
+
+              case MsgInfoLoaded():
+                return InfoList(
+                    users: state.users,
+                    onTapForUser: (user) => () {
+                          decreaseAmntOfSentMessages(
+                            receiver: widget.dispatcher,
+                            sender: user,
+                          );
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) =>
+                                  DispatcherMessageScreen<Driver>(
+                                dispatcher: widget.dispatcher,
+                                receiver: (user as Driver),
+                              ),
+                            ),
+                          );
+                        });
+            }
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class RequesteeInfoList extends StatefulWidget {
+  final Dispatcher dispatcher;
+  const RequesteeInfoList({
+    super.key,
+    required this.dispatcher,
+  });
+
+  @override
+  State<RequesteeInfoList> createState() => _RequesteeInfoListState();
+}
+
+class _RequesteeInfoListState extends State<RequesteeInfoList> {
+  List<StreamSubscription<DatabaseEvent>> subscriptions = [];
+
+  @override
+  void dispose() {
+    for (final subscription in subscriptions) {
+      subscription.cancel();
+    }
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text("Requestees")),
+      body: BlocProvider(
+        create: (context) => MsgInfoCubit(
+          dispatcherMessageInfoDatabase:
+              DispatcherMessageInfoDatabase(dispatcher: widget.dispatcher),
+        ),
+        child: BlocBuilder<MsgInfoCubit, MsgInfoState>(
+          builder: (context, state) {
+            switch (state) {
+              case MsgInfoInitial():
+                subscriptions =
+                    context.read<MsgInfoCubit>().requesteeOnChangeSub();
+
+                context.read<MsgInfoCubit>().loadRequestees();
+                return Container();
+
+              case MsgInfoLoaded():
+                return InfoList(
+                  users: state.users,
+                  onTapForUser: (user) => () {
+                    decreaseAmntOfSentMessages(
+                      receiver: widget.dispatcher,
+                      sender: user,
+                    );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) =>
+                            DispatcherMessageScreen<Requestee>(
+                          dispatcher: widget.dispatcher,
+                          receiver: (user as Requestee),
+                        ),
+                      ),
+                    );
+                  },
+                );
+            }
+          },
+        ),
+      ),
+    );
+  }
+}
+
+class InfoList extends StatelessWidget {
+  final List<User> users;
+  final void Function() Function(User) onTapForUser;
+  const InfoList({super.key, required this.users, required this.onTapForUser});
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: users.length,
+      itemBuilder: (context, index) {
+        var user_ = users[index];
+        return UserProfileRowV2(
+          onTap: onTapForUser(users[index]),
+          children: MessageInfoRowFactory().make(user_),
+        );
+      },
+    );
+  }
+}
+
+void decreaseAmntOfSentMessages({
+  required User receiver,
+  required User sender,
+}) {
+  var receiver_ = receiver;
+  if (receiver_ is! Dispatcher) {
+    return;
+  }
+
+  FirebaseFunctions.instance.httpsCallable('decreaseMessageSent').call({
+    "companyid": Settings.companyid,
+    "designation": switch (sender) {
+      Requestee() => "requestees",
+      Dispatcher() => "dispatchers",
+      Driver() => "drivers",
+      Admin() => "admin",
+    },
+    "dispatcherid": receiver_.id,
+    "designateeid": sender.id,
+  });
+}

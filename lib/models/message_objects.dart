@@ -16,7 +16,6 @@ class UpdateReceipt extends Message {
   final int updateTime;
   late final bool isUser;
   UpdateReceipt({
-    required super.text,
     required super.date,
     required super.isDispatch,
     required super.sent,
@@ -49,15 +48,16 @@ class UpdateReceipt extends Message {
       child: Text.rich(
         TextSpan(
           children: [
-            TextSpan(text: "${(isUser) ? "My" : "Your"} ticket made on \n\n"),
-            TextSpan(text: "$timeMade \n\n"),
-            const TextSpan(text: "has been "),
+            TextSpan(
+              text: "Your ticket made on \n"
+                  "$timeMade \n"
+                  "has been ",
+            ),
             const TextSpan(
               text: "updated ",
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
-            const TextSpan(text: "on\n\n"),
-            TextSpan(text: "$timeUpdated\n\n"),
+            TextSpan(text: "on\n $timeUpdated\n"),
           ],
         ),
       ),
@@ -66,10 +66,10 @@ class UpdateReceipt extends Message {
 
   @override
   Map<String, dynamic> toMap() => {
-        "text": text,
         "date": date.millisecondsSinceEpoch,
         "isDispatch": isDispatch,
         "sent": sent,
+        "seen": seen,
         "updateTime": updateTime,
         "ticketTime": ticketTime,
         "isReceipt": true,
@@ -82,7 +82,6 @@ class CancelReceipt extends Message {
   final int ticketTime;
   late final bool isUser;
   CancelReceipt({
-    required super.text,
     required super.date,
     required super.isDispatch,
     required super.sent,
@@ -115,15 +114,15 @@ class CancelReceipt extends Message {
       child: Text.rich(
         TextSpan(
           children: [
-            TextSpan(text: "${(isUser) ? "My" : "Your"} ticket made on \n\n"),
-            TextSpan(text: "$timeMade \n\n"),
-            const TextSpan(text: "has been "),
+            TextSpan(
+                text: "Your ticket made on \n"
+                    "$timeMade \n"
+                    "has been"),
             const TextSpan(
-              text: "cancelled ",
+              text: "cancelled",
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
-            const TextSpan(text: "on\n\n"),
-            TextSpan(text: "$timeCancelled\n\n"),
+            TextSpan(text: "on\n $timeCancelled"),
           ],
         ),
       ),
@@ -132,10 +131,10 @@ class CancelReceipt extends Message {
 
   @override
   Map<String, dynamic> toMap() => {
-        "text": text,
         "date": date.millisecondsSinceEpoch,
         "isDispatch": isDispatch,
         "sent": sent,
+        "seen": seen,
         "cancelTime": cancelTime,
         "ticketTime": ticketTime,
         "isReceipt": true,
@@ -143,12 +142,87 @@ class CancelReceipt extends Message {
       };
 }
 
-class ConfirmReceipt extends Message {
+class ConfirmDriverReceipt extends Message {
+  final Requestee requestee;
+  final int confirmTime;
+  final int ticketTime;
+  ConfirmDriverReceipt({
+    required super.date,
+    required super.isDispatch,
+    required super.sent,
+    required super.senderid,
+    required super.messagesViewState,
+    required super.seen,
+    required this.requestee,
+    required this.confirmTime,
+    required this.ticketTime,
+  });
+
+  @override
+  Map<String, dynamic> toMap() => {
+        "date": date.millisecondsSinceEpoch,
+        "isDispatch": isDispatch,
+        "sent": sent,
+        "seen": seen,
+        "driver": requestee.toMap(),
+        "confirmedTime": confirmTime,
+        "ticketTime": ticketTime,
+        "isReceipt": true,
+        "senderid": senderid,
+      };
+
+  @override
+  Widget toWidget(BuildContext context) {
+    String timeMade = DateFormat().add_yMMMd().add_jm().format(
+          DateTime.fromMillisecondsSinceEpoch(
+            ticketTime,
+          ),
+        );
+    String timeConfirmed = DateFormat().add_yMMMd().add_jm().format(
+          DateTime.fromMillisecondsSinceEpoch(
+            confirmTime,
+          ),
+        );
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+                text: "Your ticket made \n"
+                    "$timeMade \n"
+                    "has been "),
+            const TextSpan(
+              text: "confirmed ",
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            TextSpan(
+              text: "on\n"
+                  "$timeConfirmed\n"
+                  "Contact your pickup ${requestee.name} on \n",
+            ),
+            TextSpan(
+              text: "${requestee.tel?.international}",
+              style: const TextStyle(
+                color: Colors.blue,
+              ),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () => launchUrl(
+                      Uri.parse("tel:${requestee.tel?.international}"),
+                    ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class ConfirmRequesteeReceipt extends Message {
   final Driver driver;
   final int confirmTime;
   final int ticketTime;
-  ConfirmReceipt({
-    required super.text,
+  ConfirmRequesteeReceipt({
     required super.date,
     required super.isDispatch,
     required super.sent,
@@ -177,17 +251,20 @@ class ConfirmReceipt extends Message {
       child: Text.rich(
         TextSpan(
           children: [
-            const TextSpan(text: "Thank you! 🎉 🎉 \n\n"),
-            const TextSpan(text: "Your ticket made \n\n"),
-            TextSpan(text: "$timeMade \n"),
-            const TextSpan(text: "has been "),
+            TextSpan(
+              text: "A ticket made \n"
+                  "$timeMade \n"
+                  "has been ",
+            ),
             const TextSpan(
               text: "confirmed ",
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
-            const TextSpan(text: "on\n\n"),
-            TextSpan(text: "$timeConfirmed\n\n"),
-            TextSpan(text: "Contact your driver ${driver.name} on \n\n"),
+            TextSpan(
+              text: "on\n"
+                  "$timeConfirmed\n"
+                  "Contact your driver ${driver.name} on \n",
+            ),
             TextSpan(
               text: "${driver.tel?.international}",
               style: const TextStyle(
@@ -206,10 +283,10 @@ class ConfirmReceipt extends Message {
 
   @override
   Map<String, dynamic> toMap() => {
-        "text": text,
         "date": date.millisecondsSinceEpoch,
         "isDispatch": isDispatch,
         "sent": sent,
+        "seen": seen,
         "driver": driver.toMap(),
         "confirmedTime": confirmTime,
         "ticketTime": ticketTime,
@@ -219,8 +296,9 @@ class ConfirmReceipt extends Message {
 }
 
 class TextMessage extends Message {
+  final String text;
   TextMessage({
-    required super.text,
+    required this.text,
     required super.date,
     required super.isDispatch,
     required super.sent,
@@ -235,6 +313,7 @@ class TextMessage extends Message {
         "date": date.millisecondsSinceEpoch,
         "isDispatch": isDispatch,
         "sent": sent,
+        "seen": seen,
         "senderid": senderid,
       };
 
@@ -247,7 +326,6 @@ class TextMessage extends Message {
 
 class ErrorMessage extends Message {
   ErrorMessage({
-    super.text = "Error",
     required super.date,
     super.isDispatch = false,
     super.sent = false,
@@ -277,6 +355,7 @@ class ErrorMessage extends Message {
 class TicketConfirmedMessage extends TicketMessage {
   final int confirmedTime;
   final String driver;
+  final String requestee;
   TicketConfirmedMessage({
     required super.text,
     required super.date,
@@ -290,6 +369,7 @@ class TicketConfirmedMessage extends TicketMessage {
     required this.driver,
     required super.senderid,
     required super.seen,
+    required this.requestee,
   });
 
   @override
@@ -298,10 +378,12 @@ class TicketConfirmedMessage extends TicketMessage {
         "date": date.millisecondsSinceEpoch,
         "isDispatch": isDispatch,
         "sent": sent,
+        "seen": seen,
         "ticketType": ticketTypes.name,
         "confirmedTime": confirmedTime,
         "driver": driver,
         "senderid": senderid,
+        "requestee": requestee,
       };
 }
 
@@ -327,6 +409,7 @@ class TicketCancelledMessage extends TicketMessage {
         "date": date.millisecondsSinceEpoch,
         "isDispatch": isDispatch,
         "sent": sent,
+        "seen": seen,
         "ticketType": ticketTypes.name,
         "cancelledTime": cancelledTime,
         "senderid": senderid,
@@ -374,6 +457,7 @@ class TicketSubmittedMessage extends TicketMessage {
         "date": date.millisecondsSinceEpoch,
         "isDispatch": isDispatch,
         "sent": sent,
+        "seen": seen,
         "ticketType": ticketTypes.name,
         "senderid": senderid,
       };
@@ -383,8 +467,9 @@ sealed class TicketMessage extends Message {
   final Color iconColor;
   final TicketTypes ticketTypes;
   final String title;
+  final String text;
   TicketMessage({
-    required super.text,
+    required this.text,
     required super.date,
     required super.isDispatch,
     required super.sent,
@@ -449,7 +534,6 @@ sealed class TicketMessage extends Message {
 
 sealed class Message {
   final int senderid;
-  final String text;
   final DateTime date;
   final bool isDispatch;
   final MessagesViewState messagesViewState;
@@ -457,7 +541,6 @@ sealed class Message {
   bool seen;
 
   Message({
-    required this.text,
     required this.date,
     required this.isDispatch,
     required this.sent,
@@ -498,7 +581,6 @@ class MessageAdaptor {
     var objectMap = snapshot.value;
     switch (objectMap) {
       case {
-          "text": String text,
           "date": int date,
           "isDispatch": bool isDispatch,
           "sent": bool sent,
@@ -510,7 +592,6 @@ class MessageAdaptor {
         }:
         {
           return UpdateReceipt(
-            text: text,
             date: DateTime.fromMillisecondsSinceEpoch(date),
             isDispatch: isDispatch,
             sent: sent,
@@ -522,7 +603,6 @@ class MessageAdaptor {
           );
         }
       case {
-          "text": String text,
           "date": int date,
           "isDispatch": bool isDispatch,
           "sent": bool sent,
@@ -534,7 +614,6 @@ class MessageAdaptor {
         }:
         {
           return CancelReceipt(
-            text: text,
             date: DateTime.fromMillisecondsSinceEpoch(date),
             isDispatch: isDispatch,
             sent: sent,
@@ -546,7 +625,6 @@ class MessageAdaptor {
           );
         }
       case {
-          "text": String text,
           "date": int date,
           "isDispatch": bool isDispatch,
           "sent": bool sent,
@@ -558,8 +636,7 @@ class MessageAdaptor {
           "isReceipt": true
         }:
         {
-          return ConfirmReceipt(
-            text: text,
+          return ConfirmRequesteeReceipt(
             date: DateTime.fromMillisecondsSinceEpoch(date),
             isDispatch: isDispatch,
             sent: sent,
@@ -622,7 +699,8 @@ class MessageAdaptor {
           "senderid": int senderid,
           "ticketType": "confirmed",
           "confirmedTime": int confirmedTime,
-          "driver": String driver
+          "driver": String driver,
+          "requestee": String requestee,
         }:
         {
           return TicketConfirmedMessage(
@@ -635,6 +713,7 @@ class MessageAdaptor {
             confirmedTime: confirmedTime,
             driver: driver,
             senderid: senderid,
+            requestee: requestee,
           );
         }
       case {

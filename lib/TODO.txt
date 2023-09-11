@@ -1,9 +1,9 @@
 ////TO TEST
-///updateMessageSent
-///decreaseMessageSent
-///updateMessageSeen
-///makeUser
 ///send push notifications, background and foreground
-///make the driver's message screen
-///Fix the date card on the messages
-///Fix the login screen
+///Improve the login screen
+///Improve the app color scheme 
+///Firebase rules
+///just make the sign in screen the passcode.
+/// make the dispatcher able to send tickets to the driver where they pick the requestee
+/// then make the it such that the confirmation alerts the other party with a receipt
+/// set up the official twilio account

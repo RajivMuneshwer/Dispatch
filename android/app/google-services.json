@@ -10,7 +10,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:509788095788:android:dcf749e07536e29d429889",
         "android_client_info": {
-          "package_name": "com.example.dispatch"
+          "package_name": "com.muneshwers.dispatch"
         }
       },
       "oauth_client": [
@@ -35,7 +35,7 @@
               "client_id": "509788095788-l0f4vkimqn7d8ljhodf5jecfd3j4aqqu.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.dispatch"
+                "bundle_id": "com.muneshwers.dispatch"
               }
             }
           ]
