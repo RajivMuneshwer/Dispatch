@@ -16,6 +16,7 @@ class App extends StatelessWidget {
       Dispatcher() => '/dispatcher',
       Admin() => '/admin',
       Driver() => '/driver',
+      BaseUser() => '/base',
     };
   }
 

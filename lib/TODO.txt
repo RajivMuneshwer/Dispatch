@@ -1,9 +1,8 @@
 ////TO TEST
 ///send push notifications, background and foreground
-///Improve the login screen
 ///Improve the app color scheme 
 ///Firebase rules
-///just make the sign in screen the passcode.
 /// make the dispatcher able to send tickets to the driver where they pick the requestee
 /// then make the it such that the confirmation alerts the other party with a receipt
 /// set up the official twilio account
+/// add sender name to message required

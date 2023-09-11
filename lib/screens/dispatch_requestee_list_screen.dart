@@ -264,6 +264,7 @@ void decreaseAmntOfSentMessages({
       Dispatcher() => "dispatchers",
       Driver() => "drivers",
       Admin() => "admin",
+      BaseUser() => "base"
     },
     "dispatcherid": receiver_.id,
     "designateeid": sender.id,

@@ -74,6 +74,8 @@ class AdminDatabase extends AppDatabase {
         return;
       case Admin():
         return;
+      case BaseUser():
+        return;
     }
   }
 
@@ -118,6 +120,10 @@ class AdminDatabase extends AppDatabase {
           return;
         }
       case Admin():
+        {
+          return;
+        }
+      case BaseUser():
         {
           return;
         }
@@ -177,6 +183,10 @@ class AdminDatabase extends AppDatabase {
             return;
           }
           throw Exception("Cannot delete the only admin");
+        }
+      case BaseUser():
+        {
+          return;
         }
     }
   }
@@ -433,6 +443,10 @@ class DispatcherDatabase extends AppDatabase {
         {
           return;
         }
+      case BaseUser():
+        {
+          return;
+        }
     }
   }
 
@@ -475,6 +489,8 @@ class DispatcherDatabase extends AppDatabase {
         {}
       case Admin():
         {}
+      case BaseUser():
+        {}
     }
   }
 
@@ -512,6 +528,10 @@ class DispatcherDatabase extends AppDatabase {
           throw Exception("Cannot delete dispatcher with requeestes");
         }
       case Admin():
+        {
+          return;
+        }
+      case BaseUser():
         {
           return;
         }

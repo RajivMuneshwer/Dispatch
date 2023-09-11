@@ -118,6 +118,22 @@ class Driver extends User {
       };
 }
 
+class BaseUser extends User {
+  BaseUser({
+    required super.id,
+    required super.name,
+    required super.sortBy,
+    required super.tel,
+  });
+
+  @override
+  Map<String, dynamic> toMap() => {
+        "id": id,
+        "name": name,
+        "tel": tel?.toJson(),
+      };
+}
+
 class UserAdaptor<T extends User> {
   T adaptMap(Map<dynamic, dynamic> map) {
     int id = map['id'] as int;
@@ -185,7 +201,7 @@ class UserAdaptor<T extends User> {
           numOfUnreadMessages: map['numOfUnreadMessages'] as int?,
           lastMessageTime: map['lastMessageTime'] as int?,
         ) as T,
-      _ => Requestee(
+      _ => BaseUser(
           id: id,
           name: name,
           sortBy: name,

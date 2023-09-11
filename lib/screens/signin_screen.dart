@@ -15,6 +15,19 @@ class SignInScreen extends StatelessWidget {
       home: Builder(builder: (context) {
         return Scaffold(
           body: FlutterLogin(
+            initialAuthMode: AuthMode.login,
+            userValidator: (value) {
+              var value_ = value;
+              if (value_ == null || value_.isEmpty) {
+                return "Input name";
+              }
+              if (value_.trim().isEmpty) {
+                return "Input name";
+              }
+              return null;
+            },
+            userType: LoginUserType.name,
+            logo: const AssetImage("assets/images/Dispatch.png"),
             title: "Dispatch",
             theme: LoginTheme(
               primaryColor: Colors.blue.shade700,

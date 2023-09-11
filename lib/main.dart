@@ -17,7 +17,7 @@ Future<void> main() async {
   );
   FirebaseAuth.instance.authStateChanges().listen((event) {});
   final SharedPreferences pref = await SharedPreferences.getInstance();
-  //await pref.clear();
+  await pref.clear();
   final bool? doesUserExist = pref.getBool('exists');
   if (doesUserExist != true) {
     return runApp(const SignInScreen());

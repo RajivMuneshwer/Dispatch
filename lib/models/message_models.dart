@@ -32,7 +32,7 @@ class NewMessageWidget extends StatelessWidget {
         Message newMessage =
             MessageAdaptor(messagesViewState: state_).adaptText(
           text,
-          state_.user.id,
+          state_.user,
           isDispatch,
         );
         context.read<MessagesViewCubit>().add(newMessage);
@@ -58,7 +58,7 @@ class NewMessageWidget extends StatelessWidget {
                     sent: false,
                     seen: false,
                     messagesViewState: state_,
-                    senderid: state_.user.id,
+                    sender: state_.user,
                   );
                   Navigator.pushNamed(context, '/ticket',
                       arguments: TicketViewWithData(
@@ -136,7 +136,7 @@ String customDateString(DateTime? date) {
     if (difference.inDays == 0) {
       text = "Yesterday";
       return text;
-    } else if (difference.inDays >= 7) {
+    } else if (difference.inDays <= 7) {
       text = "${difference.inDays} days ago";
       return text;
     } else {

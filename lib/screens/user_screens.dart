@@ -447,6 +447,7 @@ class MessageInfoRowFactory<T extends User> extends UserRowFactory<T> {
         ],
       Dispatcher() => [],
       Admin() => [],
+      BaseUser() => [],
     };
   }
 }
@@ -588,7 +589,7 @@ String customTimeString(int? time) {
     if (difference.inDays == 0) {
       text = "Yesterday";
       return text;
-    } else if (difference.inDays >= 7) {
+    } else if (difference.inDays <= 7) {
       text = "${difference.inDays} days ago";
       return text;
     } else {

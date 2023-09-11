@@ -160,6 +160,7 @@ class UserInfoScreenFactory {
       Dispatcher() => DispatcherInfoScreen(user: user, database: database),
       Admin() => AdminInfoScreen(user: user, database: database),
       Driver() => DriverInfoScreen(user: user, database: database),
+      BaseUser() => throw Exception("incorrect user")
     };
   }
 }

@@ -1181,7 +1181,7 @@ class CancelButton extends StatelessWidget {
               isDispatch: ticketMessage.isDispatch,
               sent: ticketMessage.sent,
               seen: ticketMessage.seen,
-              senderid: state.messagesState.user.id,
+              sender: state.messagesState.user,
               messagesViewState: state.messagesState,
               cancelledTime: DateTime.now().millisecondsSinceEpoch,
             );
@@ -1199,7 +1199,7 @@ class CancelButton extends StatelessWidget {
               messagesViewState: state.messagesState,
               cancelTime: DateTime.now().millisecondsSinceEpoch,
               ticketTime: ticketMessage.date.millisecondsSinceEpoch,
-              senderid: state.messagesState.user.id,
+              sender: state.messagesState.user,
             );
             state.messagesState.database.addMessage(cancelReceipt);
 
@@ -1254,7 +1254,7 @@ class UpdateButton extends StatelessWidget {
               sent: ticketMessage.sent,
               seen: ticketMessage.seen,
               messagesViewState: state.messagesState,
-              senderid: state.messagesState.user.id,
+              sender: state.messagesState.user,
             );
             state.messagesState.database.updateTicket(submittedMessage);
 
@@ -1270,7 +1270,7 @@ class UpdateButton extends StatelessWidget {
               messagesViewState: state.messagesState,
               ticketTime: ticketMessage.date.millisecondsSinceEpoch,
               updateTime: DateTime.now().millisecondsSinceEpoch,
-              senderid: state.messagesState.user.id,
+              sender: state.messagesState.user,
             );
             state.messagesState.database.addMessage(updateReceipt);
 
@@ -1313,9 +1313,6 @@ class _ConfirmButtonState extends State<ConfirmButton> {
           onPressed: (isRunning)
               ? () {}
               : () {
-                  setState(() {
-                    isRunning = true;
-                  });
                   FormBuilderState? formbuilderState =
                       widget.formKey.currentState;
                   if (formbuilderState == null) {
@@ -1336,6 +1333,9 @@ class _ConfirmButtonState extends State<ConfirmButton> {
                   if (driver != null && requestee != null) {
                     throw Exception("both driver and requestee fields active");
                   }
+                  setState(() {
+                    isRunning = true;
+                  });
                   //either one or the other is null
 
                   updateTicketToConfirmed(state, driver, requestee);
@@ -1382,7 +1382,7 @@ void updateTicketToConfirmed(
     isDispatch: ticketMessage.isDispatch,
     sent: ticketMessage.sent,
     seen: ticketMessage.seen,
-    senderid: ticketMessage.messagesViewState.user.id,
+    sender: ticketMessage.messagesViewState.user,
     messagesViewState: messagesState,
     confirmedTime: DateTime.now().millisecondsSinceEpoch,
     driver: (driver !=
@@ -1410,7 +1410,7 @@ void sendReceiptToRequestee(
     isDispatch: true,
     sent: false,
     seen: false,
-    senderid: state.messagesState.user.id,
+    sender: state.messagesState.user,
     messagesViewState: state.messagesState,
     driver: (driver != null) ? driver : other as Driver,
     confirmTime: DateTime.now().millisecondsSinceEpoch,
@@ -1432,7 +1432,7 @@ void sendReceiptToDriver(
     date: DateTime.now(),
     isDispatch: true,
     sent: false,
-    senderid: state.messagesState.user.id,
+    sender: state.messagesState.user,
     messagesViewState: state.messagesState,
     seen: false,
     requestee: (requestee != null) ? requestee : other as Requestee,
