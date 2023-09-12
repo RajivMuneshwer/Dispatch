@@ -398,6 +398,7 @@ class TicketCancelledMessage extends TicketMessage {
         "ticketType": ticketTypes.name,
         "cancelledTime": cancelledTime,
         "sender": sender.toMap(),
+        "receiver": receiver.toMap(),
       };
 }
 
@@ -446,6 +447,7 @@ class TicketSubmittedMessage extends TicketMessage {
         "seen": seen,
         "ticketType": ticketTypes.name,
         "sender": sender.toMap(),
+        "receiver": receiver.toMap(),
       };
 }
 
