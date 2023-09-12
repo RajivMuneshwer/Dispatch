@@ -818,7 +818,6 @@ class RequesteeDropDown extends StatelessWidget {
         var user = state_.messagesState.user;
         if (user is! Dispatcher) return Container();
         var requesteesid = user.requesteesid;
-        print(user.toMap());
         return FutureBuilder<List<Requestee>>(
             future: getRequestees(requesteesid),
             builder: (context, snapshot) {
@@ -829,7 +828,6 @@ class RequesteeDropDown extends StatelessWidget {
               } else if (!snapshot.hasData || snapshot.data == null) {
                 return const Text('No options available.');
               }
-              print(requesteesid);
               return requesteeDropDownWidget(
                 snapshot.data ?? [],
                 requesteeDropdownName(),
@@ -885,7 +883,6 @@ class DriverDropDown extends StatelessWidget {
         var user = state_.messagesState.user;
         if (user is! Dispatcher) return Container();
         var driverids = user.driversid;
-        print(user.toMap());
         return FutureBuilder<List<Driver>>(
             future: getDrivers(driverids),
             builder: (context, snapshot) {
@@ -896,7 +893,6 @@ class DriverDropDown extends StatelessWidget {
               } else if (!snapshot.hasData || snapshot.data == null) {
                 return const Text('No options available.');
               }
-              print(driverids);
               return driverDropDownWidget(
                 snapshot.data ?? [],
                 driverDropdownName(),
@@ -1182,6 +1178,7 @@ class CancelButton extends StatelessWidget {
               sent: ticketMessage.sent,
               seen: ticketMessage.seen,
               sender: state.messagesState.user,
+              receiver: state.messagesState.other,
               messagesViewState: state.messagesState,
               cancelledTime: DateTime.now().millisecondsSinceEpoch,
             );
@@ -1200,6 +1197,7 @@ class CancelButton extends StatelessWidget {
               cancelTime: DateTime.now().millisecondsSinceEpoch,
               ticketTime: ticketMessage.date.millisecondsSinceEpoch,
               sender: state.messagesState.user,
+              receiver: state.messagesState.other,
             );
             state.messagesState.database.addMessage(cancelReceipt);
 
@@ -1255,6 +1253,7 @@ class UpdateButton extends StatelessWidget {
               seen: ticketMessage.seen,
               messagesViewState: state.messagesState,
               sender: state.messagesState.user,
+              receiver: state.messagesState.other,
             );
             state.messagesState.database.updateTicket(submittedMessage);
 
@@ -1271,6 +1270,7 @@ class UpdateButton extends StatelessWidget {
               ticketTime: ticketMessage.date.millisecondsSinceEpoch,
               updateTime: DateTime.now().millisecondsSinceEpoch,
               sender: state.messagesState.user,
+              receiver: state.messagesState.other,
             );
             state.messagesState.database.addMessage(updateReceipt);
 
@@ -1383,6 +1383,7 @@ void updateTicketToConfirmed(
     sent: ticketMessage.sent,
     seen: ticketMessage.seen,
     sender: ticketMessage.messagesViewState.user,
+    receiver: ticketMessage.messagesViewState.other,
     messagesViewState: messagesState,
     confirmedTime: DateTime.now().millisecondsSinceEpoch,
     driver: (driver !=
@@ -1411,6 +1412,7 @@ void sendReceiptToRequestee(
     sent: false,
     seen: false,
     sender: state.messagesState.user,
+    receiver: state.messagesState.other,
     messagesViewState: state.messagesState,
     driver: (driver != null) ? driver : other as Driver,
     confirmTime: DateTime.now().millisecondsSinceEpoch,
@@ -1433,6 +1435,7 @@ void sendReceiptToDriver(
     isDispatch: true,
     sent: false,
     sender: state.messagesState.user,
+    receiver: state.messagesState.other,
     messagesViewState: state.messagesState,
     seen: false,
     requestee: (requestee != null) ? requestee : other as Requestee,
@@ -1464,7 +1467,7 @@ class CirclePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = 20.0;
+    const radius = 20.0;
 
     final fillPaint = Paint()
       ..color = Colors.transparent

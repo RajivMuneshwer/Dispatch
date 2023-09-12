@@ -85,35 +85,29 @@ class ErrorMessageDatabase extends MessageDatabase {
 
   @override
   Future<void> addMessage(Message message) {
-    // TODO: implement addMessage
     throw UnimplementedError();
   }
 
   @override
   Future<DatabaseEvent> loadMessagesBeforeTime(int time, int numOfMessage) {
-    // TODO: implement loadMessagesBeforeTime
     throw UnimplementedError();
   }
 
   @override
   Stream<DatabaseEvent> onChildAddedStream(int messageLimit) {
-    // TODO: implement onChildAddedStream
     throw UnimplementedError();
   }
 
   @override
   Stream<DatabaseEvent> onChildChanged() {
-    // TODO: implement onChildChanged
     throw UnimplementedError();
   }
 
   @override
-  // TODO: implement ref
   DatabaseReference get ref => throw UnimplementedError();
 
   @override
   Future<void> updateTicket(TicketMessage ticketMessage) {
-    // TODO: implement updateTicket
     throw UnimplementedError();
   }
 }

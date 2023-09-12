@@ -728,7 +728,7 @@ class _EditSubmitButtonState<T extends User>
                 setState(() {
                   free = false;
                 });
-                await Future.delayed(Duration(seconds: 3), () {});
+                await Future.delayed(const Duration(seconds: 3), () {});
                 var state = widget.formKey.currentState;
                 var user_ = widget.user;
                 if (state!.validate() == true) {
