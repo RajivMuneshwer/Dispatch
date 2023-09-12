@@ -1,9 +1,11 @@
 ////TO TEST
-///send push notifications, background and foreground
+///send push notifications foreground
 ///Improve the app color scheme 
 ///Firebase rules
 /// make the dispatcher able to send tickets to the driver where they pick the requestee
 /// then make the it such that the confirmation alerts the other party with a receipt
 /// set up the official twilio account
-/// add sender name to message required
-/// fix bug with on reload previous messages it triggers the send
+/// make the receipt more personal with the wording. 
+/// improve the push messaging body
+/// put in the delivered parameter to message
+/// keep message alive

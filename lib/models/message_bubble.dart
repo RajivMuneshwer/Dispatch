@@ -22,6 +22,7 @@ class MessageBubble extends StatelessWidget {
       bubbleMain: message.toWidget(context),
       sent: message.sent,
       seen: message.seen,
+      delivered: message.delivered,
       tail: true,
       color: (isSender)
           ? const Color.fromRGBO(220, 220, 220, 1)

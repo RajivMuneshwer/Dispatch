@@ -1177,6 +1177,7 @@ class CancelButton extends StatelessWidget {
               isDispatch: ticketMessage.isDispatch,
               sent: ticketMessage.sent,
               seen: ticketMessage.seen,
+              delivered: ticketMessage.delivered,
               sender: state.messagesState.user,
               receiver: state.messagesState.other,
               messagesViewState: state.messagesState,
@@ -1193,6 +1194,7 @@ class CancelButton extends StatelessWidget {
               isDispatch: isDispatch,
               sent: false,
               seen: false,
+              delivered: false,
               messagesViewState: state.messagesState,
               cancelTime: DateTime.now().millisecondsSinceEpoch,
               ticketTime: ticketMessage.date.millisecondsSinceEpoch,
@@ -1251,6 +1253,7 @@ class UpdateButton extends StatelessWidget {
               isDispatch: ticketMessage.isDispatch,
               sent: ticketMessage.sent,
               seen: ticketMessage.seen,
+              delivered: ticketMessage.delivered,
               messagesViewState: state.messagesState,
               sender: state.messagesState.user,
               receiver: state.messagesState.other,
@@ -1266,6 +1269,7 @@ class UpdateButton extends StatelessWidget {
               isDispatch: isDispatch,
               sent: false,
               seen: false,
+              delivered: false,
               messagesViewState: state.messagesState,
               ticketTime: ticketMessage.date.millisecondsSinceEpoch,
               updateTime: DateTime.now().millisecondsSinceEpoch,
@@ -1382,6 +1386,7 @@ void updateTicketToConfirmed(
     isDispatch: ticketMessage.isDispatch,
     sent: ticketMessage.sent,
     seen: ticketMessage.seen,
+    delivered: ticketMessage.delivered,
     sender: ticketMessage.messagesViewState.user,
     receiver: ticketMessage.messagesViewState.other,
     messagesViewState: messagesState,
@@ -1411,6 +1416,7 @@ void sendReceiptToRequestee(
     isDispatch: true,
     sent: false,
     seen: false,
+    delivered: false,
     sender: state.messagesState.user,
     receiver: state.messagesState.other,
     messagesViewState: state.messagesState,
@@ -1434,10 +1440,11 @@ void sendReceiptToDriver(
     date: DateTime.now(),
     isDispatch: true,
     sent: false,
+    seen: false,
+    delivered: false,
     sender: state.messagesState.user,
     receiver: state.messagesState.other,
     messagesViewState: state.messagesState,
-    seen: false,
     requestee: (requestee != null) ? requestee : other as Requestee,
     confirmTime: DateTime.now().millisecondsSinceEpoch,
     ticketTime: ticketMessage.date.millisecondsSinceEpoch,
@@ -1712,16 +1719,3 @@ Future<List<Requestee>> getRequestees(List<int>? requesteesid) async {
   }
   return requestees;
 }
-
-////cannot delete dispatcher if they have drivers as well
-///Also the ticket needs to show the time and driver for confirmation
-///an auto message should be sent in case of update or would the push notification be enough???
-///flesh out the widget for the dispatcher to see the dropdown for drivers
-///and make a confirmation stamp on the end of the ticket
-///
-///
-///COMPLETED
-///the dropdown should return a driver as the value so it would be easier to get the driver for the receipt
-////build the receipt builder that returns a message and takes the driver as argument
-///The ticket should be updated first if the dispatcher wants to make changes
-///the receipt needs the current time when it was confirmed and send it as a new message

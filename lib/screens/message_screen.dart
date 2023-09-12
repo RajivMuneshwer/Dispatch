@@ -217,15 +217,54 @@ class DisplayMessagesWidget extends StatefulWidget {
   State<DisplayMessagesWidget> createState() => _DisplayMessagesWidgetState();
 }
 
-class _DisplayMessagesWidgetState extends State<DisplayMessagesWidget> {
+class _DisplayMessagesWidgetState extends State<DisplayMessagesWidget>
+    with WidgetsBindingObserver {
   List<StreamSubscription<DatabaseEvent>> subscriptions = [];
 
   @override
+  void initState() {
+    WidgetsBinding.instance.addObserver(this);
+    super.initState();
+  }
+
+  @override
   void dispose() async {
+    WidgetsBinding.instance.removeObserver(this);
     for (final subscription in subscriptions) {
       subscription.cancel();
     }
     super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    switch (state) {
+      case AppLifecycleState.resumed:
+        {
+          for (var sub in subscriptions) {
+            sub.resume();
+          }
+          break;
+        }
+      case AppLifecycleState.paused:
+        {
+          for (var sub in subscriptions) {
+            sub.pause();
+          }
+          break;
+        }
+      case AppLifecycleState.inactive:
+        {
+          print("inactive");
+          break;
+        }
+      case AppLifecycleState.detached:
+        {
+          print("detached");
+          break;
+        }
+    }
+    super.didChangeAppLifecycleState(state);
   }
 
   @override

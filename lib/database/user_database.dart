@@ -244,7 +244,6 @@ class DriverDatabase extends AppDatabase {
 
   @override
   Future<Iterable<DataSnapshot>> getAll<T extends User>() {
-    // TODO: implement getAll
     throw UnimplementedError();
   }
 
@@ -566,13 +565,11 @@ class AllDatabase extends AppDatabase {
 
   @override
   Future<Iterable<DataSnapshot>> getAll<T extends User>() {
-    // TODO: implement getAll
     throw UnimplementedError();
   }
 
   @override
   Future<Iterable<DataSnapshot>> getOne<T extends User>(int id) {
-    // TODO: implement getOne
     throw UnimplementedError();
   }
 
@@ -612,7 +609,6 @@ class AllDatabase extends AppDatabase {
     required T? lastUser,
     required String orderBy,
   }) {
-    // TODO: implement getSome
     throw UnimplementedError();
   }
 }

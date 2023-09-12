@@ -25,6 +25,7 @@ class UpdateReceipt extends Message {
     required super.sender,
     required super.seen,
     required super.receiver,
+    required super.delivered,
   }) {
     isUser = switch (messagesViewState.user) {
       Dispatcher() => (isDispatch),
@@ -71,6 +72,7 @@ class UpdateReceipt extends Message {
         "isDispatch": isDispatch,
         "sent": sent,
         "seen": seen,
+        "delivered": delivered,
         "updateTime": updateTime,
         "ticketTime": ticketTime,
         "isReceipt": true,
@@ -93,6 +95,7 @@ class CancelReceipt extends Message {
     required super.sender,
     required super.seen,
     required super.receiver,
+    required super.delivered,
   }) {
     isUser = switch (messagesViewState.user) {
       Dispatcher() => (isDispatch),
@@ -138,6 +141,7 @@ class CancelReceipt extends Message {
         "isDispatch": isDispatch,
         "sent": sent,
         "seen": seen,
+        "delivered": delivered,
         "cancelTime": cancelTime,
         "ticketTime": ticketTime,
         "isReceipt": true,
@@ -161,6 +165,7 @@ class ConfirmDriverReceipt extends Message {
     required this.confirmTime,
     required this.ticketTime,
     required super.receiver,
+    required super.delivered,
   });
 
   @override
@@ -169,6 +174,7 @@ class ConfirmDriverReceipt extends Message {
         "isDispatch": isDispatch,
         "sent": sent,
         "seen": seen,
+        "delivered": delivered,
         "driver": requestee.toMap(),
         "confirmedTime": confirmTime,
         "ticketTime": ticketTime,
@@ -239,6 +245,7 @@ class ConfirmRequesteeReceipt extends Message {
     required super.sender,
     required super.seen,
     required super.receiver,
+    required super.delivered,
   });
 
   @override
@@ -294,6 +301,7 @@ class ConfirmRequesteeReceipt extends Message {
         "isDispatch": isDispatch,
         "sent": sent,
         "seen": seen,
+        "delivered": delivered,
         "driver": driver.toMap(),
         "confirmedTime": confirmTime,
         "ticketTime": ticketTime,
@@ -314,6 +322,7 @@ class TextMessage extends Message {
     required super.sender,
     required super.seen,
     required super.receiver,
+    required super.delivered,
   });
 
   @override
@@ -323,6 +332,7 @@ class TextMessage extends Message {
         "isDispatch": isDispatch,
         "sent": sent,
         "seen": seen,
+        "delivered": delivered,
         "sender": sender.toMap(),
         "receiver": receiver.toMap(),
       };
@@ -353,6 +363,7 @@ class TicketConfirmedMessage extends TicketMessage {
     required super.seen,
     required this.requestee,
     required super.receiver,
+    required super.delivered,
   });
 
   @override
@@ -362,6 +373,7 @@ class TicketConfirmedMessage extends TicketMessage {
         "isDispatch": isDispatch,
         "sent": sent,
         "seen": seen,
+        "delivered": delivered,
         "ticketType": ticketTypes.name,
         "confirmedTime": confirmedTime,
         "driver": driver,
@@ -386,6 +398,7 @@ class TicketCancelledMessage extends TicketMessage {
     required super.sender,
     required super.seen,
     required super.receiver,
+    required super.delivered,
   });
 
   @override
@@ -395,6 +408,7 @@ class TicketCancelledMessage extends TicketMessage {
         "isDispatch": isDispatch,
         "sent": sent,
         "seen": seen,
+        "delivered": delivered,
         "ticketType": ticketTypes.name,
         "cancelledTime": cancelledTime,
         "sender": sender.toMap(),
@@ -415,6 +429,7 @@ class TicketNewMessage extends TicketMessage {
     required super.sender,
     required super.seen,
     required super.receiver,
+    required super.delivered,
   });
 
   @override
@@ -436,6 +451,7 @@ class TicketSubmittedMessage extends TicketMessage {
     required super.sender,
     required super.seen,
     required super.receiver,
+    required super.delivered,
   });
 
   @override
@@ -445,6 +461,7 @@ class TicketSubmittedMessage extends TicketMessage {
         "isDispatch": isDispatch,
         "sent": sent,
         "seen": seen,
+        "delivered": delivered,
         "ticketType": ticketTypes.name,
         "sender": sender.toMap(),
         "receiver": receiver.toMap(),
@@ -468,6 +485,7 @@ sealed class TicketMessage extends Message {
     required super.sender,
     required super.seen,
     required super.receiver,
+    required super.delivered,
   });
 
   @override
@@ -528,6 +546,7 @@ sealed class Message {
   final bool isDispatch;
   final MessagesViewState messagesViewState;
   bool sent;
+  bool delivered;
   bool seen;
 
   Message({
@@ -538,6 +557,7 @@ sealed class Message {
     required this.receiver,
     required this.messagesViewState,
     required this.seen,
+    required this.delivered,
   });
 
   int get id => dateToInt();
@@ -563,6 +583,7 @@ class MessageAdaptor {
       isDispatch: isDispatch,
       sent: false,
       seen: false,
+      delivered: false,
       sender: sender,
       receiver: receiver,
       messagesViewState: messagesViewState,
@@ -577,6 +598,7 @@ class MessageAdaptor {
           "isDispatch": bool isDispatch,
           "sent": bool sent,
           "seen": bool seen,
+          "delivered": bool delivered,
           "updateTime": int updateTime,
           "ticketTime": int ticketTime,
           "sender": Map<Object?, Object?> sender,
@@ -588,6 +610,7 @@ class MessageAdaptor {
             date: DateTime.fromMillisecondsSinceEpoch(date),
             isDispatch: isDispatch,
             sent: sent,
+            delivered: delivered,
             sender: UserAdaptor<BaseUser>().adaptMap(sender),
             receiver: UserAdaptor<BaseUser>().adaptMap(receiver),
             messagesViewState: messagesViewState,
@@ -601,6 +624,7 @@ class MessageAdaptor {
           "isDispatch": bool isDispatch,
           "sent": bool sent,
           "seen": bool seen,
+          "delivered": bool delivered,
           "sender": Map<Object?, Object?> sender,
           "receiver": Map<Object?, Object?> receiver,
           "cancelTime": int cancelTime,
@@ -613,6 +637,7 @@ class MessageAdaptor {
             isDispatch: isDispatch,
             sent: sent,
             seen: seen,
+            delivered: delivered,
             messagesViewState: messagesViewState,
             cancelTime: cancelTime,
             ticketTime: ticketTime,
@@ -625,6 +650,7 @@ class MessageAdaptor {
           "isDispatch": bool isDispatch,
           "sent": bool sent,
           "seen": bool seen,
+          "delivered": bool delivered,
           "sender": Map<Object?, Object?> sender,
           "receiver": Map<Object?, Object?> receiver,
           "driver": Map<dynamic, dynamic> dmap,
@@ -638,6 +664,7 @@ class MessageAdaptor {
             isDispatch: isDispatch,
             sent: sent,
             seen: seen,
+            delivered: delivered,
             messagesViewState: messagesViewState,
             driver: UserAdaptor<Driver>().adaptMap(dmap),
             confirmTime: confirmTime,
@@ -652,6 +679,7 @@ class MessageAdaptor {
           "isDispatch": bool isDispatch,
           "sent": bool sent,
           "seen": bool seen,
+          "delivered": bool delivered,
           "sender": Map<Object?, Object?> sender,
           "receiver": Map<Object?, Object?> receiver,
           "ticketType": "submitted",
@@ -663,6 +691,7 @@ class MessageAdaptor {
             isDispatch: isDispatch,
             sent: sent,
             seen: seen,
+            delivered: delivered,
             messagesViewState: messagesViewState,
             sender: UserAdaptor<BaseUser>().adaptMap(sender),
             receiver: UserAdaptor<BaseUser>().adaptMap(receiver),
@@ -674,6 +703,7 @@ class MessageAdaptor {
           "isDispatch": bool isDispatch,
           "sent": bool sent,
           "seen": bool seen,
+          "delivered": bool delivered,
           "sender": Map<Object?, Object?> sender,
           "receiver": Map<Object?, Object?> receiver,
           "ticketType": "cancelled",
@@ -686,6 +716,7 @@ class MessageAdaptor {
             isDispatch: isDispatch,
             sent: sent,
             seen: seen,
+            delivered: delivered,
             messagesViewState: messagesViewState,
             cancelledTime: cancelledTime,
             sender: UserAdaptor<BaseUser>().adaptMap(sender),
@@ -698,6 +729,7 @@ class MessageAdaptor {
           "isDispatch": bool isDispatch,
           "sent": bool sent,
           "seen": bool seen,
+          "delivered": bool delivered,
           "sender": Map<Object?, Object?> sender,
           "receiver": Map<Object?, Object?> receiver,
           "ticketType": "confirmed",
@@ -712,6 +744,7 @@ class MessageAdaptor {
             isDispatch: isDispatch,
             sent: sent,
             seen: seen,
+            delivered: delivered,
             messagesViewState: messagesViewState,
             confirmedTime: confirmedTime,
             driver: driver,
@@ -726,6 +759,7 @@ class MessageAdaptor {
           "isDispatch": bool isDispatch,
           "sent": bool sent,
           "seen": bool seen,
+          "delivered": bool delivered,
           "sender": Map<Object?, Object?> sender,
           "receiver": Map<Object?, Object?> receiver,
         }:
@@ -736,6 +770,7 @@ class MessageAdaptor {
             isDispatch: isDispatch,
             sent: sent,
             seen: seen,
+            delivered: delivered,
             messagesViewState: messagesViewState,
             sender: UserAdaptor<BaseUser>().adaptMap(sender),
             receiver: UserAdaptor<BaseUser>().adaptMap(receiver),
@@ -761,6 +796,7 @@ class MessageAdaptor {
       isDispatch: isDispatch,
       sent: false,
       seen: false,
+      delivered: false,
       ticketTypes: TicketTypes.submitted,
       messagesViewState: ticketState.messagesState,
       sender: ticketState.messagesState.user,

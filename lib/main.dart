@@ -18,7 +18,7 @@ Future<void> main() async {
   FirebaseMessaging messaging = FirebaseMessaging.instance;
   await messaging.requestPermission(alert: true, sound: true);
   final SharedPreferences pref = await SharedPreferences.getInstance();
-  await pref.clear();
+  //await pref.clear();
   final bool? doesUserExist = pref.getBool('exists');
   if (doesUserExist != true) {
     return runApp(const SignInScreen());

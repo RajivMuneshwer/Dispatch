@@ -58,6 +58,7 @@ class NewMessageWidget extends StatelessWidget {
                     isDispatch: isDispatch,
                     sent: false,
                     seen: false,
+                    delivered: false,
                     messagesViewState: state_,
                     sender: state_.user,
                     receiver: state_.other,
