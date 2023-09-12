@@ -3,10 +3,10 @@ import 'package:dispatch/models/settings_object.dart';
 import 'package:dispatch/screens/app_screen.dart';
 import 'package:dispatch/screens/signin_screen.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 Future<void> main() async {
   Animate.restartOnHotReload = true;
@@ -15,7 +15,8 @@ Future<void> main() async {
     name: "dispatch-muneshwers",
     options: DefaultFirebaseOptions.currentPlatform,
   );
-  FirebaseAuth.instance.authStateChanges().listen((event) {});
+  FirebaseMessaging messaging = FirebaseMessaging.instance;
+  await messaging.requestPermission(alert: true, sound: true);
   final SharedPreferences pref = await SharedPreferences.getInstance();
   await pref.clear();
   final bool? doesUserExist = pref.getBool('exists');

@@ -6,3 +6,4 @@
 /// then make the it such that the confirmation alerts the other party with a receipt
 /// set up the official twilio account
 /// add sender name to message required
+/// fix bug with on reload previous messages it triggers the send

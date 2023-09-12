@@ -117,9 +117,9 @@ class CancelReceipt extends Message {
             TextSpan(
                 text: "Your ticket made on \n"
                     "$timeMade \n"
-                    "has been"),
+                    "has been "),
             const TextSpan(
-              text: "cancelled",
+              text: "cancelled ",
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             TextSpan(text: "on\n $timeCancelled"),
@@ -459,7 +459,7 @@ class TicketSubmittedMessage extends TicketMessage {
         "sent": sent,
         "seen": seen,
         "ticketType": ticketTypes.name,
-        "sender": sender,
+        "sender": sender.toMap(),
       };
 }
 

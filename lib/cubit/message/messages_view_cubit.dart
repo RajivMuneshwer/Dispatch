@@ -150,6 +150,10 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
 
   void updateMessageToSeen(Message newMessage) {
     var receiver_ = receiver;
+    bool isMessageFromReceiver = (newMessage.sender.id == receiver.id);
+    if (isMessageFromReceiver) {
+      return;
+    }
     if (receiver_ is! Dispatcher) {
       FirebaseFunctions.instance.httpsCallable('updateMessageSeen').call(
         {
