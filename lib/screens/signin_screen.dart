@@ -12,6 +12,21 @@ class SignInScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+        colorScheme: ColorScheme(
+          brightness: Brightness.light,
+          primary: Settings.primaryColor,
+          onPrimary: Settings.onPrimary,
+          secondary: Settings.secondaryColor,
+          onSecondary: Settings.onSecondary,
+          error: Colors.red,
+          onError: Colors.white,
+          background: Settings.primaryColor,
+          onBackground: Settings.onPrimary,
+          surface: Colors.white,
+          onSurface: Settings.secondaryColor,
+        ),
+      ),
       home: Builder(builder: (context) {
         return Scaffold(
           body: FlutterLogin(
@@ -27,11 +42,10 @@ class SignInScreen extends StatelessWidget {
               return null;
             },
             userType: LoginUserType.name,
-            logo: const AssetImage("assets/images/Dispatch.png"),
-            title: "Dispatch",
+            logo: const AssetImage("assets/images/logo.png"),
             theme: LoginTheme(
-              primaryColor: Colors.blue.shade700,
-              accentColor: Colors.blue.shade100,
+              primaryColor: Settings.primaryColor,
+              accentColor: Settings.secondaryColor,
             ),
             hideForgotPasswordButton: true,
             onLogin: (LoginData loginData) async {

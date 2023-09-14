@@ -19,7 +19,8 @@ class DispatcherMessageInfoDatabase {
   }
 
   Future<Iterable<DataSnapshot>> getRequestees() async {
-    return (await ref.child("requesteesid").get()).children;
+    var snapshots = (await ref.child("requesteesid").get()).children;
+    return snapshots;
   }
 
   Future<Iterable<DataSnapshot>> getDrivers() async {

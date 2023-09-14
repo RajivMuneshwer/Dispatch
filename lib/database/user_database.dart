@@ -197,6 +197,7 @@ class AdminDatabase extends AppDatabase {
     required T? lastUser,
     required String orderBy,
   }) async {
+    print(lastUser?.name ?? "empty");
     String path = getpath<T>();
     var snapshots = (await ref
             .child(path)
@@ -205,6 +206,7 @@ class AdminDatabase extends AppDatabase {
             .limitToFirst(limit)
             .once())
         .snapshot;
+    print(snapshots.children);
     return snapshots.children;
   }
 }

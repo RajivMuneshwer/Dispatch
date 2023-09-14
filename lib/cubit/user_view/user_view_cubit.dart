@@ -15,6 +15,7 @@ class UserViewCubit<M> extends Cubit<UserViewState> {
         duration,
         () async {
           data = await func();
+          print(data);
           emit(
             UserViewWithData<M>(
               data: data,

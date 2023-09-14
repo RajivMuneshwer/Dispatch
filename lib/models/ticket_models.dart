@@ -3,6 +3,7 @@ import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
 import 'package:dispatch/database/message_database.dart';
 import 'package:dispatch/database/user_database.dart';
 import 'package:dispatch/models/message_objects.dart';
+import 'package:dispatch/models/settings_object.dart';
 import 'package:dispatch/models/user_objects.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +18,6 @@ import 'package:form_builder_validators/form_builder_validators.dart';
 AppBar ticketAppBar(BuildContext context, TicketMessage ticketMessage) {
   return AppBar(
     centerTitle: false,
-    backgroundColor: ticketMessage.iconColor,
     title: Text(ticketMessage.title),
   );
 }
@@ -1001,18 +1001,20 @@ class _WaitSwitchState extends State<WaitSwitch> {
                 activeText: "Leave",
                 valueFontSize: 10,
                 inactiveText: "Stay",
+                activeColor: Settings.primaryColor,
+                inactiveColor: Settings.secondaryColor,
                 activeIcon: Transform.translate(
                   offset: const Offset(2, 0),
-                  child: const FaIcon(
+                  child: FaIcon(
                     FontAwesomeIcons.carSide,
-                    color: Colors.blue,
+                    color: Settings.primaryColor,
                   ),
                 ),
                 inactiveIcon: Transform.translate(
                   offset: const Offset(-2, 0),
-                  child: const FaIcon(
+                  child: FaIcon(
                     FontAwesomeIcons.carSide,
-                    color: Colors.grey,
+                    color: Settings.secondaryColor,
                   ),
                 ),
               ),
@@ -1070,9 +1072,9 @@ class PlusButton extends StatelessWidget {
             children: [
               Container(
                 height: 50.0,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.blue,
+                  color: Settings.primaryColor,
                 ),
                 child: IconButton(
                   // add button
@@ -1089,9 +1091,9 @@ class PlusButton extends StatelessWidget {
                 offset: const Offset(-18.5, -18),
                 child: Container(
                   height: 36.0,
-                  decoration: const BoxDecoration(
+                  decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Colors.blue,
+                    color: Settings.primaryColor,
                   ),
                   child: IconButton(
                     // minus button
@@ -1281,8 +1283,8 @@ class UpdateButton extends StatelessWidget {
             Navigator.pop(context);
           },
           style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.blue,
-            side: const BorderSide(width: 1, color: Colors.blue),
+            backgroundColor: Settings.primaryColor,
+            side: BorderSide(width: 1, color: Settings.primaryColor),
           ),
           child: const Text(
             "Update",

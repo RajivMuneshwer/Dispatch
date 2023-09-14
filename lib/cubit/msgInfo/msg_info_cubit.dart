@@ -20,8 +20,11 @@ class MsgInfoCubit extends Cubit<MsgInfoState> {
           .map((driverSnap) => UserAdaptor<Driver>().adaptSnapshot(driverSnap))
           .toList();
 
-      drivers
-          .sort((d1, d2) => d2.lastMessageTime!.compareTo(d1.lastMessageTime!));
+      drivers.sort((d1, d2) {
+        var comparitor2 = d2.lastMessageTime ?? d2.id;
+        var comparitor1 = d1.lastMessageTime ?? d1.id;
+        return comparitor2.compareTo(comparitor1);
+      });
       userMap = {for (final driver in drivers) driver.id: driver};
 
       emit(MsgInfoLoaded(users: drivers));
@@ -36,8 +39,11 @@ class MsgInfoCubit extends Cubit<MsgInfoState> {
                   UserAdaptor<Requestee>().adaptSnapshot(requesteeSnap))
               .toList();
 
-      requestees
-          .sort((r1, r2) => r2.lastMessageTime!.compareTo(r1.lastMessageTime!));
+      requestees.sort((r1, r2) {
+        var comparitor2 = r2.lastMessageTime ?? r2.id;
+        var comparitor1 = r1.lastMessageTime ?? r1.id;
+        return comparitor2.compareTo(comparitor1);
+      });
 
       userMap = {for (final requestee in requestees) requestee.id: requestee};
 
@@ -60,8 +66,11 @@ class MsgInfoCubit extends Cubit<MsgInfoState> {
       }
 
       var requestees = userMap.values.map((u) => (u as Requestee)).toList();
-      requestees
-          .sort((r1, r2) => r2.lastMessageTime!.compareTo(r1.lastMessageTime!));
+      requestees.sort((r1, r2) {
+        var comparitor2 = r2.lastMessageTime ?? r2.id;
+        var comparitor1 = r1.lastMessageTime ?? r1.id;
+        return comparitor2.compareTo(comparitor1);
+      });
 
       emit(
         MsgInfoLoaded(users: requestees),
@@ -83,8 +92,11 @@ class MsgInfoCubit extends Cubit<MsgInfoState> {
       }
 
       var drivers = userMap.values.map((u) => (u as Driver)).toList();
-      drivers
-          .sort((d1, d2) => d2.lastMessageTime!.compareTo(d1.lastMessageTime!));
+      drivers.sort((d1, d2) {
+        var comparitor2 = d2.lastMessageTime ?? d2.id;
+        var comparitor1 = d1.lastMessageTime ?? d1.id;
+        return comparitor2.compareTo(comparitor1);
+      });
 
       emit(
         MsgInfoLoaded(users: drivers),

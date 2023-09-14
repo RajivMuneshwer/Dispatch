@@ -23,6 +23,21 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      theme: ThemeData(
+        colorScheme: ColorScheme(
+          brightness: Brightness.light,
+          primary: Settings.primaryColor,
+          onPrimary: Settings.onPrimary,
+          secondary: Settings.secondaryColor,
+          onSecondary: Settings.onSecondary,
+          error: Colors.red,
+          onError: Colors.white,
+          background: Settings.primaryColor,
+          onBackground: Settings.onPrimary,
+          surface: Colors.white,
+          onSurface: Settings.secondaryColor,
+        ),
+      ),
       onGenerateRoute: (settings) {
         final args = settings.arguments;
 

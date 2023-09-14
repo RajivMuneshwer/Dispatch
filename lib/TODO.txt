@@ -1,7 +1,8 @@
 ////TO TEST
-///Improve the app color scheme 
 ///Firebase rules
 /// make the dispatcher able to send tickets to the driver where they pick the requestee
 /// then make the it such that the confirmation alerts the other party with a receipt
 /// set up the official twilio account
 /// improve the push messaging body
+//// change the driver receipt there is an erro should be pickup instrads of driver
+//// make the last message time for all interactions

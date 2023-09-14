@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:dispatch/cubit/message/messages_view_cubit.dart';
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
 import 'package:dispatch/models/message_objects.dart';
+import 'package:dispatch/models/settings_object.dart';
 import 'package:dispatch/models/ticket_models.dart';
 import 'package:dispatch/models/user_objects.dart';
 import 'package:flutter/material.dart';
@@ -68,18 +69,19 @@ class NewMessageWidget extends StatelessWidget {
                         formLayoutList: getNewTicketLayout(),
                         ticketMessage: newTicket,
                         messagesState: state_,
-                        color: Colors.blue,
+                        color: Settings.primaryColor,
                         animate: true,
                       ));
                 },
-                icon: const FaIcon(
+                icon: FaIcon(
                   FontAwesomeIcons.ticket,
-                  color: Colors.blue,
+                  color: Settings.primaryColor,
                 ),
               ),
             ),
           )
         ],
+        sendButtonColor: Settings.primaryColor,
       );
     });
   }
@@ -203,8 +205,8 @@ class RefreshIndicator extends StatelessWidget {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 150),
       alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        color: Colors.blue,
+      decoration: BoxDecoration(
+        color: Settings.secondaryColor,
         shape: BoxShape.circle,
       ),
       child: SizedBox(
@@ -226,8 +228,8 @@ Widget refreshIndicator(BuildContext context, IndicatorController controller) {
   return AnimatedContainer(
     duration: const Duration(milliseconds: 150),
     alignment: Alignment.center,
-    decoration: const BoxDecoration(
-      color: Colors.blue,
+    decoration: BoxDecoration(
+      color: Settings.secondaryColor,
       shape: BoxShape.circle,
     ),
     child: SizedBox(

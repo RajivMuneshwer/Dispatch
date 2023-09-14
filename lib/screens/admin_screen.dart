@@ -97,7 +97,7 @@ class UserChoiceBubble<T extends User> extends StatelessWidget {
 
 class AllUserListScreen<T extends User> extends UserListScreen<T> {
   final AppDatabase database;
-  final int limit = 15;
+  final int limit = 10;
   final String orderBy = "name";
   const AllUserListScreen({
     super.key,
@@ -144,6 +144,7 @@ class AllUserListScreen<T extends User> extends UserListScreen<T> {
               limit: limit, lastUser: lastUsers, orderBy: orderBy))
           .map((snapshot) => UserAdaptor<T>().adaptSnapshot(snapshot))
           .toList();
+      print(newUsers);
       if (newUsers.isEmpty) return null;
       return newUsers;
     };
@@ -860,8 +861,8 @@ class EditNameField extends StatelessWidget {
         autocorrect: true,
         autovalidateMode: AutovalidateMode.onUserInteraction,
         initialValue: initial,
-        style: const TextStyle(
-          color: Colors.grey,
+        style: TextStyle(
+          color: Settings.secondaryColor,
           fontWeight: FontWeight.w500,
         ),
         textAlign: TextAlign.left,
@@ -906,9 +907,9 @@ class ChoiceBubble extends StatelessWidget {
         width: widgetWidth,
         height: widgetHeight,
         decoration: BoxDecoration(
-          color: const Color.fromARGB(255, 33, 96, 243),
+          color: Settings.primaryColor,
           border: Border.all(
-            color: Colors.white,
+            color: Settings.onPrimary,
             width: 2,
           ),
           borderRadius: const BorderRadius.horizontal(
@@ -938,10 +939,10 @@ class AddFloatButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return FloatingActionButton(
       onPressed: onPressed(context),
-      backgroundColor: Colors.blue,
-      child: const Icon(
+      backgroundColor: Settings.primaryColor,
+      child: Icon(
         Icons.add,
-        color: Colors.white,
+        color: Settings.onPrimary,
       ),
     );
   }

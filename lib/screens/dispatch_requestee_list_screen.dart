@@ -47,6 +47,8 @@ class _DispatcherHomeScreenState extends State<DispatcherHomeScreen> {
       bottomNavigationBar: StyleProvider(
         style: NavStyle(),
         child: ConvexAppBar(
+          color: Settings.onPrimary,
+          backgroundColor: Settings.primaryColor,
           curveSize: 75,
           top: -20,
           style: TabStyle.react,

@@ -1,5 +1,6 @@
 import 'package:dispatch/database/user_database.dart';
 import 'package:dispatch/models/user_objects.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class Settings {
@@ -7,6 +8,10 @@ class Settings {
   static int companyid = 0;
   static String token = "";
   static User user = Requestee(id: 0, name: "", sortBy: "");
+  static Color primaryColor = const Color(0xff2D569B);
+  static Color onPrimary = Colors.white70;
+  static Color secondaryColor = Colors.grey;
+  static Color onSecondary = Colors.black87;
 
   static Future<Settings> initializeFromPref(SharedPreferences prefs) async {
     Map<String, dynamic> storedValues = {

@@ -27,7 +27,7 @@ class TicketViewSubmitted extends TicketViewWithData {
     required super.formLayoutList,
     required super.ticketMessage,
     required super.messagesState,
-    super.color = Colors.blue,
+    super.color = const Color(0xff2D569B),
     super.animate = true,
   });
 }
