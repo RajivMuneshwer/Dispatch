@@ -1,6 +1,6 @@
 //import 'package:dispatch/cubit/message/messages_view_cubit.dart';
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
-import 'package:dispatch/database/requestee_database.dart';
+import 'package:dispatch/database/message_database.dart';
 import 'package:dispatch/database/user_database.dart';
 import 'package:dispatch/models/message_objects.dart';
 import 'package:dispatch/models/user_objects.dart';

@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:dispatch/cubit/message/messages_view_cubit.dart';
-import 'package:dispatch/database/requestee_database.dart';
+import 'package:dispatch/database/message_database.dart';
 import 'package:dispatch/database/user_database.dart';
 import 'package:dispatch/models/user_objects.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -175,6 +175,12 @@ class MessageScreen<T extends User, M extends User> extends StatefulWidget {
 
 class _MessageScreenState extends State<MessageScreen> {
   final ScrollController controller = ScrollController();
+
+  @override
+  void initState() {
+    widget.database.sync();
+    super.initState();
+  }
 
   @override
   void dispose() {

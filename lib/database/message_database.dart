@@ -7,6 +7,7 @@ abstract class MessageDatabase<T extends User> {
   T user;
   MessageDatabase({required this.user});
   DatabaseReference get ref;
+  Future<void> sync();
   Future<void> addMessage(Message message);
   Future<void> updateTicket(TicketMessage ticketMessage);
   Future<DatabaseEvent> loadMessagesBeforeTime(int time, int numOfMessage);
@@ -45,6 +46,12 @@ class RequesteesMessageDatabase extends MessageDatabase<Requestee> {
   Stream<DatabaseEvent> onChildChanged() {
     return ref.onChildChanged;
   }
+
+  @override
+  Future<void> sync() async {
+    ref.keepSynced(true);
+    return;
+  }
 }
 
 class DriverMessageDatabase extends MessageDatabase<Driver> {
@@ -78,37 +85,10 @@ class DriverMessageDatabase extends MessageDatabase<Driver> {
   Stream<DatabaseEvent> onChildChanged() {
     return ref.onChildChanged;
   }
-}
-
-class ErrorMessageDatabase extends MessageDatabase {
-  ErrorMessageDatabase({required super.user});
 
   @override
-  Future<void> addMessage(Message message) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Future<DatabaseEvent> loadMessagesBeforeTime(int time, int numOfMessage) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Stream<DatabaseEvent> onChildAddedStream(int messageLimit) {
-    throw UnimplementedError();
-  }
-
-  @override
-  Stream<DatabaseEvent> onChildChanged() {
-    throw UnimplementedError();
-  }
-
-  @override
-  DatabaseReference get ref => throw UnimplementedError();
-
-  @override
-  Future<void> updateTicket(TicketMessage ticketMessage) {
-    throw UnimplementedError();
+  Future<void> sync() async {
+    ref.keepSynced(true);
   }
 }
 
@@ -117,7 +97,7 @@ class MessageDatabaseFactory<T extends User> {
     return switch (user) {
       Requestee() => RequesteesMessageDatabase(user: user),
       Driver() => DriverMessageDatabase(user: user),
-      _ => ErrorMessageDatabase(user: user),
+      _ => throw Exception("user does not have database"),
     };
   }
 }

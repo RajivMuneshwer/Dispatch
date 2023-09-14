@@ -27,10 +27,7 @@ class UpdateReceipt extends Message {
     required super.receiver,
     required super.delivered,
   }) {
-    isUser = switch (messagesViewState.user) {
-      Dispatcher() => (isDispatch),
-      _ => (!isDispatch),
-    };
+    isUser = (messagesViewState.user.id == sender.id);
   }
 
   @override
@@ -51,7 +48,7 @@ class UpdateReceipt extends Message {
         TextSpan(
           children: [
             TextSpan(
-              text: "Your ticket made on \n"
+              text: "${isDispatch ? "Your" : "My"} ticket made on \n"
                   "$timeMade \n"
                   "has been ",
             ),
@@ -121,7 +118,7 @@ class CancelReceipt extends Message {
         TextSpan(
           children: [
             TextSpan(
-                text: "Your ticket made on \n"
+                text: "${isDispatch ? "Your" : "My"} ticket made on \n"
                     "$timeMade \n"
                     "has been "),
             const TextSpan(
@@ -201,7 +198,7 @@ class ConfirmDriverReceipt extends Message {
         TextSpan(
           children: [
             TextSpan(
-                text: "Your ticket made \n"
+                text: "A ticket made \n"
                     "$timeMade \n"
                     "has been "),
             const TextSpan(
@@ -266,7 +263,7 @@ class ConfirmRequesteeReceipt extends Message {
         TextSpan(
           children: [
             TextSpan(
-              text: "A ticket made \n"
+              text: "${isDispatch ? "Your" : "My"} ticket made \n"
                   "$timeMade \n"
                   "has been ",
             ),

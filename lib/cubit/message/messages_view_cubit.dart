@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:dispatch/database/requestee_database.dart';
+import 'package:dispatch/database/message_database.dart';
 import 'package:dispatch/models/message_objects.dart';
 import 'package:dispatch/models/settings_object.dart';
 import 'package:dispatch/models/user_objects.dart';
