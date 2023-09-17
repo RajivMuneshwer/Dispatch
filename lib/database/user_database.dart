@@ -1,5 +1,5 @@
-import 'package:dispatch/models/settings_object.dart';
-import 'package:dispatch/models/user_objects.dart';
+import 'package:dispatch/objects/settings_object.dart';
+import 'package:dispatch/objects/user_objects.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 

@@ -1,4 +1,4 @@
-import 'package:dispatch/models/user_objects.dart';
+import 'package:dispatch/objects/user_objects.dart';
 
 class ObjectListSorter<M extends SortableObject> {
   final List<M?> objectList;

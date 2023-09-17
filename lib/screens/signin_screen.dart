@@ -1,5 +1,5 @@
 import 'package:cloud_functions/cloud_functions.dart';
-import 'package:dispatch/models/settings_object.dart';
+import 'package:dispatch/objects/settings_object.dart';
 import 'package:dispatch/screens/app_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
@@ -28,73 +28,96 @@ class SignInScreen extends StatelessWidget {
         ),
       ),
       home: Builder(builder: (context) {
-        return Scaffold(
-          body: FlutterLogin(
-            initialAuthMode: AuthMode.login,
-            userValidator: (value) {
-              var value_ = value;
-              if (value_ == null || value_.isEmpty) {
-                return "Input name";
-              }
-              if (value_.trim().isEmpty) {
-                return "Input name";
-              }
-              return null;
-            },
-            userType: LoginUserType.name,
-            logo: const AssetImage("assets/images/logo.png"),
-            theme: LoginTheme(
-              primaryColor: Settings.primaryColor,
-              accentColor: Settings.secondaryColor,
-            ),
-            hideForgotPasswordButton: true,
-            onLogin: (LoginData loginData) async {
-              var fcmToken = await FirebaseMessaging.instance.getToken();
-              if (fcmToken == null) {
-                return throw Exception("null token");
-              }
-              final result = await FirebaseFunctions.instance
-                  .httpsCallable('loginUser')
-                  .call(
-                {
-                  "token": fcmToken,
-                  "id": loginData.password,
-                },
-              );
-              String status = result.data["status"] as String;
-              Map<dynamic, dynamic> info =
-                  result.data["info"] as Map<dynamic, dynamic>;
-              if (status != "success") {
-                return "Login failed. Check with admin";
-              }
-              int userid = info["userid"] as int;
-              int companyid = info["companyid"] as int;
-              String role = info["role"] as String;
-
-              final SharedPreferences prefs =
-                  await SharedPreferences.getInstance();
-              prefs.setBool("exists", true);
-              prefs.setInt("userid", userid);
-              prefs.setInt("companyid", companyid);
-              prefs.setString("role", role);
-              prefs.setString("token", fcmToken);
-
-              Settings.initializeFromPref(prefs);
-
-              return null;
-            },
-            onSubmitAnimationCompleted: () => Navigator.pushReplacement(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const App(),
-                )),
-            onRecoverPassword: (p) => null,
-          ),
-        );
+        return const SignInWidget();
       }),
     );
   }
 }
+
+class SignInWidget extends StatefulWidget {
+  const SignInWidget({super.key});
+
+  @override
+  State<SignInWidget> createState() => _SignInWidgetState();
+}
+
+class _SignInWidgetState extends State<SignInWidget> {
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: FlutterLogin(
+        initialAuthMode: AuthMode.login,
+        userValidator: (value) {
+          var value_ = value;
+          if (value_ == null || value_.isEmpty) {
+            return "Input name";
+          }
+          if (value_.trim().isEmpty) {
+            return "Input name";
+          }
+          return null;
+        },
+        userType: LoginUserType.name,
+        logo: const AssetImage("assets/images/logo.png"),
+        theme: LoginTheme(
+          primaryColor: Settings.primaryColor,
+          accentColor: Settings.secondaryColor,
+        ),
+        hideForgotPasswordButton: true,
+        onLogin: (LoginData loginData) async {
+          var fcmToken = await FirebaseMessaging.instance.getToken();
+          if (fcmToken == null) {
+            return throw Exception("null token");
+          }
+          final result =
+              await FirebaseFunctions.instance.httpsCallable('loginUser').call(
+            {
+              "token": fcmToken,
+              "id": loginData.password,
+            },
+          );
+          String status = result.data["status"] as String;
+          Map<dynamic, dynamic> info =
+              result.data["info"] as Map<dynamic, dynamic>;
+          if (status != "success") {
+            return "Login failed. Check with admin";
+          }
+          int userid = info["userid"] as int;
+          int companyid = info["companyid"] as int;
+          String role = info["role"] as String;
+
+          final SharedPreferences prefs = await SharedPreferences.getInstance();
+          prefs.setBool("exists", true);
+          prefs.setInt("userid", userid);
+          prefs.setInt("companyid", companyid);
+          prefs.setString("role", role);
+          prefs.setString("token", fcmToken);
+
+          Settings.initializeFromPref(prefs);
+
+          return null;
+        },
+        onSubmitAnimationCompleted: () => Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const App(),
+            )),
+        onRecoverPassword: (p) => null,
+      ),
+    );
+  }
+}
+
 
 ////admin creates the user XX
 ///this updates the realtime database XX

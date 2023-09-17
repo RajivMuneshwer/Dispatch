@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:dispatch/cubit/message/messages_view_cubit.dart';
 import 'package:dispatch/database/message_database.dart';
 import 'package:dispatch/database/user_database.dart';
-import 'package:dispatch/models/user_objects.dart';
+import 'package:dispatch/objects/user_objects.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

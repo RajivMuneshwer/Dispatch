@@ -1,5 +1,5 @@
 import 'package:dispatch/cubit/user_view/user_view_cubit.dart';
-import 'package:dispatch/models/user_objects.dart';
+import 'package:dispatch/objects/user_objects.dart';
 import 'package:dispatch/utils/object_list_sorter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';

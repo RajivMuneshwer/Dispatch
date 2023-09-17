@@ -1,15 +1,20 @@
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
-import 'package:dispatch/models/settings_object.dart';
-import 'package:dispatch/models/user_objects.dart';
+import 'package:dispatch/objects/settings_object.dart';
+import 'package:dispatch/objects/user_objects.dart';
 import 'package:dispatch/screens/admin_screen.dart';
 import 'package:dispatch/screens/dispatch_requestee_list_screen.dart';
 import 'package:dispatch/screens/message_screen.dart';
 import 'package:dispatch/screens/ticket_screen.dart';
 import 'package:flutter/material.dart';
 
-class App extends StatelessWidget {
+class App extends StatefulWidget {
   const App({super.key});
 
+  @override
+  State<App> createState() => _AppState();
+}
+
+class _AppState extends State<App> {
   String initialRoute(User user) {
     return switch (user) {
       Requestee() => '/requestee',

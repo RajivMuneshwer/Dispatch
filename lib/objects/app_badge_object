@@ -1,0 +1,18 @@
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_app_badger/flutter_app_badger.dart';
+
+class AppBadge {
+
+  void increaseBadgeCountBy(int inc){
+
+  }
+
+  void decreaseBadgeCountBy(int dec){
+
+  }
+
+  void initializeBadgeCount(){
+
+  }
+
+}

@@ -2,9 +2,9 @@
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
 import 'package:dispatch/database/message_database.dart';
 import 'package:dispatch/database/user_database.dart';
-import 'package:dispatch/models/message_objects.dart';
-import 'package:dispatch/models/settings_object.dart';
-import 'package:dispatch/models/user_objects.dart';
+import 'package:dispatch/objects/message_objects.dart';
+import 'package:dispatch/objects/settings_object.dart';
+import 'package:dispatch/objects/user_objects.dart';
 import 'package:dotted_line/dotted_line.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -1343,8 +1343,18 @@ class _ConfirmButtonState extends State<ConfirmButton> {
                     isRunning = true;
                   });
                   //either one or the other is null
-
-                  updateTicketToConfirmed(state, driver, requestee);
+                  final ticketConfirmed = makeConfirmedTicket(
+                    state,
+                    driver,
+                    requestee,
+                  );
+                  updateTicketToConfirmed(state, ticketConfirmed);
+                  sendTicketToSecondUser(
+                    state,
+                    driver,
+                    requestee,
+                    ticketConfirmed,
+                  );
                   sendReceiptToRequestee(state, driver, requestee);
                   sendReceiptToDriver(state, driver, requestee);
                   Navigator.pop(context);
@@ -1373,7 +1383,31 @@ class _ConfirmButtonState extends State<ConfirmButton> {
   }
 }
 
-void updateTicketToConfirmed(
+void sendTicketToSecondUser(
+  TicketViewWithData state,
+  Driver? driver,
+  Requestee? requestee,
+  TicketConfirmedMessage ticketConfirmed,
+) {
+  if (state.messagesState.other is Driver) {
+    var requestee_ = requestee;
+    if (requestee_ == null) {
+      throw Exception(
+          "The requestee cannot be null when the ticket is for the driver");
+    }
+    RequesteesMessageDatabase(user: requestee_).addMessage(ticketConfirmed);
+    return;
+  }
+  var driver_ = driver;
+  if (driver_ == null) {
+    throw Exception(
+        "The driver cannot be null when the ticket is for the requestee");
+  }
+  DriverMessageDatabase(user: driver_).addMessage(ticketConfirmed);
+  return;
+}
+
+TicketConfirmedMessage makeConfirmedTicket(
   TicketViewWithData state,
   Driver? driver,
   Requestee? requestee,
@@ -1381,8 +1415,7 @@ void updateTicketToConfirmed(
   var ticketMessage = state.ticketMessage;
   var messagesState = state.messagesState;
   User other = state.messagesState.other;
-  MessageDatabase messageDatabase = state.messagesState.database;
-  var confirmedMessage = TicketConfirmedMessage(
+  return TicketConfirmedMessage(
     text: ticketMessage.text,
     date: ticketMessage.date,
     isDispatch: ticketMessage.isDispatch,
@@ -1402,6 +1435,13 @@ void updateTicketToConfirmed(
         ? requestee.name
         : other.name,
   );
+}
+
+void updateTicketToConfirmed(
+  TicketViewWithData state,
+  TicketConfirmedMessage confirmedMessage,
+) {
+  MessageDatabase messageDatabase = state.messagesState.database;
   messageDatabase.updateTicket(confirmedMessage);
 }
 
@@ -1451,9 +1491,10 @@ void sendReceiptToDriver(
     confirmTime: DateTime.now().millisecondsSinceEpoch,
     ticketTime: ticketMessage.date.millisecondsSinceEpoch,
   );
-  DriverMessageDatabase(
+  final driverDatabase = DriverMessageDatabase(
     user: (driver != null) ? driver : other as Driver,
-  ).addMessage(confirmDriverReceipt);
+  );
+  driverDatabase.addMessage(confirmDriverReceipt);
 }
 
 class ConfirmIcon extends StatelessWidget {

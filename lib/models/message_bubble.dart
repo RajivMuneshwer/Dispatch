@@ -1,5 +1,5 @@
-import 'package:dispatch/models/message_objects.dart';
-import 'package:dispatch/models/user_objects.dart';
+import 'package:dispatch/objects/message_objects.dart';
+import 'package:dispatch/objects/user_objects.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 

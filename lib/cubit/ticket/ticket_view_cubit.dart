@@ -1,6 +1,6 @@
 import 'package:bloc/bloc.dart';
 import 'package:dispatch/cubit/message/messages_view_cubit.dart';
-import 'package:dispatch/models/message_objects.dart';
+import 'package:dispatch/objects/message_objects.dart';
 import 'package:dispatch/models/ticket_models.dart';
 import 'package:flutter/material.dart';
 import 'package:meta/meta.dart';

@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'package:dispatch/cubit/message/messages_view_cubit.dart';
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
-import 'package:dispatch/models/message_objects.dart';
-import 'package:dispatch/models/settings_object.dart';
+import 'package:dispatch/objects/message_objects.dart';
+import 'package:dispatch/objects/settings_object.dart';
 import 'package:dispatch/models/ticket_models.dart';
-import 'package:dispatch/models/user_objects.dart';
+import 'package:dispatch/objects/user_objects.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:grouped_list/grouped_list.dart';

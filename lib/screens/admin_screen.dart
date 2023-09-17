@@ -1,7 +1,7 @@
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:dispatch/database/user_database.dart';
-import 'package:dispatch/models/settings_object.dart';
-import 'package:dispatch/models/user_objects.dart';
+import 'package:dispatch/objects/settings_object.dart';
+import 'package:dispatch/objects/user_objects.dart';
 import 'package:dispatch/screens/user_screens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';

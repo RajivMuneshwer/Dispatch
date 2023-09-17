@@ -1,9 +1,9 @@
 import 'package:dispatch/cubit/message/messages_view_cubit.dart';
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
 import 'package:dispatch/models/message_models.dart';
-import 'package:dispatch/models/rnd_message_generator.dart';
+import 'package:dispatch/utils/rnd_message_generator.dart';
 import 'package:dispatch/models/ticket_models.dart';
-import 'package:dispatch/models/user_objects.dart';
+import 'package:dispatch/objects/user_objects.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -172,7 +172,7 @@ class ConfirmDriverReceipt extends Message {
         "sent": sent,
         "seen": seen,
         "delivered": delivered,
-        "driver": requestee.toMap(),
+        "requestee": requestee.toMap(),
         "confirmedTime": confirmTime,
         "ticketTime": ticketTime,
         "isReceipt": true,
@@ -653,7 +653,7 @@ class MessageAdaptor {
           "driver": Map<dynamic, dynamic> dmap,
           "confirmedTime": int confirmTime,
           "ticketTime": int ticketTime,
-          "isReceipt": true
+          "isReceipt": true,
         }:
         {
           return ConfirmRequesteeReceipt(
@@ -668,6 +668,34 @@ class MessageAdaptor {
             ticketTime: ticketTime,
             sender: UserAdaptor<BaseUser>().adaptMap(sender),
             receiver: UserAdaptor<BaseUser>().adaptMap(receiver),
+          );
+        }
+      case {
+          "date": int date,
+          "isDispatch": bool isDispatch,
+          "sent": bool sent,
+          "seen": bool seen,
+          "delivered": bool delivered,
+          "sender": Map<Object?, Object?> sender,
+          "receiver": Map<Object?, Object?> receiver,
+          "requestee": Map<dynamic, dynamic> rmap,
+          "confirmedTime": int confirmTime,
+          "ticketTime": int ticketTime,
+          "isReceipt": true,
+        }:
+        {
+          return ConfirmDriverReceipt(
+            date: DateTime.fromMillisecondsSinceEpoch(date),
+            isDispatch: isDispatch,
+            sent: sent,
+            sender: UserAdaptor<BaseUser>().adaptMap(sender),
+            messagesViewState: messagesViewState,
+            seen: seen,
+            requestee: UserAdaptor<Requestee>().adaptMap(rmap),
+            confirmTime: confirmTime,
+            ticketTime: ticketTime,
+            receiver: UserAdaptor<BaseUser>().adaptMap(receiver),
+            delivered: delivered,
           );
         }
       case {

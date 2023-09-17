@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:bloc/bloc.dart';
 import 'package:dispatch/database/dispatcher_message_info_database.dart';
-import 'package:dispatch/models/user_objects.dart';
+import 'package:dispatch/objects/user_objects.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'package:meta/meta.dart';
 
