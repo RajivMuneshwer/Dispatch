@@ -144,7 +144,6 @@ class AllUserListScreen<T extends User> extends UserListScreen<T> {
               limit: limit, lastUser: lastUsers, orderBy: orderBy))
           .map((snapshot) => UserAdaptor<T>().adaptSnapshot(snapshot))
           .toList();
-      print(newUsers);
       if (newUsers.isEmpty) return null;
       return newUsers;
     };
@@ -361,7 +360,6 @@ class UserErrorScreen extends UserInfoScreen<User, User> {
 
   @override
   Future<List<User>?> Function() loadData(User lastUsers) {
-    // TODO: implement loadData
     throw UnimplementedError();
   }
 }

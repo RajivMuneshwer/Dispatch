@@ -1,4 +1,44 @@
-////TO TEST
-///Firebase rules
-/// set up the official twilio account
-/// plug in to put the number on the app
+TO TODO
+Firebase rules
+set up the official twilio account
+plug in to put the number on the app
+able to cancel a confirmed ticket
+
+BUGS
+
+when messages are sent by one user and then another in the foreground, 
+the app for both, iOS and Android show 1 unread message for the badge
+and the message info
+=> nothing is wrong with the serve
+=> something is wrong with the way the messages are either sent to the app
+or read by the app i.e a problem in the cubit 
+*it happens on a fresh start where the other user sends first
+*it happens when the other user sends a message 
+*the decrease method is called => that it should be decreasing but isnt
+=> errors with 
+1) initial cubit state
+2) Sign in screen
+
+start up
+user
+other
+error
+
+* on the error the log had the following output:
+called
+decrease
+increase
+=> the order when the other user sends is in the wrong order
+=> the badge decreases first (0 -> 0) and then increases (0 -> 1)
+instead of increasing (0 -> 1) and then decreasing (1 -> 0)
+=> not a database error
+
+fixed with an internal queue. Everytime the request fires I put that request
+in an async queue and wait for it to finish and then I call the next one. 
+
+
+messages at the top for both systems tends to flip when a new message is sent
+and when the user looks at it (i.e. the state is updated to seen) the order
+changes to the correct ordering
+=> error in the ordering? 
+

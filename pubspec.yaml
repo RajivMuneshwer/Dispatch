@@ -34,6 +34,7 @@ dependencies:
   grouped_list: ^5.1.2
   intl: ^0.18.0
   phone_form_field: ^8.1.0
+  queue: ^3.1.0+2
   shared_preferences: ^2.2.1
   url_launcher: ^6.1.12
 

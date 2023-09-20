@@ -2,7 +2,9 @@ import 'dart:async';
 import 'package:bloc/bloc.dart';
 import 'package:cloud_functions/cloud_functions.dart';
 import 'package:dispatch/database/message_database.dart';
+import 'package:dispatch/objects/app_badge.dart';
 import 'package:dispatch/objects/message_objects.dart';
+import 'package:dispatch/objects/num_of_unread_q.dart';
 import 'package:dispatch/objects/settings_object.dart';
 import 'package:dispatch/objects/user_objects.dart';
 import 'package:firebase_database/firebase_database.dart';
@@ -16,7 +18,7 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
   final User receiver;
   final User other;
   final User sender;
-  final int initialNumOfMessages = 3;
+  final int initialNumOfMessages = 10;
   final int numOfMessagesToLoadAfterInitial = 10;
   Map<int, Message> messagesMap = {};
   late int earliestMessageTime;
@@ -40,20 +42,18 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
 
     final StreamSubscription<DatabaseEvent> childAddSubscription =
         childAddStream.listen(
-      (event) {
+      (event) async {
         final snapshot = event.snapshot;
         Message newMessage = MessageAdaptor(
           messagesViewState: state,
         ).adaptSnapshot(snapshot);
 
-        decreaseAmntOfSentMessages();
-
         bool isUser = isMessageFromUser(newMessage);
         if (!isUser && newMessage.seen == false) {
-          updateMessageToSeen(newMessage);
+          await handleMessageExternalState(newMessage);
         }
 
-        return handleMessageAccordingToState(newMessage, state);
+        return handleMessageInternalToState(newMessage, state);
       },
     );
 
@@ -96,49 +96,50 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
   }
 
   Future<void> loadPreviousMessages() async {
-    if (!isComplete) {
-      final Iterable<DataSnapshot> previousMessagesSnapshots =
-          (await database.loadMessagesBeforeTime(
-        earliestMessageTime,
-        numOfMessagesToLoadAfterInitial,
-      ))
-              .snapshot
-              .children;
-
-      if (previousMessagesSnapshots.isEmpty) {
-        isComplete = true;
-        emit(MessagesViewLoaded(
-            messages: messagesMap.values.toList(),
-            user: receiver,
-            other: other,
-            database: database));
-      } else {
-        final msgAdaptor = MessageAdaptor(messagesViewState: state);
-
-        List<Message> prevMsgs = previousMessagesSnapshots
-            .map((msgSnap) => msgAdaptor.adaptSnapshot(msgSnap))
-            .toList();
-        prevMsgs.sort((m1, m2) => m1.date.compareTo(m2.date));
-
-        earliestMessageTime = prevMsgs.first.dateToInt();
-
-        Map<int, Message> prevMsgMap = {
-          for (final msg in prevMsgs) msg.dateToInt(): msg
-        };
-
-        prevMsgMap.addAll(messagesMap);
-        messagesMap = prevMsgMap;
-        emit(
-          MessagesViewLoaded(
-            messages: messagesMap.values.toList(),
-            user: receiver,
-            other: other,
-            database: database,
-          ),
-        );
-        Future.forEach(prevMsgs, (msg) => updateMessageToSeen(msg));
-      }
+    if (isComplete) {
+      return;
     }
+    final Iterable<DataSnapshot> previousMessagesSnapshots =
+        (await database.loadMessagesBeforeTime(
+      earliestMessageTime,
+      numOfMessagesToLoadAfterInitial,
+    ))
+            .snapshot
+            .children;
+
+    if (previousMessagesSnapshots.isEmpty) {
+      isComplete = true;
+      emit(MessagesViewLoaded(
+          messages: messagesMap.values.toList(),
+          user: receiver,
+          other: other,
+          database: database));
+      return;
+    }
+    final msgAdaptor = MessageAdaptor(messagesViewState: state);
+
+    List<Message> prevMsgs = previousMessagesSnapshots
+        .map((msgSnap) => msgAdaptor.adaptSnapshot(msgSnap))
+        .toList();
+    prevMsgs.sort((m1, m2) => m1.date.compareTo(m2.date));
+
+    earliestMessageTime = prevMsgs.first.dateToInt();
+
+    Map<int, Message> prevMsgMap = {
+      for (final msg in prevMsgs) msg.dateToInt(): msg
+    };
+
+    prevMsgMap.addAll(messagesMap);
+    messagesMap = prevMsgMap;
+    emit(
+      MessagesViewLoaded(
+        messages: messagesMap.values.toList(),
+        user: receiver,
+        other: other,
+        database: database,
+      ),
+    );
+    Future.forEach(prevMsgs, (msg) => handleMessageExternalState(msg));
   }
 
   bool isMessageFromUser(Message newMessage) {
@@ -148,14 +149,36 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
     };
   }
 
-  void updateMessageToSeen(Message newMessage) {
+  Future<void> handleMessageExternalState(Message newMessage) async {
+    bool isMessageFromReceiver = (newMessage.sender.id == receiver.id);
+    if (isMessageFromReceiver) {
+      return;
+    }
+    if (newMessage.seen == true) {
+      return;
+    }
+    await decreaseAmntMessagesInfo();
+    await reduceAppBadge();
+    await updateMessageToSeen(newMessage);
+    return;
+  }
+
+  Future<void> reduceAppBadge() async {
+    final appBadge = await AppBadge.getInstance();
+    await appBadgeQueue.add<void>(() => appBadge.decreaseBadgeCountBy(1));
+  }
+
+  Future<void> updateMessageToSeen(Message newMessage) async {
     var receiver_ = receiver;
     bool isMessageFromReceiver = (newMessage.sender.id == receiver.id);
     if (isMessageFromReceiver) {
       return;
     }
+    if (newMessage.seen == true) {
+      return;
+    }
     if (receiver_ is! Dispatcher) {
-      FirebaseFunctions.instance.httpsCallable('updateMessageSeen').call(
+      await FirebaseFunctions.instance.httpsCallable('updateMessageSeen').call(
         {
           "companyid": Settings.companyid,
           "designation": switch (receiver) {
@@ -170,7 +193,7 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
         },
       );
     } else {
-      FirebaseFunctions.instance.httpsCallable('updateMessageSeen').call({
+      await FirebaseFunctions.instance.httpsCallable('updateMessageSeen').call({
         "companyid": Settings.companyid,
         "designation": switch (sender) {
           Requestee() => "requestees",
@@ -185,7 +208,12 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
     }
   }
 
-  void handleMessageAccordingToState(
+  Future<void> decreaseAppBadge() async {
+    final appBadge = await AppBadge.getInstance();
+    appBadge.decreaseBadgeCountBy(1);
+  }
+
+  void handleMessageInternalToState(
     Message newMessage,
     MessagesViewState state,
   ) {
@@ -235,23 +263,37 @@ class MessagesViewCubit extends Cubit<MessagesViewState> {
     }
   }
 
-  void decreaseAmntOfSentMessages() {
+  Future<void> decreaseAmntMessagesInfo() async {
     var user_ = receiver;
     if (user_ is! Dispatcher) {
       return;
     }
+    Future<HttpsCallableResult<dynamic>> decAmntMsgs() async {
+      return await FirebaseFunctions.instance
+          .httpsCallable('decreaseMessageSent')
+          .call({
+        "companyid": Settings.companyid,
+        "designation": switch (sender) {
+          Requestee() => "requestees",
+          Dispatcher() => "dispatchers",
+          Driver() => "drivers",
+          Admin() => "admin",
+          BaseUser() => "base",
+        },
+        "dispatcherid": user_.id,
+        "designateeid": sender.id,
+      });
+    }
 
-    FirebaseFunctions.instance.httpsCallable('decreaseMessageSent').call({
-      "companyid": Settings.companyid,
-      "designation": switch (sender) {
-        Requestee() => "requestees",
-        Dispatcher() => "dispatchers",
-        Driver() => "drivers",
-        Admin() => "admin",
-        BaseUser() => "base",
-      },
-      "dispatcherid": user_.id,
-      "designateeid": sender.id,
+    unreadQ.add<void>(() async {
+      final result = await decAmntMsgs();
+      int status = result.data["status"] as int;
+      if (status == 200) {
+        print("success");
+        return;
+      }
+      print("failed");
+      return;
     });
 
     //{companyid, designation, dispatcherid, designateeid}

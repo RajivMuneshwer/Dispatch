@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:dispatch/cubit/msgInfo/msg_info_cubit.dart';
 import 'package:dispatch/database/dispatcher_message_info_database.dart';
 import 'package:dispatch/objects/settings_object.dart';
@@ -138,10 +137,6 @@ class _DriverInfoListState extends State<DriverInfoList> {
                 return InfoList(
                     users: state.users,
                     onTapForUser: (user) => () {
-                          decreaseAmntOfSentMessages(
-                            receiver: widget.dispatcher,
-                            sender: user,
-                          );
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -206,10 +201,6 @@ class _RequesteeInfoListState extends State<RequesteeInfoList> {
                 return InfoList(
                   users: state.users,
                   onTapForUser: (user) => () {
-                    decreaseAmntOfSentMessages(
-                      receiver: widget.dispatcher,
-                      sender: user,
-                    );
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -248,27 +239,4 @@ class InfoList extends StatelessWidget {
       },
     );
   }
-}
-
-void decreaseAmntOfSentMessages({
-  required User receiver,
-  required User sender,
-}) {
-  var receiver_ = receiver;
-  if (receiver_ is! Dispatcher) {
-    return;
-  }
-
-  FirebaseFunctions.instance.httpsCallable('decreaseMessageSent').call({
-    "companyid": Settings.companyid,
-    "designation": switch (sender) {
-      Requestee() => "requestees",
-      Dispatcher() => "dispatchers",
-      Driver() => "drivers",
-      Admin() => "admin",
-      BaseUser() => "base"
-    },
-    "dispatcherid": receiver_.id,
-    "designateeid": sender.id,
-  });
 }

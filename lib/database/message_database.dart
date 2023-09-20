@@ -34,7 +34,11 @@ class RequesteesMessageDatabase extends MessageDatabase<Requestee> {
 
   @override
   Future<DatabaseEvent> loadMessagesBeforeTime(int time, int numOfMessage) {
-    return ref.orderByChild("date").endBefore(time).limitToLast(2).once();
+    return ref
+        .orderByChild("date")
+        .endBefore(time)
+        .limitToLast(numOfMessage)
+        .once();
   }
 
   @override
@@ -73,7 +77,11 @@ class DriverMessageDatabase extends MessageDatabase<Driver> {
 
   @override
   Future<DatabaseEvent> loadMessagesBeforeTime(int time, int numOfMessage) {
-    return ref.orderByChild("date").endBefore(time).limitToLast(2).once();
+    return ref
+        .orderByChild("date")
+        .endBefore(time)
+        .limitToLast(numOfMessage)
+        .once();
   }
 
   @override

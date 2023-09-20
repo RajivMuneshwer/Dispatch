@@ -1,4 +1,5 @@
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:dispatch/objects/app_badge.dart';
 import 'package:dispatch/objects/settings_object.dart';
 import 'package:dispatch/screens/app_screen.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
@@ -104,6 +105,7 @@ class _SignInWidgetState extends State<SignInWidget> {
           prefs.setString("token", fcmToken);
 
           Settings.initializeFromPref(prefs);
+          await (await AppBadge.getInstance()).initializeBadgeCount();
 
           return null;
         },
