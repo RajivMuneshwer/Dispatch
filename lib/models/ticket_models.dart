@@ -1,4 +1,3 @@
-//import 'package:dispatch/cubit/message/messages_view_cubit.dart';
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
 import 'package:dispatch/database/message_database.dart';
 import 'package:dispatch/database/user_database.dart';
@@ -107,9 +106,13 @@ List<Widget> buildTicketWidgets({
       {
         listBuilder
           ..addVerticalSpace(30)
-          ..addConfirmationRow()
+          ..addConfirmationDriverRow()
           ..addVerticalSpace(20)
-          ..addTimeStampRow();
+          ..addConfirmationRequesteeRow()
+          ..addVerticalSpace(20)
+          ..addTimeStampRow()
+          ..addVerticalSpace(40)
+          ..addCancesButtonAfterConfirmRow();
         break;
       }
     case TicketCancelledMessage():
@@ -271,13 +274,23 @@ class ListBuilder {
     return this;
   }
 
-  ListBuilder addConfirmationRow() {
-    children.add(const ConfirmationRow());
+  ListBuilder addConfirmationDriverRow() {
+    children.add(const ConfirmationDriverRow());
+    return this;
+  }
+
+  ListBuilder addConfirmationRequesteeRow() {
+    children.add(const ConfirmationRequesteeRow());
     return this;
   }
 
   ListBuilder addCancelledRow() {
     children.add(const CancellationRow());
+    return this;
+  }
+
+  ListBuilder addCancesButtonAfterConfirmRow() {
+    children.add(const CancelButtonAfterConfirmRow());
     return this;
   }
 
@@ -478,13 +491,43 @@ class RequesteeDropdownRow extends StatelessWidget {
   }
 }
 
-class ConfirmationRow extends StatelessWidget {
-  const ConfirmationRow({super.key});
+class ConfirmationDriverRow extends StatelessWidget {
+  const ConfirmationDriverRow({super.key});
 
   @override
   Widget build(BuildContext context) {
     return RowBuilder()
         .addDriverConfirmText()
+        .addSpace()
+        .addBlank()
+        .addSpace()
+        .addBlank()
+        .build();
+  }
+}
+
+class ConfirmationRequesteeRow extends StatelessWidget {
+  const ConfirmationRequesteeRow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return RowBuilder()
+        .addRequesteeConfirmText()
+        .addSpace()
+        .addBlank()
+        .addSpace()
+        .addBlank()
+        .build();
+  }
+}
+
+class CancelButtonAfterConfirmRow extends StatelessWidget {
+  const CancelButtonAfterConfirmRow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return RowBuilder()
+        .addCancelButtonAfterConfirm()
         .addSpace()
         .addBlank()
         .addSpace()
@@ -616,6 +659,16 @@ class RowBuilder {
 
   RowBuilder addDriverConfirmText() {
     children.add(const DriverConfirmText());
+    return this;
+  }
+
+  RowBuilder addRequesteeConfirmText() {
+    children.add(const RequesteeConfirmText());
+    return this;
+  }
+
+  RowBuilder addCancelButtonAfterConfirm() {
+    children.add(const CancelButtonAfterConfirm());
     return this;
   }
 
@@ -1428,12 +1481,12 @@ TicketConfirmedMessage makeConfirmedTicket(
     confirmedTime: DateTime.now().millisecondsSinceEpoch,
     driver: (driver !=
             null) // if the driver is not in the form field then they are the other user
-        ? driver.name
-        : other.name,
+        ? driver
+        : other as Driver,
     requestee: (requestee !=
             null) // if the requestee is not in the form field then they are the other user
-        ? requestee.name
-        : other.name,
+        ? requestee
+        : other as Requestee,
   );
 }
 
@@ -1549,7 +1602,30 @@ class DriverConfirmText extends StatelessWidget {
         var message = state.ticketMessage;
         if (message is! TicketConfirmedMessage) return Container();
         return Text(
-          "Driver: ${message.driver}",
+          "Driver: ${message.driver.name}",
+          style: const TextStyle(
+            fontSize: 15.0,
+            color: Colors.grey,
+            fontWeight: FontWeight.w600,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class RequesteeConfirmText extends StatelessWidget {
+  const RequesteeConfirmText({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TicketViewCubit, TicketViewState>(
+      builder: (context, state) {
+        if (state is! TicketViewWithData) return Container();
+        var message = state.ticketMessage;
+        if (message is! TicketConfirmedMessage) return Container();
+        return Text(
+          "Pickup: ${message.requestee.name}",
           style: const TextStyle(
             fontSize: 15.0,
             color: Colors.grey,
@@ -1614,6 +1690,113 @@ class TimeStampText extends StatelessWidget {
               return Container();
             }
         }
+      },
+    );
+  }
+}
+
+class CancelButtonAfterConfirm extends StatefulWidget {
+  const CancelButtonAfterConfirm({super.key});
+
+  @override
+  State<CancelButtonAfterConfirm> createState() =>
+      _CancelButtonAfterConfirmState();
+}
+
+class _CancelButtonAfterConfirmState extends State<CancelButtonAfterConfirm> {
+  bool running = false;
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TicketViewCubit, TicketViewState>(
+      builder: (context, state) {
+        if (state is! TicketViewWithData) return Container();
+        var ticketMessage = state.ticketMessage;
+        if (ticketMessage is! TicketConfirmedMessage) return Container();
+        var confirmedTicket = ticketMessage;
+        return ElevatedButton(
+          onPressed: (running)
+              ? () {}
+              : () {
+                  var cancelledMessage = TicketCancelledMessage(
+                    text: confirmedTicket.text,
+                    date: confirmedTicket.date,
+                    isDispatch: confirmedTicket.isDispatch,
+                    sent: confirmedTicket.sent,
+                    seen: confirmedTicket.seen,
+                    delivered: confirmedTicket.delivered,
+                    sender: state.messagesState.user,
+                    receiver: state.messagesState.other,
+                    messagesViewState: state.messagesState,
+                    cancelledTime: DateTime.now().millisecondsSinceEpoch,
+                  );
+                  state.messagesState.database.updateTicket(cancelledMessage);
+
+                  MessageDatabase<User> otherRecipientDatabase;
+
+                  if (state.messagesState.user is Requestee) {
+                    otherRecipientDatabase = DriverMessageDatabase(
+                      user: confirmedTicket.driver,
+                    );
+                  } else if (state.messagesState.user is Driver) {
+                    otherRecipientDatabase = RequesteesMessageDatabase(
+                      user: confirmedTicket.requestee,
+                    );
+                  } else {
+                    //user can only be a Dispatcher at this point
+                    if (state.messagesState.other is Requestee) {
+                      otherRecipientDatabase = DriverMessageDatabase(
+                        user: confirmedTicket.driver,
+                      );
+                    } else {
+                      // other can only be driver
+                      otherRecipientDatabase = RequesteesMessageDatabase(
+                        user: confirmedTicket.requestee,
+                      );
+                    }
+                  }
+                  otherRecipientDatabase.updateTicket(cancelledMessage);
+
+                  bool isDispatch = switch (state.messagesState.user) {
+                    Dispatcher() => true,
+                    _ => false,
+                  };
+                  var cancelReceipt = CancelReceipt(
+                    date: DateTime.now(),
+                    isDispatch: isDispatch,
+                    sent: false,
+                    seen: false,
+                    delivered: false,
+                    messagesViewState: state.messagesState,
+                    cancelTime: DateTime.now().millisecondsSinceEpoch,
+                    ticketTime: ticketMessage.date.millisecondsSinceEpoch,
+                    sender: state.messagesState.user,
+                    receiver: state.messagesState.other,
+                  );
+                  state.messagesState.database.addMessage(cancelReceipt);
+                  otherRecipientDatabase.addMessage(cancelReceipt);
+
+                  Navigator.pop(context);
+                },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.red,
+            side: const BorderSide(width: 1, color: Colors.red),
+          ),
+          child: (running)
+              ? const SizedBox(
+                  height: 10,
+                  width: 10,
+                  child: CircularProgressIndicator(
+                    color: Colors.grey,
+                  ),
+                )
+              : const Text(
+                  "Cancel",
+                  style: TextStyle(
+                    color: Colors.white,
+                    backgroundColor: Colors.red,
+                  ),
+                ),
+        );
       },
     );
   }

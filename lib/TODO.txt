@@ -1,7 +1,7 @@
 TO TODO
-Firebase rules
+Test Firebase rules
+Authenticate user
 set up the official twilio account
-plug in to put the number on the app
 able to cancel a confirmed ticket
 
 BUGS

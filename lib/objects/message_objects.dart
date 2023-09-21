@@ -117,15 +117,15 @@ class CancelReceipt extends Message {
       child: Text.rich(
         TextSpan(
           children: [
-            TextSpan(
-                text: "${isDispatch ? "Your" : "My"} ticket made on \n"
-                    "$timeMade \n"
-                    "has been "),
+            TextSpan(text: "${sender.name} has "),
             const TextSpan(
               text: "cancelled ",
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
-            TextSpan(text: "on\n $timeCancelled"),
+            TextSpan(
+                text: "${isDispatch ? "Your" : "My"} ticket made on \n"
+                    "$timeMade \n"),
+            TextSpan(text: "at\n $timeCancelled"),
           ],
         ),
       ),
@@ -343,8 +343,8 @@ class TextMessage extends Message {
 
 class TicketConfirmedMessage extends TicketMessage {
   final int confirmedTime;
-  final String driver;
-  final String requestee;
+  final Driver driver;
+  final Requestee requestee;
   TicketConfirmedMessage({
     required super.text,
     required super.date,
@@ -373,10 +373,10 @@ class TicketConfirmedMessage extends TicketMessage {
         "delivered": delivered,
         "ticketType": ticketTypes.name,
         "confirmedTime": confirmedTime,
-        "driver": driver,
+        "driver": driver.toMap(),
         "sender": sender.toMap(),
         "receiver": receiver.toMap(),
-        "requestee": requestee,
+        "requestee": requestee.toMap(),
       };
 }
 
@@ -759,8 +759,8 @@ class MessageAdaptor {
           "receiver": Map<Object?, Object?> receiver,
           "ticketType": "confirmed",
           "confirmedTime": int confirmedTime,
-          "driver": String driver,
-          "requestee": String requestee,
+          "driver": Map<Object?, Object?> driver,
+          "requestee": Map<Object?, Object?> requestee,
         }:
         {
           return TicketConfirmedMessage(
@@ -772,10 +772,10 @@ class MessageAdaptor {
             delivered: delivered,
             messagesViewState: messagesViewState,
             confirmedTime: confirmedTime,
-            driver: driver,
+            driver: UserAdaptor<Driver>().adaptMap(driver),
             sender: UserAdaptor<BaseUser>().adaptMap(sender),
             receiver: UserAdaptor<BaseUser>().adaptMap(receiver),
-            requestee: requestee,
+            requestee: UserAdaptor<Requestee>().adaptMap(requestee),
           );
         }
       case {
