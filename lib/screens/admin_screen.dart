@@ -2,6 +2,7 @@ import 'package:cloud_functions/cloud_functions.dart';
 import 'package:dispatch/database/user_database.dart';
 import 'package:dispatch/objects/settings_object.dart';
 import 'package:dispatch/objects/user_objects.dart';
+import 'package:dispatch/screens/car_screens.dart';
 import 'package:dispatch/screens/user_screens.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -52,7 +53,9 @@ class UserChoicesColumn extends StatelessWidget {
           const SizedBox(height: 40),
           UserChoiceBubble<Driver>(
             database: adminDatabase,
-          )
+          ),
+          const SizedBox(height: 40),
+          const CarChoiceBubble(),
         ],
       ),
     );
@@ -405,7 +408,7 @@ class DriverEditScreen extends UserEditScreen<Driver> {
         const SizedBox(height: 20),
         EditTelField(name: telName, initialTel: user?.tel),
         const SizedBox(height: 20),
-        EditDropdownFormField(
+        EditDropdownDispatchFormField(
           dropdownOptions: dispatchers,
           initialId: (user_ != null) ? user_.dispatcherid : null,
           name: dropdownName,
@@ -496,7 +499,7 @@ class RequesteeEditScreen extends UserEditScreen<Requestee> {
         const SizedBox(height: 20),
         EditTelField(name: telName, initialTel: user?.tel),
         const SizedBox(height: 20),
-        EditDropdownFormField(
+        EditDropdownDispatchFormField(
           dropdownOptions: dispatchers,
           initialId: (user_ != null) ? user_.dispatcherid : null,
           name: dropdownName,
@@ -773,15 +776,17 @@ Widget errorScreen(BuildContext context) => Scaffold(
       ),
     );
 
-class EditDropdownFormField extends StatelessWidget {
+class EditDropdownDispatchFormField extends StatelessWidget {
   final String name;
-  final List<User> dropdownOptions;
+  final List<Dispatcher> dropdownOptions;
   final int? initialId;
-  const EditDropdownFormField({
+  final String labelText;
+  const EditDropdownDispatchFormField({
     super.key,
     required this.dropdownOptions,
     required this.initialId,
     required this.name,
+    this.labelText = "Dispatcher",
   });
 
   @override
@@ -789,9 +794,9 @@ class EditDropdownFormField extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: FormBuilderDropdown<int>(
-        decoration: const InputDecoration(
-          labelText: "Dispatcher",
-          labelStyle: TextStyle(fontWeight: FontWeight.normal),
+        decoration: InputDecoration(
+          labelText: labelText,
+          labelStyle: const TextStyle(fontWeight: FontWeight.normal),
         ),
         name: name,
         initialValue: initialId,
@@ -848,7 +853,13 @@ class EditTelField extends StatelessWidget {
 class EditNameField extends StatelessWidget {
   final String name;
   final String? initial;
-  const EditNameField({super.key, required this.name, required this.initial});
+  final String? labelText;
+  const EditNameField({
+    super.key,
+    required this.name,
+    required this.initial,
+    this.labelText = "Name",
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -865,7 +876,7 @@ class EditNameField extends StatelessWidget {
         ),
         textAlign: TextAlign.left,
         decoration: InputDecoration(
-          labelText: "Name",
+          labelText: labelText,
           labelStyle: const TextStyle(fontWeight: FontWeight.normal),
           border: UnderlineInputBorder(
             borderRadius: const BorderRadius.all(Radius.circular(4)),

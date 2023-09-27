@@ -22,6 +22,7 @@ class AppBadge {
     if (currentUnread == null) {
       throw Exception("no currentUnread. Value was not initialized");
     }
+    print(currentUnread);
     currentUnread += inc;
     final displayValue = (currentUnread <= 0) ? 0 : currentUnread;
     await FlutterAppBadger.updateBadgeCount(displayValue);
@@ -29,10 +30,12 @@ class AppBadge {
   }
 
   Future<void> decreaseBadgeCountBy(int dec) async {
+    print("decrease");
     final currentUnread = prefs.getInt("currentUnread");
     if (currentUnread == null) {
       throw Exception("no currentUnread. Value was not initialized");
     }
+    print(currentUnread);
     final newUnread = currentUnread - dec;
     final displayValue = (newUnread <= 0) ? 0 : newUnread;
     await FlutterAppBadger.updateBadgeCount(displayValue);

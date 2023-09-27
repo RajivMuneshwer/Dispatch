@@ -134,7 +134,7 @@ abstract class UserInfoScreen<T extends User, M extends User>
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           const SizedBox(height: 40.0),
-                          NameInfoBox(user: user),
+                          TextInfoBox(text: "Name: ${user.name}"),
                           const SizedBox(height: 40.0),
                           TelInfoBox(user: user),
                           const SizedBox(height: 20.0),
@@ -231,11 +231,11 @@ class TelInfoBox extends StatelessWidget {
   }
 }
 
-class NameInfoBox extends StatelessWidget {
-  final User user;
-  const NameInfoBox({
+class TextInfoBox extends StatelessWidget {
+  final String text;
+  const TextInfoBox({
     super.key,
-    required this.user,
+    required this.text,
   });
 
   @override
@@ -259,7 +259,7 @@ class NameInfoBox extends StatelessWidget {
           left: 16.0,
         ),
         child: Text(
-          "Name: ${user.name}",
+          text,
           style: TextStyle(
             fontWeight: FontWeight.w600,
             color: Colors.grey.shade700,

@@ -881,8 +881,13 @@ class RequesteeDropDown extends StatelessWidget {
               } else if (!snapshot.hasData || snapshot.data == null) {
                 return const Text('No options available.');
               }
+              Requestee errand =
+                  Requestee(id: 0, name: "Errand", sortBy: "Errand");
+
+              List<Requestee> requestees = (snapshot.data ?? []);
+              requestees.add(errand);
               return requesteeDropDownWidget(
-                snapshot.data ?? [],
+                requestees,
                 requesteeDropdownName(),
               );
             });
@@ -1385,13 +1390,9 @@ class _ConfirmButtonState extends State<ConfirmButton> {
                   Requestee? requestee =
                       formbuilderState.fields[requesteeDropdownName()]?.value;
 
-                  if (driver == null && requestee == null) {
-                    throw Exception(
-                        "both driver and requestee fields inactive");
-                  }
-                  if (driver != null && requestee != null) {
-                    throw Exception("both driver and requestee fields active");
-                  }
+                  (driver, requestee) =
+                      validateDriverRequestee(driver, requestee);
+
                   setState(() {
                     isRunning = true;
                   });
@@ -1436,17 +1437,32 @@ class _ConfirmButtonState extends State<ConfirmButton> {
   }
 }
 
+(Driver?, Requestee?) validateDriverRequestee(
+    Driver? driver, Requestee? requestee) {
+  if (driver == null && requestee == null) {
+    throw Exception("both driver and requestee fields inactive");
+  }
+  if (driver != null && requestee != null) {
+    throw Exception("both driver and requestee fields active");
+  }
+  return (driver, requestee);
+}
+
 void sendTicketToSecondUser(
   TicketViewWithData state,
   Driver? driver,
   Requestee? requestee,
   TicketConfirmedMessage ticketConfirmed,
 ) {
+  ticketConfirmed.setIsDispatch = true;
   if (state.messagesState.other is Driver) {
     var requestee_ = requestee;
     if (requestee_ == null) {
       throw Exception(
           "The requestee cannot be null when the ticket is for the driver");
+    }
+    if (requestee_.id == 0) {
+      return; // this is an errand requestee so no actual place to send it to
     }
     RequesteesMessageDatabase(user: requestee_).addMessage(ticketConfirmed);
     return;
@@ -1503,6 +1519,9 @@ void sendReceiptToRequestee(
   Driver? driver,
   Requestee? requestee,
 ) {
+  if (requestee != null && requestee.id == 0) {
+    return; //the requestee is an errand so no actual requestee
+  }
   var ticketMessage = state.ticketMessage;
   User other = state.messagesState.other;
 
@@ -1531,23 +1550,45 @@ void sendReceiptToDriver(
 ) {
   var ticketMessage = state.ticketMessage;
   User other = state.messagesState.other;
-  var confirmDriverReceipt = ConfirmDriverReceipt(
-    date: DateTime.now(),
-    isDispatch: true,
-    sent: false,
-    seen: false,
-    delivered: false,
-    sender: state.messagesState.user,
-    receiver: state.messagesState.other,
-    messagesViewState: state.messagesState,
-    requestee: (requestee != null) ? requestee : other as Requestee,
-    confirmTime: DateTime.now().millisecondsSinceEpoch,
-    ticketTime: ticketMessage.date.millisecondsSinceEpoch,
-  );
-  final driverDatabase = DriverMessageDatabase(
-    user: (driver != null) ? driver : other as Driver,
-  );
-  driverDatabase.addMessage(confirmDriverReceipt);
+  bool isErrand = (requestee != null && requestee.id == 0);
+  if (isErrand) {
+    var confirmDriverErrand = ConfirmDriverErrandReceipt(
+      date: DateTime.now(),
+      isDispatch: true,
+      sent: false,
+      seen: false,
+      delivered: false,
+      sender: state.messagesState.user,
+      messagesViewState: state.messagesState,
+      confirmTime: DateTime.now().millisecondsSinceEpoch,
+      ticketTime: ticketMessage.date.millisecondsSinceEpoch,
+      receiver: state.messagesState.other,
+    );
+    final driverDatabase = DriverMessageDatabase(
+      user: (driver != null) ? driver : other as Driver,
+    );
+    driverDatabase.addMessage(confirmDriverErrand);
+    return;
+  } else {
+    var confirmDriverReceipt = ConfirmDriverReceipt(
+      date: DateTime.now(),
+      isDispatch: true,
+      sent: false,
+      seen: false,
+      delivered: false,
+      sender: state.messagesState.user,
+      receiver: state.messagesState.other,
+      messagesViewState: state.messagesState,
+      requestee: (requestee != null) ? requestee : other as Requestee,
+      confirmTime: DateTime.now().millisecondsSinceEpoch,
+      ticketTime: ticketMessage.date.millisecondsSinceEpoch,
+    );
+    final driverDatabase = DriverMessageDatabase(
+      user: (driver != null) ? driver : other as Driver,
+    );
+    driverDatabase.addMessage(confirmDriverReceipt);
+    return;
+  }
 }
 
 class ConfirmIcon extends StatelessWidget {

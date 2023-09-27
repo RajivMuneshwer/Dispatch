@@ -147,6 +147,75 @@ class CancelReceipt extends Message {
       };
 }
 
+class ConfirmDriverErrandReceipt extends Message {
+  final int confirmTime;
+  final int ticketTime;
+  ConfirmDriverErrandReceipt({
+    required super.date,
+    required super.isDispatch,
+    required super.sent,
+    required super.sender,
+    required super.messagesViewState,
+    required super.seen,
+    required this.confirmTime,
+    required this.ticketTime,
+    required super.receiver,
+    required super.delivered,
+  });
+
+  @override
+  Map<String, dynamic> toMap() => {
+        "date": date.millisecondsSinceEpoch,
+        "isDispatch": isDispatch,
+        "sent": sent,
+        "seen": seen,
+        "delivered": delivered,
+        "confirmedTime": confirmTime,
+        "ticketTime": ticketTime,
+        "isReceipt": true,
+        "sender": sender.toMap(),
+        "receiver": receiver.toMap(),
+      };
+
+  @override
+  Widget toWidget(BuildContext context) {
+    String timeConfirmed = DateFormat().add_yMMMd().add_jm().format(
+          DateTime.fromMillisecondsSinceEpoch(
+            confirmTime,
+          ),
+        );
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Text.rich(
+        TextSpan(
+          children: [
+            const TextSpan(text: "You have been sent on an "),
+            const TextSpan(
+              text: "errand ",
+              style: TextStyle(fontWeight: FontWeight.w600),
+            ),
+            TextSpan(
+              text: "confirmed at \n"
+                  "$timeConfirmed\n"
+                  "Any questions? Contact ${sender.name} on \n",
+            ),
+            TextSpan(
+              text: "${sender.tel?.international}",
+              style: const TextStyle(
+                color: Colors.blue,
+              ),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () => launchUrl(
+                      Uri.parse("tel:${sender.tel?.international}"),
+                    ),
+            )
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class ConfirmDriverReceipt extends Message {
   final Requestee requestee;
   final int confirmTime;
@@ -363,6 +432,10 @@ class TicketConfirmedMessage extends TicketMessage {
     required super.delivered,
   });
 
+  set setIsDispatch(bool setValue) {
+    isDispatch = setValue;
+  }
+
   @override
   Map<String, dynamic> toMap() => {
         "text": text,
@@ -540,7 +613,7 @@ sealed class Message {
   final User sender;
   final User receiver;
   final DateTime date;
-  final bool isDispatch;
+  bool isDispatch;
   final MessagesViewState messagesViewState;
   bool sent;
   bool delivered;
@@ -692,6 +765,32 @@ class MessageAdaptor {
             messagesViewState: messagesViewState,
             seen: seen,
             requestee: UserAdaptor<Requestee>().adaptMap(rmap),
+            confirmTime: confirmTime,
+            ticketTime: ticketTime,
+            receiver: UserAdaptor<BaseUser>().adaptMap(receiver),
+            delivered: delivered,
+          );
+        }
+      case {
+          "date": int date,
+          "isDispatch": bool isDispatch,
+          "sent": bool sent,
+          "seen": bool seen,
+          "delivered": bool delivered,
+          "sender": Map<Object?, Object?> sender,
+          "receiver": Map<Object?, Object?> receiver,
+          "confirmedTime": int confirmTime,
+          "ticketTime": int ticketTime,
+          "isReceipt": true,
+        }:
+        {
+          return ConfirmDriverErrandReceipt(
+            date: DateTime.fromMillisecondsSinceEpoch(date),
+            isDispatch: isDispatch,
+            sent: sent,
+            sender: UserAdaptor<BaseUser>().adaptMap(sender),
+            messagesViewState: messagesViewState,
+            seen: seen,
             confirmTime: confirmTime,
             ticketTime: ticketTime,
             receiver: UserAdaptor<BaseUser>().adaptMap(receiver),

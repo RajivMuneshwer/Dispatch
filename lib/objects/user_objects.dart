@@ -47,6 +47,7 @@ class Requestee extends User {
 class Dispatcher extends User {
   final List<int>? requesteesid;
   final List<int>? driversid;
+  final List<int>? carsid;
   Dispatcher({
     required super.id,
     required super.name,
@@ -54,12 +55,14 @@ class Dispatcher extends User {
     super.tel,
     this.requesteesid,
     this.driversid,
+    this.carsid,
   });
 
   @override
   Map<String, dynamic> toMap() {
     var requesteesid_ = requesteesid;
     var driversid_ = driversid;
+    var carsid_ = carsid;
     return {
       "id": id,
       "name": name,
@@ -74,6 +77,11 @@ class Dispatcher extends User {
           ? {}
           : {
               for (final driverid in driversid_) "$driverid": driverid,
+            },
+      "cars": (carsid_ == null)
+          ? {}
+          : {
+              for (final carid in carsid_) "$carid": carsid,
             }
     };
   }
@@ -185,7 +193,16 @@ class UserAdaptor<T extends User> {
                 .map((e) => e as int)
                 .toList();
           }(),
-        ) as T,
+          carsid: () {
+            var carsidMap = map["cars"];
+            if (carsidMap == null) {
+              return null;
+            }
+            return (carsidMap as Map<Object?, Object?>)
+                .values
+                .map((carid) => carid as int)
+                .toList();
+          }()) as T,
       Admin => Admin(
           id: id,
           name: name,

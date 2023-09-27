@@ -11,6 +11,7 @@
     <data android:scheme="tel" />
   </intent>
 </queries>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <application
         android:label="dispatch"
         android:name="${applicationName}"

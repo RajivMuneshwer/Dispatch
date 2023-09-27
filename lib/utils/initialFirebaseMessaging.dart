@@ -1,6 +1,7 @@
 import 'package:dispatch/objects/app_badge.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 Future<void> handleBackgroundMessage(RemoteMessage message) async {
   final appBadge = await AppBadge.getInstance();
@@ -13,7 +14,12 @@ Future<void> initializeFirebaseMessaging() async {
 
   //foreground messaging
   FirebaseMessaging messaging = FirebaseMessaging.instance;
-  await messaging.requestPermission(alert: true, sound: true);
+  await messaging.requestPermission(
+    alert: true,
+    sound: true,
+    announcement: true,
+    badge: true,
+  );
   await messaging.setForegroundNotificationPresentationOptions(
     alert: true,
     badge: true,
@@ -37,8 +43,10 @@ Future<void> initializeFirebaseMessaging() async {
       .catchError((err) => print("error: $err"));
 
   FirebaseMessaging.onMessage.listen((RemoteMessage message) async {
+    final pref = await SharedPreferences.getInstance();
+    await pref.reload();
     //increase badge counter in foreground
-    final appbadge = await AppBadge.getInstance();
+    final appbadge = AppBadge(prefs: pref);
     await appBadgeQueue.add<void>(() => appbadge.increaseBadgeCountBy(1));
 
     final notification = message.notification;
@@ -57,7 +65,7 @@ Future<void> initializeFirebaseMessaging() async {
               priority: Priority.max,
               importance: Importance.max,
               enableVibration: true,
-              channelShowBadge: false,
+              channelShowBadge: true,
             ),
             iOS: const DarwinNotificationDetails(
               presentAlert: true,
