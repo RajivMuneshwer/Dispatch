@@ -1,6 +1,7 @@
 import 'package:dispatch/cubit/message/messages_view_cubit.dart';
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
 import 'package:dispatch/models/message_models.dart';
+import 'package:dispatch/objects/car_objects.dart';
 import 'package:dispatch/utils/rnd_message_generator.dart';
 import 'package:dispatch/models/ticket_models.dart';
 import 'package:dispatch/objects/user_objects.dart';
@@ -218,6 +219,7 @@ class ConfirmDriverErrandReceipt extends Message {
 
 class ConfirmDriverReceipt extends Message {
   final Requestee requestee;
+  final Car car;
   final int confirmTime;
   final int ticketTime;
   ConfirmDriverReceipt({
@@ -229,6 +231,7 @@ class ConfirmDriverReceipt extends Message {
     required super.seen,
     required this.requestee,
     required this.confirmTime,
+    required this.car,
     required this.ticketTime,
     required super.receiver,
     required super.delivered,
@@ -247,6 +250,7 @@ class ConfirmDriverReceipt extends Message {
         "isReceipt": true,
         "sender": sender.toMap(),
         "receiver": receiver.toMap(),
+        "car": car.toMap(),
       };
 
   @override
@@ -280,7 +284,7 @@ class ConfirmDriverReceipt extends Message {
                   "Contact your pickup ${requestee.name} on \n",
             ),
             TextSpan(
-              text: "${requestee.tel?.international}",
+              text: "${requestee.tel?.international}\n",
               style: const TextStyle(
                 color: Colors.blue,
               ),
@@ -288,7 +292,8 @@ class ConfirmDriverReceipt extends Message {
                 ..onTap = () => launchUrl(
                       Uri.parse("tel:${requestee.tel?.international}"),
                     ),
-            )
+            ),
+            TextSpan(text: "Car ${car.name}; license plate ${car.licensePlate}")
           ],
         ),
       ),
@@ -298,6 +303,7 @@ class ConfirmDriverReceipt extends Message {
 
 class ConfirmRequesteeReceipt extends Message {
   final Driver driver;
+  final Car car;
   final int confirmTime;
   final int ticketTime;
   ConfirmRequesteeReceipt({
@@ -312,6 +318,7 @@ class ConfirmRequesteeReceipt extends Message {
     required super.seen,
     required super.receiver,
     required super.delivered,
+    required this.car,
   });
 
   @override
@@ -346,7 +353,7 @@ class ConfirmRequesteeReceipt extends Message {
                   "Contact your driver ${driver.name} on \n",
             ),
             TextSpan(
-              text: "${driver.tel?.international}",
+              text: "${driver.tel?.international}\n",
               style: const TextStyle(
                 color: Colors.blue,
               ),
@@ -354,7 +361,8 @@ class ConfirmRequesteeReceipt extends Message {
                 ..onTap = () => launchUrl(
                       Uri.parse("tel:${driver.tel?.international}"),
                     ),
-            )
+            ),
+            TextSpan(text: "Car ${car.name}; license plate ${car.licensePlate}")
           ],
         ),
       ),
@@ -374,6 +382,7 @@ class ConfirmRequesteeReceipt extends Message {
         "isReceipt": true,
         "sender": sender.toMap(),
         "receiver": receiver.toMap(),
+        "car": car.toMap(),
       };
 }
 
@@ -414,6 +423,7 @@ class TicketConfirmedMessage extends TicketMessage {
   final int confirmedTime;
   final Driver driver;
   final Requestee requestee;
+  final Car car;
   TicketConfirmedMessage({
     required super.text,
     required super.date,
@@ -428,6 +438,7 @@ class TicketConfirmedMessage extends TicketMessage {
     required super.sender,
     required super.seen,
     required this.requestee,
+    required this.car,
     required super.receiver,
     required super.delivered,
   });
@@ -450,6 +461,7 @@ class TicketConfirmedMessage extends TicketMessage {
         "sender": sender.toMap(),
         "receiver": receiver.toMap(),
         "requestee": requestee.toMap(),
+        "car": car.toMap(),
       };
 }
 
@@ -724,24 +736,25 @@ class MessageAdaptor {
           "sender": Map<Object?, Object?> sender,
           "receiver": Map<Object?, Object?> receiver,
           "driver": Map<dynamic, dynamic> dmap,
+          "car": Map<Object?, Object?> carMap,
           "confirmedTime": int confirmTime,
           "ticketTime": int ticketTime,
           "isReceipt": true,
         }:
         {
           return ConfirmRequesteeReceipt(
-            date: DateTime.fromMillisecondsSinceEpoch(date),
-            isDispatch: isDispatch,
-            sent: sent,
-            seen: seen,
-            delivered: delivered,
-            messagesViewState: messagesViewState,
-            driver: UserAdaptor<Driver>().adaptMap(dmap),
-            confirmTime: confirmTime,
-            ticketTime: ticketTime,
-            sender: UserAdaptor<BaseUser>().adaptMap(sender),
-            receiver: UserAdaptor<BaseUser>().adaptMap(receiver),
-          );
+              date: DateTime.fromMillisecondsSinceEpoch(date),
+              isDispatch: isDispatch,
+              sent: sent,
+              seen: seen,
+              delivered: delivered,
+              messagesViewState: messagesViewState,
+              driver: UserAdaptor<Driver>().adaptMap(dmap),
+              confirmTime: confirmTime,
+              ticketTime: ticketTime,
+              sender: UserAdaptor<BaseUser>().adaptMap(sender),
+              receiver: UserAdaptor<BaseUser>().adaptMap(receiver),
+              car: CarAdaptor().adaptMap(carMap));
         }
       case {
           "date": int date,
@@ -752,6 +765,7 @@ class MessageAdaptor {
           "sender": Map<Object?, Object?> sender,
           "receiver": Map<Object?, Object?> receiver,
           "requestee": Map<dynamic, dynamic> rmap,
+          "car": Map<Object?, Object?> carMap,
           "confirmedTime": int confirmTime,
           "ticketTime": int ticketTime,
           "isReceipt": true,
@@ -768,6 +782,7 @@ class MessageAdaptor {
             confirmTime: confirmTime,
             ticketTime: ticketTime,
             receiver: UserAdaptor<BaseUser>().adaptMap(receiver),
+            car: CarAdaptor().adaptMap(carMap),
             delivered: delivered,
           );
         }
@@ -860,6 +875,7 @@ class MessageAdaptor {
           "confirmedTime": int confirmedTime,
           "driver": Map<Object?, Object?> driver,
           "requestee": Map<Object?, Object?> requestee,
+          "car": Map<Object?, Object?> car,
         }:
         {
           return TicketConfirmedMessage(
@@ -875,6 +891,7 @@ class MessageAdaptor {
             sender: UserAdaptor<BaseUser>().adaptMap(sender),
             receiver: UserAdaptor<BaseUser>().adaptMap(receiver),
             requestee: UserAdaptor<Requestee>().adaptMap(requestee),
+            car: CarAdaptor().adaptMap(car),
           );
         }
       case {

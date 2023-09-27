@@ -26,8 +26,10 @@ class TicketScreen extends StatelessWidget {
 class DispatchForm extends StatelessWidget {
   DispatchForm({super.key});
 
-  final GlobalKey<FormBuilderState> _formKey = GlobalKey<FormBuilderState>();
-
+  final GlobalKey<FormBuilderState> _formKeyUpper =
+      GlobalKey<FormBuilderState>();
+  final GlobalKey<FormBuilderState> _formKeyLower =
+      GlobalKey<FormBuilderState>();
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<TicketViewCubit, TicketViewState>(
@@ -37,7 +39,8 @@ class DispatchForm extends StatelessWidget {
           return loading();
         } else if (state is TicketViewWithData) {
           return Ticket(
-            formKey: _formKey,
+            formKeyUpper: _formKeyUpper,
+            formKeyLower: _formKeyLower,
           );
         } else {
           return loading();

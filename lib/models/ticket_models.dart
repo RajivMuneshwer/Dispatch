@@ -1,10 +1,13 @@
 import 'package:dispatch/cubit/ticket/ticket_view_cubit.dart';
+import 'package:dispatch/database/car_database.dart';
 import 'package:dispatch/database/message_database.dart';
 import 'package:dispatch/database/user_database.dart';
+import 'package:dispatch/objects/car_objects.dart';
 import 'package:dispatch/objects/message_objects.dart';
 import 'package:dispatch/objects/settings_object.dart';
 import 'package:dispatch/objects/user_objects.dart';
 import 'package:dotted_line/dotted_line.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_form_builder/flutter_form_builder.dart';
@@ -22,10 +25,12 @@ AppBar ticketAppBar(BuildContext context, TicketMessage ticketMessage) {
 }
 
 class Ticket extends StatelessWidget {
-  final GlobalKey<FormBuilderState> formKey;
+  final GlobalKey<FormBuilderState> formKeyUpper;
+  final GlobalKey<FormBuilderState> formKeyLower;
   const Ticket({
     super.key,
-    required this.formKey,
+    required this.formKeyUpper,
+    required this.formKeyLower,
   });
 
   @override
@@ -35,29 +40,50 @@ class Ticket extends StatelessWidget {
         if (state is! TicketViewWithData) {
           return Container();
         }
-        final List<Widget> children = buildTicketWidgets(
+        final List<Widget> childrenTicket = buildTicketWidget(
           xOffset: MediaQuery.of(context).size.width * 0.05,
-          formkey: formKey,
           ticketViewWithData: state,
         );
 
-        return FormBuilder(
-          key: formKey,
-          child: ListView.builder(
-            padding: const EdgeInsets.all(8.0),
-            scrollDirection: Axis.vertical,
-            physics: const AlwaysScrollableScrollPhysics(),
-            itemCount: children.length,
-            itemBuilder: (context, index) => children[index],
-          ),
+        final List<Widget> childrenState = buildStateWidgets(
+          xOffset: MediaQuery.of(context).size.width * 0.05,
+          formKeyUpper: formKeyUpper,
+          formKeyLower: formKeyLower,
+          ticketViewWithData: state,
+        );
+
+        return Column(
+          children: [
+            FormBuilder(
+              key: formKeyUpper,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(8.0),
+                scrollDirection: Axis.vertical,
+                shrinkWrap: true,
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: childrenTicket.length,
+                itemBuilder: (context, index) => childrenTicket[index],
+              ),
+            ),
+            FormBuilder(
+              key: formKeyLower,
+              child: ListView.builder(
+                padding: const EdgeInsets.all(8.0),
+                shrinkWrap: true,
+                scrollDirection: Axis.vertical,
+                physics: const AlwaysScrollableScrollPhysics(),
+                itemCount: childrenState.length,
+                itemBuilder: (context, index) => childrenState[index],
+              ),
+            )
+          ],
         );
       },
     );
   }
 }
 
-List<Widget> buildTicketWidgets({
-  required GlobalKey<FormBuilderState> formkey,
+List<Widget> buildTicketWidget({
   required TicketViewWithData ticketViewWithData,
   double xOffset = 0,
 }) {
@@ -98,7 +124,16 @@ List<Widget> buildTicketWidgets({
     }
   }
   listBuilder.children.removeAt(0); //to remove the top most connecting line
+  return listBuilder.build();
+}
 
+List<Widget> buildStateWidgets({
+  required GlobalKey<FormBuilderState> formKeyUpper,
+  required GlobalKey<FormBuilderState> formKeyLower,
+  required TicketViewWithData ticketViewWithData,
+  double xOffset = 0,
+}) {
+  var listBuilder = ListBuilder(xOffset: xOffset);
   var user = ticketViewWithData.messagesState.user;
 
   switch (ticketViewWithData.ticketMessage) {
@@ -109,6 +144,8 @@ List<Widget> buildTicketWidgets({
           ..addConfirmationDriverRow()
           ..addVerticalSpace(20)
           ..addConfirmationRequesteeRow()
+          ..addVerticalSpace(20)
+          ..addCarConfirmRow()
           ..addVerticalSpace(20)
           ..addTimeStampRow()
           ..addVerticalSpace(40)
@@ -133,20 +170,19 @@ List<Widget> buildTicketWidgets({
           ..addVerticalSpace(10.0);
 
         if (user is! Dispatcher) {
-          listBuilder.addCancelOrUpdateRow(formkey);
-          break;
+          listBuilder.addCancelOrUpdateRow(formKeyUpper);
         }
         if (ticketViewWithData.messagesState.other is Requestee) {
           listBuilder
             ..addDriverDropdownRow()
             ..addVerticalSpace(60.0)
-            ..addCancelUpdateOrConfirm(formkey);
+            ..addCancelUpdateOrConfirm(formKeyUpper, formKeyLower);
           break;
         } else if (ticketViewWithData.messagesState.other is Driver) {
           listBuilder
             ..addRequesteeDropdownRow()
             ..addVerticalSpace(60.0)
-            ..addCancelUpdateOrConfirm(formkey);
+            ..addCancelUpdateOrConfirm(formKeyUpper, formKeyLower);
           break;
         }
       }
@@ -156,7 +192,7 @@ List<Widget> buildTicketWidgets({
           ..addConnector()
           ..addPlusButton()
           ..addVerticalSpace(10.0)
-          ..addSubmitRow(formkey);
+          ..addSubmitRow(formKeyUpper);
 
         break;
       }
@@ -250,16 +286,20 @@ class ListBuilder {
     return this;
   }
 
-  ListBuilder addCancelOrUpdateRow(GlobalKey<FormBuilderState> formkey) {
+  ListBuilder addCancelOrUpdateRow(GlobalKey<FormBuilderState> formKeyUper) {
     children.add(CancelOrUpdateRow(
-      formKey: formkey,
+      formKey: formKeyUper,
     ));
     return this;
   }
 
-  ListBuilder addCancelUpdateOrConfirm(GlobalKey<FormBuilderState> formkey) {
+  ListBuilder addCancelUpdateOrConfirm(
+    GlobalKey<FormBuilderState> formKeyUpper,
+    GlobalKey<FormBuilderState> formKeyLower,
+  ) {
     children.add(CancelUpdateOrConfirm(
-      formKey: formkey,
+      formKeyUpper: formKeyUpper,
+      formKeyLower: formKeyLower,
     ));
     return this;
   }
@@ -281,6 +321,11 @@ class ListBuilder {
 
   ListBuilder addConfirmationRequesteeRow() {
     children.add(const ConfirmationRequesteeRow());
+    return this;
+  }
+
+  ListBuilder addCarConfirmRow() {
+    children.add(const CarConfirmRow());
     return this;
   }
 
@@ -443,10 +488,12 @@ class CancelOrUpdateRow extends StatelessWidget {
 }
 
 class CancelUpdateOrConfirm extends StatelessWidget {
-  final GlobalKey<FormBuilderState> formKey;
+  final GlobalKey<FormBuilderState> formKeyUpper;
+  final GlobalKey<FormBuilderState> formKeyLower;
   const CancelUpdateOrConfirm({
     super.key,
-    required this.formKey,
+    required this.formKeyUpper,
+    required this.formKeyLower,
   });
 
   @override
@@ -454,9 +501,12 @@ class CancelUpdateOrConfirm extends StatelessWidget {
     return RowBuilder()
         .addCancel()
         .addSpace()
-        .addUpdate(formKey: formKey)
+        .addUpdate(formKey: formKeyUpper)
         .addSpace()
-        .addConfirm(formKey: formKey)
+        .addConfirm(
+          formKeyUpper: formKeyUpper,
+          formKeyLower: formKeyLower,
+        )
         .build();
   }
 }
@@ -469,7 +519,7 @@ class DriverDropdownRow extends StatelessWidget {
     return RowBuilder()
         .addDriverDropdown()
         .addSpace()
-        .addBlank()
+        .addCarDropdown()
         .addSpace()
         .addBlank()
         .build();
@@ -484,7 +534,7 @@ class RequesteeDropdownRow extends StatelessWidget {
     return RowBuilder()
         .addRequesteeDropdown()
         .addSpace()
-        .addBlank()
+        .addCarDropdown()
         .addSpace()
         .addBlank()
         .build();
@@ -513,6 +563,21 @@ class ConfirmationRequesteeRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return RowBuilder()
         .addRequesteeConfirmText()
+        .addSpace()
+        .addBlank()
+        .addSpace()
+        .addBlank()
+        .build();
+  }
+}
+
+class CarConfirmRow extends StatelessWidget {
+  const CarConfirmRow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return RowBuilder()
+        .addCarConfirmText()
         .addSpace()
         .addBlank()
         .addSpace()
@@ -630,14 +695,18 @@ class RowBuilder {
 
   RowBuilder addUpdate({required GlobalKey<FormBuilderState> formKey}) {
     children.add(UpdateButton(
-      formKey: formKey,
+      formKeyUpper: formKey,
     ));
     return this;
   }
 
-  RowBuilder addConfirm({required GlobalKey<FormBuilderState> formKey}) {
+  RowBuilder addConfirm({
+    required GlobalKey<FormBuilderState> formKeyUpper,
+    required GlobalKey<FormBuilderState> formKeyLower,
+  }) {
     children.add(ConfirmButton(
-      formKey: formKey,
+      formKeyUpper: formKeyUpper,
+      formKeyLower: formKeyLower,
     ));
     return this;
   }
@@ -649,6 +718,11 @@ class RowBuilder {
 
   RowBuilder addRequesteeDropdown() {
     children.add(const RequesteeDropDown());
+    return this;
+  }
+
+  RowBuilder addCarDropdown() {
+    children.add(const CarDropDown());
     return this;
   }
 
@@ -664,6 +738,11 @@ class RowBuilder {
 
   RowBuilder addRequesteeConfirmText() {
     children.add(const RequesteeConfirmText());
+    return this;
+  }
+
+  RowBuilder addCarConfirmText() {
+    children.add(const CarConfirmText());
     return this;
   }
 
@@ -875,7 +954,7 @@ class RequesteeDropDown extends StatelessWidget {
             future: getRequestees(requesteesid),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return driverDropDownWidget([], "temp");
+                return requesteeDropDownWidget([], "temp");
               } else if (snapshot.hasError) {
                 return Text('Error: ${snapshot.error}');
               } else if (!snapshot.hasData || snapshot.data == null) {
@@ -981,6 +1060,70 @@ Widget driverDropDownWidget(List<Driver> drivers, String name) {
               .map((driver) => DropdownMenuItem(
                     value: driver,
                     child: Text(driver.name),
+                  ))
+              .toList(),
+          validator: FormBuilderValidators.compose([
+            FormBuilderValidators.required(),
+          ]),
+        ),
+      ),
+    ),
+  );
+}
+
+class CarDropDown extends StatelessWidget {
+  const CarDropDown({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TicketViewCubit, TicketViewState>(
+      builder: (context, state) {
+        var state_ = state;
+        if (state_ is! TicketViewWithData) return Container();
+        var user = state_.messagesState.user;
+        if (user is! Dispatcher) return Container();
+        var carsid = user.carsid;
+        print(carsid);
+        return FutureBuilder<List<Car>>(
+            future: getCars(carsid),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return carDropDownWidget([], "carTemp");
+              } else if (snapshot.hasError) {
+                return Text('Error: ${snapshot.error}');
+              } else if (!snapshot.hasData || snapshot.data == null) {
+                return const Text('No options available.');
+              }
+              return carDropDownWidget(
+                snapshot.data ?? [],
+                carDropdownName(),
+              );
+            });
+      },
+    );
+  }
+}
+
+Widget carDropDownWidget(List<Car> cars, String name) {
+  return Flexible(
+    child: Container(
+      decoration: BoxDecoration(
+        color: Colors.grey.shade300,
+        borderRadius: BorderRadius.circular(25.0),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.only(left: 16.0),
+        child: FormBuilderDropdown<Car>(
+          decoration: const InputDecoration(
+              labelText: "Car",
+              labelStyle: TextStyle(fontWeight: FontWeight.normal),
+              border: InputBorder.none),
+          name: name,
+          initialValue: null,
+          items: cars
+              .map((car) => DropdownMenuItem(
+                    value: car,
+                    child: Text(car.name),
                   ))
               .toList(),
           validator: FormBuilderValidators.compose([
@@ -1283,10 +1426,10 @@ class CancelButton extends StatelessWidget {
 }
 
 class UpdateButton extends StatelessWidget {
-  final GlobalKey<FormBuilderState> formKey;
+  final GlobalKey<FormBuilderState> formKeyUpper;
   const UpdateButton({
     super.key,
-    required this.formKey,
+    required this.formKeyUpper,
   });
 
   @override
@@ -1296,7 +1439,7 @@ class UpdateButton extends StatelessWidget {
         if (state is! TicketViewWithData) return Container();
         return ElevatedButton(
           onPressed: () {
-            FormBuilderState? formbuilderState = formKey.currentState;
+            FormBuilderState? formbuilderState = formKeyUpper.currentState;
             if (formbuilderState == null) {
               return;
             }
@@ -1355,10 +1498,12 @@ class UpdateButton extends StatelessWidget {
 }
 
 class ConfirmButton extends StatefulWidget {
-  final GlobalKey<FormBuilderState> formKey;
+  final GlobalKey<FormBuilderState> formKeyUpper;
+  final GlobalKey<FormBuilderState> formKeyLower;
   const ConfirmButton({
     super.key,
-    required this.formKey,
+    required this.formKeyUpper,
+    required this.formKeyLower,
   });
 
   @override
@@ -1377,18 +1522,25 @@ class _ConfirmButtonState extends State<ConfirmButton> {
           onPressed: (isRunning)
               ? () {}
               : () {
-                  FormBuilderState? formbuilderState =
-                      widget.formKey.currentState;
-                  if (formbuilderState == null) {
+                  var formUpperState = widget.formKeyUpper.currentState;
+                  var formLowerState = widget.formKeyLower.currentState;
+                  if (formUpperState == null) {
                     return;
                   }
-                  if (!formbuilderState.validate()) {
+                  if (formLowerState == null) {
+                    return;
+                  }
+                  if (!formUpperState.validate()) {
+                    return;
+                  }
+                  if (!formLowerState.validate()) {
                     return;
                   }
                   Driver? driver =
-                      formbuilderState.fields[driverDropdownName()]?.value;
+                      formLowerState.fields[driverDropdownName()]?.value;
                   Requestee? requestee =
-                      formbuilderState.fields[requesteeDropdownName()]?.value;
+                      formLowerState.fields[requesteeDropdownName()]?.value;
+                  Car car = formLowerState.fields[carDropdownName()]!.value;
 
                   (driver, requestee) =
                       validateDriverRequestee(driver, requestee);
@@ -1401,6 +1553,7 @@ class _ConfirmButtonState extends State<ConfirmButton> {
                     state,
                     driver,
                     requestee,
+                    car,
                   );
                   updateTicketToConfirmed(state, ticketConfirmed);
                   sendTicketToSecondUser(
@@ -1409,8 +1562,18 @@ class _ConfirmButtonState extends State<ConfirmButton> {
                     requestee,
                     ticketConfirmed,
                   );
-                  sendReceiptToRequestee(state, driver, requestee);
-                  sendReceiptToDriver(state, driver, requestee);
+                  sendReceiptToRequestee(
+                    state,
+                    driver,
+                    requestee,
+                    car,
+                  );
+                  sendReceiptToDriver(
+                    state,
+                    driver,
+                    requestee,
+                    car,
+                  );
                   Navigator.pop(context);
                 },
           style: ElevatedButton.styleFrom(
@@ -1480,6 +1643,7 @@ TicketConfirmedMessage makeConfirmedTicket(
   TicketViewWithData state,
   Driver? driver,
   Requestee? requestee,
+  Car car,
 ) {
   var ticketMessage = state.ticketMessage;
   var messagesState = state.messagesState;
@@ -1503,6 +1667,7 @@ TicketConfirmedMessage makeConfirmedTicket(
             null) // if the requestee is not in the form field then they are the other user
         ? requestee
         : other as Requestee,
+    car: car,
   );
 }
 
@@ -1518,6 +1683,7 @@ void sendReceiptToRequestee(
   TicketViewWithData state,
   Driver? driver,
   Requestee? requestee,
+  Car car,
 ) {
   if (requestee != null && requestee.id == 0) {
     return; //the requestee is an errand so no actual requestee
@@ -1535,6 +1701,7 @@ void sendReceiptToRequestee(
     receiver: state.messagesState.other,
     messagesViewState: state.messagesState,
     driver: (driver != null) ? driver : other as Driver,
+    car: car,
     confirmTime: DateTime.now().millisecondsSinceEpoch,
     ticketTime: ticketMessage.date.millisecondsSinceEpoch,
   );
@@ -1547,6 +1714,7 @@ void sendReceiptToDriver(
   TicketViewWithData state,
   Driver? driver,
   Requestee? requestee,
+  Car car,
 ) {
   var ticketMessage = state.ticketMessage;
   User other = state.messagesState.other;
@@ -1578,6 +1746,7 @@ void sendReceiptToDriver(
       delivered: false,
       sender: state.messagesState.user,
       receiver: state.messagesState.other,
+      car: car,
       messagesViewState: state.messagesState,
       requestee: (requestee != null) ? requestee : other as Requestee,
       confirmTime: DateTime.now().millisecondsSinceEpoch,
@@ -1667,6 +1836,29 @@ class RequesteeConfirmText extends StatelessWidget {
         if (message is! TicketConfirmedMessage) return Container();
         return Text(
           "Pickup: ${message.requestee.name}",
+          style: const TextStyle(
+            fontSize: 15.0,
+            color: Colors.grey,
+            fontWeight: FontWeight.w600,
+          ),
+        );
+      },
+    );
+  }
+}
+
+class CarConfirmText extends StatelessWidget {
+  const CarConfirmText({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<TicketViewCubit, TicketViewState>(
+      builder: (context, state) {
+        if (state is! TicketViewWithData) return Container();
+        var message = state.ticketMessage;
+        if (message is! TicketConfirmedMessage) return Container();
+        return Text(
+          "Car: ${message.car.name} ${message.car.licensePlate}",
           style: const TextStyle(
             fontSize: 15.0,
             color: Colors.grey,
@@ -1926,8 +2118,8 @@ String Function() nowInMilliseconds =
     () => DateTime.now().millisecondsSinceEpoch.toString();
 
 String Function() driverDropdownName = () => "drivers";
-
 String Function() requesteeDropdownName = () => "requestees";
+String Function() carDropdownName = () => "cars";
 
 class FormLayoutEncoder {
   static const rowSeparator = "~";
@@ -1973,6 +2165,19 @@ Future<List<Driver>> getDrivers(List<int>? driverids) async {
         .toList());
   }
   return drivers;
+}
+
+Future<List<Car>> getCars(List<int>? carsid) async {
+  var carsid_ = carsid;
+  if (carsid_ == null) return [];
+  if (carsid_.isEmpty) return [];
+  CarDatabase carDatabase = CarDatabase();
+  CarAdaptor carAdaptor = CarAdaptor();
+  List<DataSnapshot> carsSnaps =
+      await Future.wait(carsid_.map((carid) => carDatabase.getOne(carid)));
+  List<Car> cars =
+      carsSnaps.map((carSnap) => carAdaptor.adaptSnapshot(carSnap)).toList();
+  return cars;
 }
 
 Future<List<Requestee>> getRequestees(List<int>? requesteesid) async {

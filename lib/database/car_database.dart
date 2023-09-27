@@ -10,6 +10,10 @@ class CarDatabase {
     return (await ref.get()).children;
   }
 
+  Future<DataSnapshot> getOne(int carid) async {
+    return ref.child("$carid").get();
+  }
+
   Future<void> delete(Car? car) async {
     if (car == null) {
       return;
