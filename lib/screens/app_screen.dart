@@ -3,6 +3,7 @@ import 'package:dispatch/objects/settings_object.dart';
 import 'package:dispatch/objects/user_objects.dart';
 import 'package:dispatch/screens/admin_screen.dart';
 import 'package:dispatch/screens/dispatch_requestee_list_screen.dart';
+import 'package:dispatch/screens/driver_info_screen.dart';
 import 'package:dispatch/screens/message_screen.dart';
 import 'package:dispatch/screens/ticket_screen.dart';
 import 'package:flutter/material.dart';
@@ -56,8 +57,8 @@ class _AppState extends State<App> {
 
           case '/driver':
             return MaterialPageRoute(
-              builder: (_) => DriverMessageScreen(
-                user: Settings.user as Driver,
+              builder: (_) => DriverFormScreen(
+                driver: Settings.user as Driver,
               ),
             );
 

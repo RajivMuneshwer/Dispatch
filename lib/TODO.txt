@@ -1,11 +1,8 @@
 TO TODO
 set up the official twilio account
-enter which car
 have the drivers able to enter their date, time, driver, vehicle and purpose
 export that to excel
-make a separate form for the bottom elements that car be validated with confirm and not with update
 api?
-add car to the dispatcher
 
 BUGS
 ordering of messages get messed up
@@ -21,3 +18,6 @@ COMPLETED
 Added the errand user so a requestee does not always need to be assigned 
 Fixed the bug where the unread messages counter increments unnecessarily
 Added the cars to admin screen
+enter which car 
+make a separate form for the bottom elements that car be validated with confirm and not with update
+add car to the dispatcher
