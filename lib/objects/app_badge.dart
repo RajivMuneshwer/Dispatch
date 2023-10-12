@@ -11,6 +11,7 @@ class AppBadge {
 
   static Future<AppBadge> getInstance() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.reload();
     return AppBadge(
       prefs: prefs,
     );

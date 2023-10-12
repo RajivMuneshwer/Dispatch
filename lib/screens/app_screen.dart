@@ -57,7 +57,7 @@ class _AppState extends State<App> {
 
           case '/driver':
             return MaterialPageRoute(
-              builder: (_) => DriverFormScreen(
+              builder: (_) => DriverHomeScreen(
                 driver: Settings.user as Driver,
               ),
             );

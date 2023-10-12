@@ -29,7 +29,7 @@ Future<void> main() async {
     }
   });
   final SharedPreferences pref = await SharedPreferences.getInstance();
-  //await pref.clear();
+  await pref.clear();
   (await AppBadge.getInstance()).initializeBadgeCount();
   final bool? doesUserExist = pref.getBool('exists');
   if (doesUserExist != true) {

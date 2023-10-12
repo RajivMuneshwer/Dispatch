@@ -1,6 +1,5 @@
 TO TODO
 set up the official twilio account
-have the drivers able to enter their date, time, driver, vehicle and purpose
 export that to excel
 api?
 
@@ -21,3 +20,4 @@ Added the cars to admin screen
 enter which car 
 make a separate form for the bottom elements that car be validated with confirm and not with update
 add car to the dispatcher
+have the drivers able to enter their date, time, driver, vehicle and purpose
