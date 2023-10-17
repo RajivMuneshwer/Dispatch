@@ -41,6 +41,42 @@
           ]
         }
       }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:509788095788:android:c98a97c89cfbe328429889",
+        "android_client_info": {
+          "package_name": "com.muneshwers.dispatch"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "509788095788-rii1rnnk6qbr111de11mma0q6au2sndb.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7CD8m837mXkIFgL3TaPXrhfBCHSfNY4c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "509788095788-rii1rnnk6qbr111de11mma0q6au2sndb.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "509788095788-l0f4vkimqn7d8ljhodf5jecfd3j4aqqu.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.muneshwers.dispatch"
+              }
+            }
+          ]
+        }
+      }
     }
   ],
   "configuration_version": "1"

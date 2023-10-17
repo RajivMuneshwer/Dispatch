@@ -26,9 +26,12 @@ class DriverInfoCubit extends Cubit<DriverInfoState> {
       Dispatcher dispatcher = await _getDispatcher(driver);
       List<Requestee> requestees = await _getRequestees(dispatcher);
       List<Car> cars = await _getCars(dispatcher);
+      List<String> carNames = cars.map((c) => c.name).toList();
+      List<String> requesteesNames = requestees.map((r) => r.name).toList();
+      requesteesNames.add("Errand");
       emit(DriverInfoWithData(
-        pickups: requestees.map((r) => r.name).toList(),
-        cars: cars.map((c) => c.name).toList(),
+        pickups: requesteesNames,
+        cars: carNames,
         json: json,
       ));
     });

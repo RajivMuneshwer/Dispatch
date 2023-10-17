@@ -44,6 +44,7 @@ class _AppState extends State<App> {
           onSurface: Settings.secondaryColor,
         ),
       ),
+      debugShowCheckedModeBanner: false,
       onGenerateRoute: (settings) {
         final args = settings.arguments;
 

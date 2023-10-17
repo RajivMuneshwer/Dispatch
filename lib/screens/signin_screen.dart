@@ -28,6 +28,7 @@ class SignInScreen extends StatelessWidget {
           onSurface: Settings.secondaryColor,
         ),
       ),
+      debugShowCheckedModeBanner: false,
       home: Builder(builder: (context) {
         return const SignInWidget();
       }),
